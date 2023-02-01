@@ -1,0 +1,433 @@
+[W 2022-09-09 11:28:09.241 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-09 11:28:09.241 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-09 11:28:09.245 ServerApp] jupyterlab | extension was successfully linked.
+[W 2022-09-09 11:28:09.247 NotebookApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-09 11:28:09.247 NotebookApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-09 11:28:09.250 ServerApp] nbclassic | extension was successfully linked.
+[I 2022-09-09 11:28:09.369 ServerApp] notebook_shim | extension was successfully linked.
+[W 2022-09-09 11:28:09.377 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 2022-09-09 11:28:09.377 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[I 2022-09-09 11:28:09.378 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2022-09-09 11:28:09.379 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-09-09 11:28:09.379 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 2022-09-09 11:28:09.381 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2022-09-09 11:28:09.382 ServerApp] nbclassic | extension was successfully loaded.
+[I 2022-09-09 11:28:09.382 ServerApp] The port 8888 is already in use, trying another port.
+[I 2022-09-09 11:28:09.382 ServerApp] The port 8889 is already in use, trying another port.
+[I 2022-09-09 11:28:09.382 ServerApp] The port 8890 is already in use, trying another port.
+[I 2022-09-09 11:28:09.383 ServerApp] The port 8891 is already in use, trying another port.
+[I 2022-09-09 11:28:09.383 ServerApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 2022-09-09 11:28:09.383 ServerApp] Jupyter Server 1.17.0 is running at:
+[I 2022-09-09 11:28:09.383 ServerApp] http://localhost:8892/lab
+[I 2022-09-09 11:28:09.383 ServerApp]  or http://127.0.0.1:8892/lab
+[I 2022-09-09 11:28:09.383 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2022-09-09 11:28:11.254 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-09-09 11:28:12.056 ServerApp] New terminal with automatic name: 1
+TermSocket.open: 1
+TermSocket.open: Opened 1
+[I 2022-09-09 11:28:30.755 ServerApp] Creating new notebook in 
+[I 2022-09-09 11:28:31.000 ServerApp] Kernel started: 18dc1faf-351c-40f7-ad77-b7103a7be9f9
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 5643e1c5-9ca4-4dd2-8df1-302bbba9dea6
+[I 2022-09-09 11:30:30.922 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 11:32:30.974 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 11:32:44.157 ServerApp] Creating new directory in 
+[I 2022-09-09 11:34:31.028 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 11:46:31.095 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 11:48:31.150 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 11:50:31.206 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 11:52:31.265 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 11:54:31.768 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 12:11:58.986 ServerApp] Saving file at /create_fits.py
+[I 2022-09-09 12:12:07.781 ServerApp] Saving file at /create_fits.py
+[I 2022-09-09 12:14:06.461 ServerApp] Kernel restarted: 18dc1faf-351c-40f7-ad77-b7103a7be9f9
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: b2e8d8b7-5da6-4f45-93ee-6e7d6d5ca82e
+[I 2022-09-09 12:14:32.059 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 12:14:44.647 ServerApp] Saving file at /Simulate_f160w.ipynb
+[W 2022-09-09 14:22:37.212 ServerApp] 403 PUT /lab/api/workspaces/default?1662726157205 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:37.212 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:37.213 LabApp] 403 PUT /lab/api/workspaces/default?1662726157205 (127.0.0.1) 2.00ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:22:46.349 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726166344 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:46.349 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:46.350 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726166344 (127.0.0.1) 1.35ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:22:51.283 ServerApp] 403 PUT /lab/api/workspaces/default?1662726171276 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:51.283 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:51.283 LabApp] 403 PUT /lab/api/workspaces/default?1662726171276 (127.0.0.1) 1.33ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:22:52.820 ServerApp] 403 PUT /lab/api/workspaces/default?1662726172812 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:52.820 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:22:52.820 LabApp] 403 PUT /lab/api/workspaces/default?1662726172812 (127.0.0.1) 1.44ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:23:12.549 ServerApp] 403 PUT /lab/api/workspaces/default?1662726192544 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:23:12.550 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:23:12.550 LabApp] 403 PUT /lab/api/workspaces/default?1662726192544 (127.0.0.1) 1.41ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:24:30.726 ServerApp] 403 PUT /lab/api/workspaces/default?1662726270724 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:30.726 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:30.726 LabApp] 403 PUT /lab/api/workspaces/default?1662726270724 (127.0.0.1) 0.61ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:24:41.111 ServerApp] 403 PUT /lab/api/workspaces/default?1662726281104 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:41.111 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:41.111 LabApp] 403 PUT /lab/api/workspaces/default?1662726281104 (127.0.0.1) 1.52ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:24:42.273 ServerApp] 403 PUT /lab/api/workspaces/default?1662726282264 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:42.274 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:42.274 LabApp] 403 PUT /lab/api/workspaces/default?1662726282264 (127.0.0.1) 1.36ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:24:43.311 ServerApp] 403 PUT /lab/api/workspaces/default?1662726283305 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:43.311 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:43.312 LabApp] 403 PUT /lab/api/workspaces/default?1662726283305 (127.0.0.1) 1.37ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:24:46.340 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726286338 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:46.341 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:24:46.341 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726286338 (127.0.0.1) 0.56ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:25:10.467 ServerApp] 403 PUT /api/contents/create_fits.py?1662726310463 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:25:10.467 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:25:10.468 ServerApp] 403 PUT /api/contents/create_fits.py?1662726310463 (127.0.0.1) 0.99ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:26:46.559 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726406553 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:26:46.559 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:26:46.560 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726406553 (127.0.0.1) 1.39ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:27:10.567 ServerApp] 403 PUT /api/contents/create_fits.py?1662726430560 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:27:10.567 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:27:10.567 ServerApp] 403 PUT /api/contents/create_fits.py?1662726430560 (127.0.0.1) 1.38ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:28:46.630 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726526625 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:28:46.631 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:28:46.631 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726526625 (127.0.0.1) 1.43ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:29:10.630 ServerApp] 403 PUT /api/contents/create_fits.py?1662726550626 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:29:10.631 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:29:10.631 ServerApp] 403 PUT /api/contents/create_fits.py?1662726550626 (127.0.0.1) 1.36ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:30:46.661 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726646656 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:30:46.661 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:30:46.662 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726646656 (127.0.0.1) 1.20ms referer=http://localhost:8892/lab/tree/create_fits.py
+[W 2022-09-09 14:31:04.180 ServerApp] 403 PUT /lab/api/workspaces/default?1662726664174 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:04.180 LabApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:04.181 LabApp] 403 PUT /lab/api/workspaces/default?1662726664174 (127.0.0.1) 1.39ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:31:05.217 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726665213 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:05.218 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:05.218 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726665213 (127.0.0.1) 0.95ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:31:08.038 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726668032 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:08.038 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:08.038 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726668032 (127.0.0.1) 1.33ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:31:09.981 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726669976 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:09.981 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:09.981 ServerApp] 403 PUT /api/contents/Simulate_f160w.ipynb?1662726669976 (127.0.0.1) 1.01ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+[W 2022-09-09 14:31:10.635 ServerApp] 403 PUT /api/contents/create_fits.py?1662726670630 (127.0.0.1): '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:10.635 ServerApp] '_xsrf' argument missing from POST
+[W 2022-09-09 14:31:10.636 ServerApp] 403 PUT /api/contents/create_fits.py?1662726670630 (127.0.0.1) 1.25ms referer=http://localhost:8892/lab/tree/Simulate_f160w.ipynb
+Websocket closed
+[I 2022-09-09 14:31:13.234 ServerApp] Starting buffering for 18dc1faf-351c-40f7-ad77-b7103a7be9f9:04c1159b-2b63-45b7-8039-61215a2fd8fd
+[W 2022-09-09 14:31:18.136 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-09 14:31:18.136 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-09 14:31:18.140 ServerApp] jupyterlab | extension was successfully linked.
+[W 2022-09-09 14:31:18.142 NotebookApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-09 14:31:18.142 NotebookApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-09 14:31:18.145 ServerApp] nbclassic | extension was successfully linked.
+[I 2022-09-09 14:31:18.255 ServerApp] notebook_shim | extension was successfully linked.
+[W 2022-09-09 14:31:18.263 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 2022-09-09 14:31:18.263 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[I 2022-09-09 14:31:18.264 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2022-09-09 14:31:18.264 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-09-09 14:31:18.264 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 2022-09-09 14:31:18.266 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2022-09-09 14:31:18.268 ServerApp] nbclassic | extension was successfully loaded.
+[I 2022-09-09 14:31:18.268 ServerApp] The port 8888 is already in use, trying another port.
+[I 2022-09-09 14:31:18.268 ServerApp] The port 8889 is already in use, trying another port.
+[I 2022-09-09 14:31:18.268 ServerApp] The port 8890 is already in use, trying another port.
+[I 2022-09-09 14:31:18.268 ServerApp] The port 8891 is already in use, trying another port.
+[I 2022-09-09 14:31:18.268 ServerApp] The port 8892 is already in use, trying another port.
+[I 2022-09-09 14:31:18.268 ServerApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 2022-09-09 14:31:18.268 ServerApp] Jupyter Server 1.17.0 is running at:
+[I 2022-09-09 14:31:18.268 ServerApp] http://localhost:8896/lab
+[I 2022-09-09 14:31:18.268 ServerApp]  or http://127.0.0.1:8896/lab
+[I 2022-09-09 14:31:18.268 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2022-09-09 14:31:20.146 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-09-09 14:31:21.526 ServerApp] Kernel started: d85ac9e4-d0cd-4c51-86fd-f7bc07c8a314
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 23b2d644-305a-4d1f-aca1-90082b2cd5bd
+[I 2022-09-09 14:32:25.189 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:34:25.231 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:38:25.560 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:39:21.943 ServerApp] Saving file at /create_fits.py
+[I 2022-09-09 14:40:25.617 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:42:25.709 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:42:28.060 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:44:28.096 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:46:28.142 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:48:28.201 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:50:28.261 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:52:28.323 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 14:54:28.369 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:06:29.043 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:08:29.105 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:10:29.165 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:12:29.235 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:14:29.291 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:16:29.351 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:18:29.410 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:20:29.578 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:28:29.925 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:30:29.984 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:32:30.049 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:34:30.100 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:36:30.155 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:38:30.235 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:40:30.286 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:42:30.343 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 15:44:30.405 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:06:32.422 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:08:32.479 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:10:21.437 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:10:24.617 ServerApp] Kernel restarted: d85ac9e4-d0cd-4c51-86fd-f7bc07c8a314
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 8a790907-b5ba-4d2e-9f57-3911626a021e
+[I 2022-09-09 16:12:21.495 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:14:21.559 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:26:22.096 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:28:22.157 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:30:22.204 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:32:23.005 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:42:24.210 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:44:24.265 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:46:24.321 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:48:24.382 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:50:24.429 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:50:44.992 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:51:42.180 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:51:53.469 ServerApp] Copying Simulate_f160w.ipynb to 
+[I 2022-09-09 16:51:57.832 ServerApp] Kernel started: 37c661dd-8e5a-42e3-b222-4714762a3d09
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: d5a0e60b-b43e-406e-bc0a-be26dc05c510
+[I 2022-09-09 16:52:46.559 ServerApp] Starting buffering for 37c661dd-8e5a-42e3-b222-4714762a3d09:24108e1e-e664-41db-b8e2-d4179226c7ce
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 664e7959-3241-4246-a04f-51c43753eeb6
+[I 2022-09-09 16:52:49.965 ServerApp] Starting buffering for 37c661dd-8e5a-42e3-b222-4714762a3d09:8db03ca7-c965-4ece-a688-d48a95924e27
+[I 2022-09-09 16:52:53.833 ServerApp] Kernel shutdown: 37c661dd-8e5a-42e3-b222-4714762a3d09
+[W 2022-09-09 16:52:54.082 ServerApp] delete /Simulate_f160w_7040.ipynb
+[I 2022-09-09 16:53:42.239 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:54:14.070 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 16:59:00.749 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 17:44:26.893 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 18:10:51.876 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 18:10:53.644 ServerApp] Starting buffering for d85ac9e4-d0cd-4c51-86fd-f7bc07c8a314:abf28862-84e2-4220-a017-24c016951bf0
+[W 2022-09-09 18:12:57.344 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-09 18:12:57.344 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-09 18:12:57.348 ServerApp] jupyterlab | extension was successfully linked.
+[W 2022-09-09 18:12:57.350 NotebookApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-09 18:12:57.350 NotebookApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-09 18:12:57.353 ServerApp] nbclassic | extension was successfully linked.
+[I 2022-09-09 18:12:57.464 ServerApp] notebook_shim | extension was successfully linked.
+[W 2022-09-09 18:12:57.472 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 2022-09-09 18:12:57.472 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[I 2022-09-09 18:12:57.473 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2022-09-09 18:12:57.473 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-09-09 18:12:57.473 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 2022-09-09 18:12:57.475 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2022-09-09 18:12:57.476 ServerApp] nbclassic | extension was successfully loaded.
+[I 2022-09-09 18:12:57.477 ServerApp] The port 8888 is already in use, trying another port.
+[I 2022-09-09 18:12:57.477 ServerApp] The port 8889 is already in use, trying another port.
+[I 2022-09-09 18:12:57.477 ServerApp] The port 8890 is already in use, trying another port.
+[I 2022-09-09 18:12:57.477 ServerApp] The port 8891 is already in use, trying another port.
+[I 2022-09-09 18:12:57.477 ServerApp] The port 8892 is already in use, trying another port.
+[I 2022-09-09 18:12:57.477 ServerApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 2022-09-09 18:12:57.477 ServerApp] Jupyter Server 1.17.0 is running at:
+[I 2022-09-09 18:12:57.477 ServerApp] http://localhost:8793/lab
+[I 2022-09-09 18:12:57.477 ServerApp]  or http://127.0.0.1:8793/lab
+[I 2022-09-09 18:12:57.477 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2022-09-09 18:12:59.984 LabApp] Could not determine jupyterlab build status without nodejs
+[W 2022-09-09 18:13:00.545 ServerApp] 404 GET /api/contents/pert_f140w.ipynb?content=0&1662739980368 (127.0.0.1): No such file or directory: pert_f140w.ipynb
+[W 2022-09-09 18:13:00.546 ServerApp] No such file or directory: pert_f140w.ipynb
+[W 2022-09-09 18:13:00.546 ServerApp] 404 GET /api/contents/pert_f140w.ipynb?content=0&1662739980368 (127.0.0.1) 16.46ms referer=http://localhost:8793/lab
+[I 2022-09-09 18:13:04.493 ServerApp] Kernel started: eff4cefa-c185-48ab-87f1-297929f127e7
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: a1ab9624-f996-4357-addb-fb26a9a01e6e
+[I 2022-09-09 18:21:04.782 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 18:25:05.911 ServerApp] Saving file at /Simulate_f160w.ipynb
+[I 2022-09-09 18:45:30.204 ServerApp] Starting buffering for eff4cefa-c185-48ab-87f1-297929f127e7:7bef779e-aeaf-46dc-968a-fd756af6b482
+[I 19:15:20.786 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 19:15:20.876 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 19:15:20.876 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2022-09-13 19:15:20.963 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-13 19:15:20.963 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-13 19:15:20.963 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-13 19:15:20.963 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-13 19:15:20.963 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-13 19:15:20.963 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-13 19:15:20.967 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-09-13 19:15:20.967 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 19:15:20.969 NotebookApp] The port 8888 is already in use, trying another port.
+[I 19:15:20.969 NotebookApp] The port 8889 is already in use, trying another port.
+[I 19:15:20.969 NotebookApp] The port 8890 is already in use, trying another port.
+[I 19:15:20.969 NotebookApp] The port 8891 is already in use, trying another port.
+[I 19:15:20.969 NotebookApp] The port 8892 is already in use, trying another port.
+[I 19:15:20.969 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 19:15:20.969 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 19:15:20.969 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8900/
+[I 19:15:20.969 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 19:15:22.021 NotebookApp] Kernel started: 8c9be597-af23-4f86-9a9c-a281c1353318, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: e38426bc-0d5a-47df-910d-6e7d23f32caa
+[I 19:26:36.781 NotebookApp] Starting buffering for 8c9be597-af23-4f86-9a9c-a281c1353318:51b4abb6adb64527baedaa06d6f84ce6
+[I 16:02:28.080 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 16:02:28.182 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 16:02:28.182 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2022-09-30 16:02:28.272 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 16:02:28.272 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 16:02:28.272 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 16:02:28.272 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 16:02:28.272 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 16:02:28.272 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-30 16:02:28.276 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-09-30 16:02:28.276 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 16:02:28.279 NotebookApp] The port 8888 is already in use, trying another port.
+[I 16:02:28.279 NotebookApp] The port 8889 is already in use, trying another port.
+[I 16:02:28.279 NotebookApp] The port 8890 is already in use, trying another port.
+[I 16:02:28.279 NotebookApp] The port 8891 is already in use, trying another port.
+[I 16:02:28.279 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 16:02:28.279 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 16:02:28.279 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8892/
+[I 16:02:28.279 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 16:02:29.330 NotebookApp] Kernel started: 56af034f-3be5-49a3-8524-45053e63db48, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 499740fa-4060-42bc-9175-01605dccacc2
+[I 16:04:29.330 NotebookApp] Saving file at /Simulate_f160w.ipynb
+[I 17:28:18.177 NotebookApp] Interrupted...
+[I 17:28:18.177 NotebookApp] Shutting down 1 kernel
+[I 17:28:18.178 NotebookApp] Kernel shutdown: 56af034f-3be5-49a3-8524-45053e63db48
+[I 17:28:18.245 NotebookApp] Starting buffering for 56af034f-3be5-49a3-8524-45053e63db48:a6075788c1e94ae5ac7acfe82cf71933
+[I 17:28:18.248 NotebookApp] Kernel shutdown: 56af034f-3be5-49a3-8524-45053e63db48
+[E 17:28:18.248 NotebookApp] Uncaught exception DELETE /api/sessions/0f88ed92-392b-4d3d-9350-3b82e25f3228 (127.0.0.1)
+    HTTPServerRequest(protocol='http', host='localhost:8892', method='DELETE', uri='/api/sessions/0f88ed92-392b-4d3d-9350-3b82e25f3228', version='HTTP/1.1', remote_ip='127.0.0.1')
+    Traceback (most recent call last):
+      File "/usr/local/lib/python3.10/dist-packages/tornado/web.py", line 1713, in _execute
+        result = await result
+      File "/usr/local/lib/python3.10/dist-packages/tornado/gen.py", line 776, in run
+        yielded = self.gen.throw(*exc_info)  # type: ignore
+      File "/home/jackquei/.local/lib/python3.10/site-packages/notebook/services/sessions/handlers.py", line 164, in delete
+        yield maybe_future(sm.delete_session(session_id))
+      File "/usr/local/lib/python3.10/dist-packages/tornado/gen.py", line 769, in run
+        value = future.result()
+      File "/usr/local/lib/python3.10/dist-packages/tornado/gen.py", line 782, in run
+        yielded = self.gen.send(value)
+      File "/home/jackquei/.local/lib/python3.10/site-packages/notebook/services/sessions/sessionmanager.py", line 287, in delete_session
+        yield maybe_future(self.kernel_manager.shutdown_kernel(session['kernel']['id']))
+      File "/home/jackquei/.local/lib/python3.10/site-packages/notebook/services/kernels/kernelmanager.py", line 304, in shutdown_kernel
+        self.pinned_superclass.shutdown_kernel(self, kernel_id, now=now, restart=restart)
+      File "/home/jackquei/.local/lib/python3.10/site-packages/jupyter_client/utils.py", line 30, in wrapped
+        raise e
+      File "/home/jackquei/.local/lib/python3.10/site-packages/jupyter_client/utils.py", line 27, in wrapped
+        return loop.run_until_complete(future)
+      File "/home/jackquei/.local/lib/python3.10/site-packages/nest_asyncio.py", line 89, in run_until_complete
+        return f.result()
+      File "/usr/lib/python3.10/asyncio/futures.py", line 201, in result
+        raise self._exception.with_traceback(self._exception_tb)
+      File "/usr/lib/python3.10/asyncio/tasks.py", line 232, in __step
+        result = coro.send(None)
+      File "/home/jackquei/.local/lib/python3.10/site-packages/jupyter_client/multikernelmanager.py", line 262, in _async_shutdown_kernel
+        if not km.ready.cancelled() and km.ready.exception():
+    asyncio.exceptions.InvalidStateError: Exception is not set.
+[W 17:28:18.251 NotebookApp] Unhandled error
+[E 17:28:18.251 NotebookApp] {
+      "Host": "localhost:8892",
+      "Accept": "application/json, text/javascript, */*; q=0.01",
+      "Referer": "http://localhost:8892/notebooks/Simulate_f160w.ipynb",
+      "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:105.0) Gecko/20100101 Firefox/105.0"
+    }
+[E 17:28:18.251 NotebookApp] 500 DELETE /api/sessions/0f88ed92-392b-4d3d-9350-3b82e25f3228 (127.0.0.1) 3.810000ms referer=http://localhost:8892/notebooks/Simulate_f160w.ipynb
+[I 17:28:18.393 NotebookApp] Shutting down 0 terminals
+[I 18:52:38.643 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 18:52:38.739 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 18:52:38.739 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2022-09-30 18:52:38.822 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 18:52:38.822 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 18:52:38.823 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 18:52:38.823 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 18:52:38.823 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-09-30 18:52:38.823 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-09-30 18:52:38.827 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-09-30 18:52:38.827 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 18:52:38.829 NotebookApp] The port 8888 is already in use, trying another port.
+[I 18:52:38.829 NotebookApp] The port 8889 is already in use, trying another port.
+[I 18:52:38.829 NotebookApp] The port 8890 is already in use, trying another port.
+[I 18:52:38.829 NotebookApp] The port 8891 is already in use, trying another port.
+[I 18:52:38.829 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 18:52:38.829 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 18:52:38.829 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8892/
+[I 18:52:38.829 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 18:52:39.824 NotebookApp] Kernel started: d47e6494-66b9-4037-b8cc-88ee6cad3f59, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 989cd586-9708-4c01-9a06-9fc03f0300e1
+[I 19:04:30.015 NotebookApp] Saving file at /Simulate_f160w.ipynb
+[I 19:04:30.452 NotebookApp] Starting buffering for d47e6494-66b9-4037-b8cc-88ee6cad3f59:b8ec0ac48b9741df9c694379e128da2a
+[I 19:04:39.848 NotebookApp] Interrupted...
+[I 19:04:39.848 NotebookApp] Shutting down 1 kernel
+[I 19:04:39.849 NotebookApp] Kernel shutdown: d47e6494-66b9-4037-b8cc-88ee6cad3f59
+[I 19:04:40.064 NotebookApp] Shutting down 0 terminals
+[I 16:15:22.334 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 16:15:22.482 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 16:15:22.482 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2022-10-10 16:15:22.614 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-10 16:15:22.614 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-10 16:15:22.614 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-10 16:15:22.614 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-10 16:15:22.614 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-10 16:15:22.614 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-10-10 16:15:22.621 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-10-10 16:15:22.621 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 16:15:22.624 NotebookApp] The port 8888 is already in use, trying another port.
+[I 16:15:22.624 NotebookApp] The port 8889 is already in use, trying another port.
+[I 16:15:22.624 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 16:15:22.624 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 16:15:22.624 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8890/
+[I 16:15:22.624 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 16:15:24.425 NotebookApp] Kernel started: 1fefb9f4-c8f3-4e37-b2ac-fb784f20b396, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: bb21d771-41f8-4ecc-bfd4-36a1f3a912a5
+[I 18:35:15.108 NotebookApp] Saving file at /Simulate_f160w.ipynb
+[I 18:35:15.494 NotebookApp] Starting buffering for 1fefb9f4-c8f3-4e37-b2ac-fb784f20b396:da127bcb5b9249af99289e0d7e92551d
+[I 14:37:10.409 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 14:37:10.500 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 14:37:10.500 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2022-10-21 14:37:10.597 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-21 14:37:10.597 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-21 14:37:10.597 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-21 14:37:10.597 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-21 14:37:10.597 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-10-21 14:37:10.597 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-10-21 14:37:10.601 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-10-21 14:37:10.601 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 14:37:10.604 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 14:37:10.604 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 14:37:10.604 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8888/
+[I 14:37:10.604 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 14:37:11.601 NotebookApp] Kernel started: 47f0c962-1361-4ee5-9c44-5073ab1d1ed9, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 7bbc01b5-3261-4465-a17e-18c277fb4c5d
+[I 15:06:41.838 NotebookApp] Starting buffering for 47f0c962-1361-4ee5-9c44-5073ab1d1ed9:cbe7f8d0626a42ad823328f586936991
+[I 12:11:52.052 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 12:11:52.171 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 12:11:52.171 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2023-01-10 12:11:52.233 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-10 12:11:52.233 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-10 12:11:52.233 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-10 12:11:52.233 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-10 12:11:52.233 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-10 12:11:52.233 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-10 12:11:52.237 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2023-01-10 12:11:52.237 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 12:11:52.239 NotebookApp] The port 8888 is already in use, trying another port.
+[I 12:11:52.239 NotebookApp] The port 8889 is already in use, trying another port.
+[I 12:11:52.239 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/sim_f160w
+[I 12:11:52.239 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 12:11:52.239 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8890/
+[I 12:11:52.239 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 12:11:53.273 NotebookApp] Kernel started: 063ce78e-7aea-43b6-a727-f7652d84b746, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 78380b8d-98d9-409c-8395-f24d30d2b8e4
+[I 12:13:53.264 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 12:15:53.253 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 12:19:53.263 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 12:21:53.263 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 12:23:53.263 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 12:25:53.263 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 12:27:53.264 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 14:09:53.413 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 14:11:53.406 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 14:29:53.605 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 14:31:29.780 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 14:31:53.602 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 14:33:53.604 NotebookApp] Saving file at /diff_f160w.ipynb
+[I 00:18:18.234 NotebookApp] Starting buffering for 063ce78e-7aea-43b6-a727-f7652d84b746:f5e56b36da6740bc8d73c93c66eede9a

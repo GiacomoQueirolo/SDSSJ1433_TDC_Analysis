@@ -52,7 +52,11 @@ def standard(param):
             param_title=r"$\psi_{Shear}$"
             UOM="[°]"    
         else:
-            raise TypeError("Not found "+param)
+            if "ra_" in param or "dec_" in param:
+                UOM="[\"]"
+                param_title = param
+            else:
+                <raise TypeError("Not found "+param)
         return param_title,UOM
         
 def with_main_lens_light(param):
@@ -153,4 +157,19 @@ def newProfile_with_main_lens_light(param):
             UOM="[]"
         else:
             raise TypeError("Not found "+param)
-        return param_title,UOM     
+        return param_title,UOM
+
+
+def newProfile_FS(param):
+    if not "center_" in param and not "source_light" in param:
+        return newProfile(param)
+    elif param=="center_x_source_light0":
+        param_title=r"$x_{source}$"
+        UOM = "[\"]"
+    elif param=="center_y_source_light0":
+        param_title=r"$y_{source}$"
+        UOM = "[\"]"
+    else:
+        raise TypeError("Not found "+param)
+    return param_title, UOM
+

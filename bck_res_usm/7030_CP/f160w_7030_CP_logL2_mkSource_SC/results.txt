@@ -1,0 +1,145 @@
+Results for settings_f160w_7030_CP_logL2_mkSource_SC 
+#################################
+
+Date and time of start : 01/09/2022 17:05:13
+Results obtained with HST_HRM_FreeSource.py
+Setting file used settings/settings_f160w_7030_CP_logL2_mkSource_SC
+Comments: Change wrt settings_f160w_7030_CP_logL2_mkSource_SC_ws: we try With Source BUT MOD_FreeSource
+append_MC: False
+kwargs_model:{'z_lens': 0.407, 'z_source': 2.737, 'lens_model_list': ['PEMD', 'SIS', 'SHEAR_GAMMA_PSI'], 'lens_light_model_list': ['SERSIC_ELLIPSE', 'SERSIC', 'UNIFORM'], 'point_source_model_list': ['LENSED_POSITION'], 'additional_images_list': [False], 'fixed_magnification_list': [False], 'source_light_model_list': ['SERSIC']}
+kwargs_numerics:{'supersampling_factor': 5, 'supersampling_convolution': True, 'supersampling_kernel_size': 71, 'point_source_supersampling_factor': 5}
+kwargs_constraints:{'num_point_source_list': [4], 'solver_type': 'NONE', 'joint_lens_with_light': [[0, 0, ['center_x', 'center_y']], [1, 1, ['center_x', 'center_y']]]}
+kwargs_likelihood:{'check_matched_source_position': True, 'source_position_tolerance': 0.01, 'force_no_add_image': True, 'check_positive_flux': True, 'custom_logL_addition': <custom_logL.logL_ellipticity_qphi object at 0x7f8dfe59a710>}
+PSO particles: 200
+PSO run steps: 400
+MCMC run steps: 8000
+MCMC burn in steps: 2000
+number of non-linear parameters in the MCMC process: 29
+parameters in order: ['theta_E_lens0', 'gamma_lens0', 'e1_lens0', 'e2_lens0', 'theta_E_lens1', 'gamma_ext_lens2', 'psi_ext_lens2', 'R_sersic_source_light0', 'n_sersic_source_light0', 'center_x_source_light0', 'center_y_source_light0', 'R_sersic_lens_light0', 'n_sersic_lens_light0', 'e1_lens_light0', 'e2_lens_light0', 'center_x_lens_light0', 'center_y_lens_light0', 'R_sersic_lens_light1', 'n_sersic_lens_light1', 'center_x_lens_light1', 'center_y_lens_light1', 'ra_image', 'ra_image', 'ra_image', 'ra_image', 'dec_image', 'dec_image', 'dec_image', 'dec_image']
+number of evaluations in the MCMC process: 2320000
+#################################
+theta_E_lens0 1.6223 - 0.009 + 0.0092
+gamma_lens0 2.047 - 0.06 + 0.07
+e1_lens0 0.204 - 0.025 + 0.03
+e2_lens0 -0.0163 - 0.0103 + 0.0099
+theta_E_lens1 0.239 - 0.016 + 0.017
+gamma_ext_lens2 0.082 - 0.011 + 0.013
+psi_ext_lens2 -1.339 - 0.03 + 0.03
+R_sersic_source_light0 0.315 - 0.024 + 0.027
+n_sersic_source_light0 1.104 - 0.078 + 0.209
+center_x_source_light0 0.408 - 0.027 + 0.026
+center_y_source_light0 -1.764 - 0.031 + 0.035
+R_sersic_lens_light0 1.306 - 0.069 + 0.051
+n_sersic_lens_light0 5.82 - 0.25 + 0.12
+e1_lens_light0 0.2382 - 0.0023 + 0.0024
+e2_lens_light0 -0.0706 - 0.0018 + 0.0018
+center_x_lens_light0 0.9343 - 0.0012 + 0.0012
+center_y_lens_light0 -2.05953 - 0.00082 + 0.00081
+R_sersic_lens_light1 0.299 - 0.027 + 0.035
+n_sersic_lens_light1 4.01 - 0.43 + 0.51
+center_x_lens_light1 -1.1105 - 0.0037 + 0.0038
+center_y_lens_light1 -1.8736 - 0.0032 + 0.0032
+ra_image -0.0331 - 0.007 + 0.0072
+ra_image -0.7734 - 0.0091 + 0.0093
+ra_image -0.0103 - 0.0078 + 0.0081
+ra_image 2.079 - 0.011 + 0.01
+dec_image 0.0063 - 0.0067 + 0.0064
+dec_image -2.1321 - 0.0094 + 0.009
+dec_image -3.7565 - 0.0071 + 0.0069
+dec_image -2.1516 - 0.0062 + 0.0061
+
+#################################
+kwargs_results:
+kwargs_lens 0
+theta_E: 1.621
+gamma: 1.9654
+e1: 0.1751
+e2: -0.0192
+center_x: 0.9347
+center_y: -2.0591
+
+kwargs_lens 1
+theta_E: 0.2294
+center_x: -1.1103
+center_y: -1.8747
+
+kwargs_lens 2
+gamma_ext: 0.0726
+psi_ext: -1.2993
+ra_0: 0.0
+dec_0: 0.0
+
+
+kwargs_source 0
+amp: 14.5251
+R_sersic: 0.2859
+n_sersic: 1.0017
+center_x: 0.4344
+center_y: -1.7996
+
+
+kwargs_lens_light 0
+amp: 42.5499
+R_sersic: 1.3412
+n_sersic: 5.8651
+e1: 0.2403
+e2: -0.0693
+center_x: 0.9347
+center_y: -2.0591
+
+kwargs_lens_light 1
+amp: 50.6024
+R_sersic: 0.2961
+n_sersic: 4.1368
+center_x: -1.1103
+center_y: -1.8747
+
+kwargs_lens_light 2
+amp: -0.4424
+
+
+kwargs_ps 0
+ra_image: [-0.0347 -0.7711 -0.0124  2.0858]
+dec_image: [ 0.0089 -2.1335 -3.7516 -2.1599]
+point_amp: [207.2932 188.9672 220.2244  76.3085]
+
+
+
+
+
+#################################
+0.5481192954454039 reduced X^2 of all evaluated imaging data combined
+################################
+Flux ratio for f160w_7030
+Flux ratio:0.9115936779736203 A/brightest
+Flux ratio:1.0623810764860602 C/brightest
+Flux ratio:0.3681185620082944 B/brightest
+########################
+
+#################################
+
+Time delay and fermat potential with MCMC-derived error
+$\phi_{Fermat}A$ -2.79 - 0.28 + 0.22
+$\phi_{Fermat}C$ -2.11 - 0.24 + 0.18
+$\phi_{Fermat}B$ -2.31 - 0.26 + 0.2
+$\phi_{Fermat}D$ -1.28 - 0.18 + 0.13
+$\Delta t_{A-C}$ -41.88 - 2.91 + 2.62
+$\Delta t_{A-B}$ -29.52 - 1.83 + 1.78
+$\Delta t_{A-D}$ -93.2 - 6.82 + 5.83
+
+#################################
+
+########################
+Time delay
+We are considering the standard cosmology of astropy
+time delays: -38.853387527096345 -27.847976682153302  -84.85316185642374
+Between images 0-1, 0-2, 0-3 with coord x:[-0.03471632 -0.77114606 -0.01243702  2.08587461] 
+and coord y[ 0.00896325 -2.13356969 -3.75164139 -2.15997718]
+
+#################################
+
+Source position
+Combined source ra 0.395 - 0.027 + 0.026
+Combined source dec -1.753 - 0.029 + 0.032
+
+#################################

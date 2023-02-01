@@ -1,0 +1,48 @@
+# Region file format: DS9 version 4.1
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+image
+box(65.459,	58.93999999999999, 2.6,2.6,0) # color=green  text={A} 
+box(58.5911,	42.66029999999999, 2.6,2.5999999999999983,0) # color=green  text={C} 
+box(45.696099999999994,	37.30159999999999, 2.6,2.5999999999999965,0) # color=green  text={B} 
+box(42.3847,	56.9967, 2.600000000000002,2.5999999999999965,0) # color=green  text={D} 
+# text(85,96) text={Initial image pos. (Rad=Max Freedom) } color=lime
+box(53.837622495455335, 51.357656393842305, 3.0089746697672592 , 2.776004345965545,0. ) # color=yellow  text={Source} 
+# text(85,94) text={Initial source pos. (Rad=Max Freedom) } color=yellow 
+box(49.2789,	51.970099999999995, 4.000000000000001, 4.000000000000002, 0.) # color=white  text={Main lens} 
+# text(85,92) text={Initial lens pos. (Rad=Max Freedom) } color=white 
+box(62.0, 42.442899999999995, 4.000000000000001 , 4.000000000000002,0. ) # color=violet  text={Pert. lens} 
+# text(85,90) text={Initial perturber pos. (Rad=Max Freedom) } color=violet 
+point(65.70616602435763,	58.80935600419612)# point=x 20 color=cyan dash=1
+point(58.699674670676096,	42.59304663121563)# point=x 20 color=cyan dash=1
+point(45.82964341861653,	37.25105693361021)# point=x 20 color=cyan dash=1
+point(42.093764536489545,	57.44394776273482)# point=x 20 color=cyan dash=1
+# text(85,88) text={Image pos. from PSO } color=cyan
+point(53.50420626233977,	50.84874470945153) # point=x 20 color=orange dash=1
+# text(85,86) text={Source pos. from PSO } color=orange
+point(49.25838231780966,	51.98013173311306) # point=x 20 color=magenta dash=1
+# text(85,84) text={Main lens pos. from PSO } color=magenta
+# vector(49.25838231780966,	51.98013173311306,10,140.79242544581774)  vector=1 color=springgreen dash=1
+# text(85,82) text={Main lens P.A. from PSO } color=springgreen
+# vector(49.25838231780966,	51.98013173311306,10,92.67264570740306)  vector=1 color=tomato dash=1
+# text(85,80) text={Max main lens P.A. from prior } color=tomato
+# vector(49.25838231780966,	51.98013173311306,10,182.6617893824252)  vector=1 color=cornflowerblue dash=1
+# text(85,78) text={Min main lens P.A. from prior} color=cornflowerblue
+# vector(49.25838231780966,	51.98013173311306,10,145.7096149004069)  vector=1 color=gold 
+# text(85,76) text={Main lens light P.A. from PSO } color=gold
+point(62.01371624776757,	42.30333872900617) # point=x 20 color=red dash=1
+# text(85,74) text={Pert. pos. from PSO } color=red
+circle(65.68340319260643,	58.802731488459145, 0.6128258770283358) # color=red dash=1
+circle(58.72035569426396,	42.589650537116796, 0.6128258770283348) # color=red dash=1
+circle(45.79172876832414,	37.2334596054065, 0.6128258770283347) # color=red dash=1
+circle(42.176227623110556,	57.45683348964374, 0.6128258770283358) # color=red dash=1
+# text(85,72) text={Image pos. from MCMC } color=red
+circle(53.97170842221635,	50.91118530947686, 0.3221419165773791) # color=chocolate dash=1
+# text(85,70) text={Source pos. from MCMC } color=chocolate
+point(49.258085905051104,	51.97612355375873) # point=x 20 color=darkgray dash=1
+# text(85,68) text={Main lens pos. from MCMC } color=darkgray
+# vector(49.258085905051104,	51.97612355375873,10,139.95899087788362)  vector=1 color=cyan 
+# text(85,66) text={Main lens P.A. from PSO } color=cyan 
+point(62.02063295118841,	42.30876415716486) # point=x 20 color=aquamarine dash=1
+# text(85,64) text={Pert. pos. from MCMC } color=aquamarine
+# text(20,96) text={Values from f160w_7030_CP_logL2_mkSource_SC } font="12" color=white 
+

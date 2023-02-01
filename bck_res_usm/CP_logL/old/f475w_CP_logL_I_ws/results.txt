@@ -1,0 +1,121 @@
+Results for settings_f475w_CP_logL_I_ws 
+#################################
+
+Date and time of start : 22/06/2022 14:33:48
+Results obtained with HST_HR_Main.py
+Setting file used settings/settings_f475w_CP_logL_I_ws
+Comments: Change wrt settings_f475w_CP_logL_ws: larger freedom for position of the qso (bc need more freedom for the source pos)
+append_MC: False
+kwargs_model:{'z_lens': 0.407, 'z_source': 2.737, 'lens_model_list': ['PEMD', 'SIS', 'SHEAR_GAMMA_PSI'], 'lens_light_model_list': ['SERSIC', 'UNIFORM'], 'point_source_model_list': ['LENSED_POSITION'], 'additional_images_list': [False], 'fixed_magnification_list': [False]}
+kwargs_numerics:{'supersampling_factor': 5, 'supersampling_convolution': True, 'supersampling_kernel_size': 41, 'point_source_supersampling_factor': 5}
+kwargs_constraints:{'num_point_source_list': [4], 'solver_type': 'NONE', 'joint_lens_with_light': [[0, 1, ['center_x', 'center_y']]]}
+kwargs_likelihood:{'check_matched_source_position': True, 'source_position_tolerance': 0.01, 'force_no_add_image': True, 'check_positive_flux': True, 'custom_logL_addition': <custom_logL.logL_ellipticity_aligned object at 0x7f6babf4e150>}
+PSO particles: 400
+PSO run steps: 800
+MCMC run steps: 1600
+MCMC burn in steps: 400
+number of non-linear parameters in the MCMC process: 21
+parameters in order: ['theta_E_lens0', 'gamma_lens0', 'e1_lens0', 'e2_lens0', 'center_x_lens0', 'center_y_lens0', 'theta_E_lens1', 'gamma_ext_lens2', 'psi_ext_lens2', 'R_sersic_lens_light0', 'n_sersic_lens_light0', 'center_x_lens_light0', 'center_y_lens_light0', 'ra_image', 'ra_image', 'ra_image', 'ra_image', 'dec_image', 'dec_image', 'dec_image', 'dec_image']
+number of evaluations in the MCMC process: 336000
+#################################
+theta_E_lens0 1.605 - 0.012 + 0.013
+gamma_lens0 2.122 - 0.048 + 0.052
+e1_lens0 0.176 - 0.026 + 0.029
+e2_lens0 -0.043 - 0.016 + 0.014
+center_x_lens0 0.91 - 0.016 + 0.017
+center_y_lens0 -2.0639 - 0.0028 + 0.0028
+theta_E_lens1 0.218 - 0.029 + 0.024
+gamma_ext_lens2 0.12 - 0.015 + 0.018
+psi_ext_lens2 -1.383 - 0.017 + 0.019
+R_sersic_lens_light0 4.921 - 0.13 + 0.056
+n_sersic_lens_light0 10.48 - 0.7 + 0.7
+center_x_lens_light0 -1.1368 - 0.0047 + 0.0048
+center_y_lens_light0 -1.8598 - 0.0048 + 0.0045
+ra_image 0.00103 - 0.00075 + 0.00076
+ra_image -0.75842 - 0.00081 + 0.00078
+ra_image -0.00343 - 0.0004 + 0.00034
+ra_image 2.0436 - 0.0011 + 0.0011
+dec_image -2e-05 - 0.00075 + 0.00073
+dec_image -2.13046 - 0.00078 + 0.00077
+dec_image -3.75413 - 0.00039 + 0.00042
+dec_image -2.1747 - 0.0011 + 0.001
+
+#################################
+kwargs_results:
+kwargs_lens 0
+theta_E: 1.6125
+gamma: 2.127
+e1: 0.1643
+e2: -0.0541
+center_x: 0.9153
+center_y: -2.0615
+
+kwargs_lens 1
+theta_E: 0.1989
+center_x: -1.1371
+center_y: -1.8624
+
+kwargs_lens 2
+gamma_ext: 0.1311
+psi_ext: -1.3817
+ra_0: 0.0
+dec_0: 0.0
+
+
+
+kwargs_lens_light 0
+amp: 0.0316
+R_sersic: 4.837
+n_sersic: 10.7007
+center_x: -1.1371
+center_y: -1.8624
+
+kwargs_lens_light 1
+amp: 1.0618
+
+
+kwargs_ps 0
+ra_image: [ 8.0000e-04 -7.5880e-01 -3.2000e-03  2.0447e+00]
+dec_image: [ 0.     -2.1305 -3.7542 -2.1743]
+point_amp: [215.4468 194.1586 252.8213  49.5223]
+
+
+
+
+
+#################################
+0.6911333242955657 reduced X^2 of all evaluated imaging data combined
+################################
+Flux ratio for f475w
+Flux ratio:0.9011904139675954 A/brightest
+Flux ratio:1.1734744141018096 C/brightest
+Flux ratio:0.2298588210027932 B/brightest
+########################
+
+#################################
+
+Time delay and fermat potential with MCMC-derived error
+$\phi_{Fermat}A$ -3.02 - 0.21 + 0.19
+$\phi_{Fermat}C$ -2.36 - 0.21 + 0.17
+$\phi_{Fermat}B$ -2.56 - 0.21 + 0.18
+$\phi_{Fermat}D$ -1.47 - 0.15 + 0.13
+$\Delta t_{A-C}$ -40.36 - 2.49 + 2.5
+$\Delta t_{A-B}$ -27.9 - 1.58 + 1.83
+$\Delta t_{A-D}$ -94.89 - 6.05 + 5.45
+
+#################################
+
+########################
+Time delay
+We are considering the standard cosmology of astropy
+time delays: -38.68039126023328 -26.561104493235092  -95.28066475546383
+Between images 0-1, 0-2, 0-3 with coord x:[ 8.97339234e-04 -7.58814639e-01 -3.21285141e-03  2.04476462e+00] 
+and coord y[ 8.87470533e-05 -2.13050000e+00 -3.75427735e+00 -2.17434234e+00]
+
+#################################
+
+Source position
+Combined source ra 0.389 - 0.02 + 0.02
+Combined source dec -1.674 - 0.033 + 0.037
+
+#################################

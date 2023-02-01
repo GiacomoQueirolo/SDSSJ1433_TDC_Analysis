@@ -1,0 +1,24 @@
+#3 Sigma results for settings_f160w_7030_CP_logL2_mkSource_I_SC.py 
+#################################
+
+Parameter   Value   1-sigma(-)   1-sigma(+)   3-sigma(-)   3-sigma(+)
+=========   =====   ==========   ==========   ==========   ==========
+theta_E_lens0    1.63    0.008    0.008      0.022    0.024
+gamma_lens0    1.88    0.064    0.059      0.161    0.137
+e1_lens0    0.16    0.025    0.018      0.094    0.043
+e2_lens0    -0.02    0.008    0.008      0.025    0.024
+theta_E_lens1    0.2    0.016    0.015      0.045    0.038
+gamma_ext_lens2    0.06    0.01    0.009      0.027    0.022
+psi_ext_lens2    -1.24    0.052    0.045      0.152    0.104
+R_sersic_source_light0    0.27    0.028    0.024      0.172    0.059
+n_sersic_source_light0    1.29    0.288    0.104      4.805    0.135
+R_sersic_lens_light0    1.28    0.05    0.065      0.121    0.208
+n_sersic_lens_light0    5.76    0.133    0.253      0.183    0.845
+e1_lens_light0    0.24    0.002    0.002      0.006    0.006
+e2_lens_light0    -0.07    0.002    0.002      0.005    0.005
+center_x_lens_light0    0.93    0.001    0.001      0.003    0.004
+center_y_lens_light0    -2.06    0.001    0.001      0.002    0.002
+R_sersic_lens_light1    0.3    0.032    0.026      0.096    0.063
+n_sersic_lens_light1    4.01    0.486    0.417      0.997    1.04
+center_x_lens_light1    -1.11    0.004    0.004      0.01    0.011
+center_y_lens_light1    -1.87    0.003    0.003      0.009    0.01

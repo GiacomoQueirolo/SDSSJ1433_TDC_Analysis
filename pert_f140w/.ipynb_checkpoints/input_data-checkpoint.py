@@ -1,0 +1,201 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+# Define functions to get kwargs_data, kwargs_numerics and kwargs_psf in order to obtain multi_band_list prior/indep.to the model itself
+
+
+# In[2]:
+
+
+from tools import *
+from image_manipulation import *
+from lenstronomy.LensModel.lens_model import LensModel
+
+
+# In[6]:
+
+
+def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_mask=False):
+    if saveplots:
+        savefig_path  = get_savefigpath(setting,backup_path) 
+    if isinstance(setting,str):
+        # else is already the function setting()
+        setting_module = get_setting_module(setting) 
+        setting = setting_module.setting()
+
+    image_file   = setting.data_path+setting.image_name
+    err_file     = setting.data_path+setting.err_name
+
+    image = load_fits(image_file)
+    if saveplots:
+        plot_image(image,setting,savefig_path+"/original_image.png")
+    err_image = load_fits(err_file)
+    # the masking procedure define the mask, subtract the eventual lens light profile,
+    # plot the error and image masked and return the subtracted (unmasked) image and the mask
+    mask = create_mask(image,setting)
+    # Subtract lens light (if necessary)
+    image_sub = subtract_light(image,setting)
+
+    if saveplots:
+        # Plot the subtracted and masked data image and error
+        if setting.sub:
+            plot_image(image_sub*mask,setting,savefig_path+"/image_sub_mask.png")
+        else:
+            plot_image(image_sub*mask,setting,savefig_path+"/image_mask.png")
+        plot_image(err_image*mask,setting,savefig_path+"/err_mask.png",err_image=True)
+
+    kwargs_data = { 'noise_map':   err_image,  # noise map
+                'ra_at_xy_0':  setting.ra_at_xy_0,  # RA  at (0,0) pixel
+                'dec_at_xy_0': setting.dec_at_xy_0, # DEC at (0,0) pixel 
+                'ra_shift' :   0., #shifts the coordinate system with respect to 'ra_at_xy_0'    
+                'dec_shift':   0., #shifts the coordinate system with respect to 'dec_at_xy_0'    
+                'transform_pix2angle': setting.transform_pix2angle,#Mpix2coord,  
+                # matrix to translate shift in pixel in shift in relative RA/DEC (2x2 matrix). 
+                # Make sure it's units are arcseconds or the angular units you want to model.
+                'image_data': image_sub  # 2d data vector
+              }
+    if not return_mask:
+        return kwargs_data
+    else:
+        return kwargs_data,mask
+
+
+# In[4]:
+
+
+def init_kwrg_psf(setting,saveplots=False,backup_path="backup_results"):
+    if isinstance(setting,str):
+        # else is already the function setting()
+        setting_module = get_setting_module(setting) 
+        setting = setting_module.setting()
+    psf_file     = setting.data_path+setting.psf_name 
+    err_psf_file = setting.data_path+setting.err_psf
+    psf_image = load_fits(psf_file)
+    if saveplots:
+        savefig_path  = get_savefigpath(setting,backup_path) 
+        if setting.pssf>1:
+            plot_image(psf_image,setting,savefig_path+"/psf_supersampled.png")
+        else:
+            plot_image(psf_image,setting,savefig_path+"/psf.png")
+
+    #We import the psf error image 
+    err_psf_image = load_fits(err_psf_file)
+    err_psf_image = psf_correction(err_psf_image,setting)
+    if saveplots:
+        plot_image(err_psf_image,setting,savefig_path+"/err_psf.png",err_image=True)
+
+
+    kwargs_psf = {'psf_type': "PIXEL", 
+                  'kernel_point_source':psf_image,
+                  'point_source_supersampling_factor':setting.pssf,
+                  'psf_error_map':err_psf_image}
+    return kwargs_psf
+
+
+# In[5]:
+
+
+def init_kwrg_numerics(setting):
+    if isinstance(setting,str):
+        # else is already the function setting()
+        setting_module = get_setting_module(setting) 
+        setting = setting_module.setting()
+
+    if setting.pssf==1:
+        kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
+    else:
+        kwargs_numerics = {'supersampling_factor': setting.pssf, 'supersampling_convolution': True,
+                            "supersampling_kernel_size":setting.ssks,# int (odd number), size (in regular pixel units) of the super-sampled convolution
+                            'point_source_supersampling_factor':setting.pssf} #not sure this is needed -> it is
+    return kwargs_numerics
+
+
+# In[7]:
+
+
+def init_multi_band_list(setting,saveplots=False,backup_path="backup_results"):
+    # setting can be the string with the name of the setting or the instance of the relative setting function 
+    kwargs_data     = init_kwrg_data(setting,saveplots,backup_path)
+    kwargs_psf      = init_kwrg_psf(setting,saveplots,backup_path)
+    kwargs_numerics = init_kwrg_numerics(setting)
+    multi_band_list = [[kwargs_data, kwargs_psf, kwargs_numerics]]
+    return multi_band_list
+
+
+# In[ ]:
+
+
+def init_lens_model_list(setting):
+    setting = get_setting_module(setting).setting()
+    lens_model_list = ['SIE']
+    if setting.CP:
+        lens_model_list = ['PEMD']
+    lens_model_list = [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
+    return lens_model_list
+
+def init_lens_light_model_list(setting):
+    setting = get_setting_module(setting).setting()
+    if setting.sub==False:
+        light_model_list = ["SERSIC_ELLIPSE", "SERSIC","UNIFORM"]
+    else:
+        light_model_list = ["SERSIC","UNIFORM"]
+    if hasattr(setting,"no_pert"):
+        if setting.no_pert==True:
+            light_model_list=["UNIFORM"]
+    return light_model_list
+
+def init_source_model_list(setting):
+    setting = get_setting_module(setting).setting()
+    if not setting.WS:
+        if hasattr(setting,"ellipt"):
+            if setting.ellipt:
+                source_model_list = ['SERSIC_ELLIPSE']
+            else:
+                source_model_list = ['SERSIC']
+        else:
+            source_model_list = ['SERSIC_ELLIPSE']
+    else:
+        source_model_list = None
+    return source_model_list
+
+
+# In[ ]:
+
+
+def get_kwargs_model(setting):
+    setting = get_setting_module(setting).setting()
+    lens_model_list   = init_lens_model_list(setting)
+    # Lens light profile with perturber
+    light_model_list  =  init_lens_light_model_list(setting)
+    # Source host gal
+    source_model_list = init_source_model_list(setting)
+    
+    # Source light model: point 
+    point_source_list = ['LENSED_POSITION']
+
+    kwargs_model = {'z_lens':setting.z_lens,
+                'z_source':setting.z_source,
+                'lens_model_list': lens_model_list,
+                'lens_light_model_list': light_model_list,
+                'point_source_model_list': point_source_list,
+                'additional_images_list': [False], #list of bools (same length as point_source_type_list).
+                # If True, search for additional images of the same source is conducted.
+                 'fixed_magnification_list': setting.fixed_mag,  # list of bools (same length as point_source_type_list).
+                #If True, magnification ratio of point sources is fixed to the one given by the lens model 
+                }
+    if not setting.WS:
+        kwargs_model['source_light_model_list'] = source_model_list
+    return kwargs_model
+
+
+# In[ ]:
+
+
+def init_lens_model(setting):
+    lens_model_list = init_lens_model_list(setting)
+    lensModel = LensModel(lens_model_list=lens_model_list, z_lens=setting.z_lens, z_source=setting.z_source)
+    return lensModel
+

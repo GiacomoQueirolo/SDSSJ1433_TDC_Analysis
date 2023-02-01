@@ -1,0 +1,146 @@
+[I 18:14:11.736 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 18:14:11.910 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 18:14:11.910 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2022-08-05 18:14:12.058 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-08-05 18:14:12.058 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-08-05 18:14:12.058 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-08-05 18:14:12.058 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-08-05 18:14:12.058 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-08-05 18:14:12.058 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-08-05 18:14:12.065 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2022-08-05 18:14:12.065 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 18:14:12.070 NotebookApp] The port 8888 is already in use, trying another port.
+[I 18:14:12.070 NotebookApp] The port 8889 is already in use, trying another port.
+[I 18:14:12.070 NotebookApp] The port 8890 is already in use, trying another port.
+[I 18:14:12.070 NotebookApp] The port 8891 is already in use, trying another port.
+[I 18:14:12.070 NotebookApp] The port 8892 is already in use, trying another port.
+[I 18:14:12.070 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/Article
+[I 18:14:12.070 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 18:14:12.071 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8938/
+[I 18:14:12.071 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 18:14:14.230 NotebookApp] Notebook Notes.ipynb is not trusted
+[I 18:14:14.350 NotebookApp] 302 GET /notebooks/notes_images/correction_intg_posterior.jpeg (127.0.0.1) 1.070000ms
+[I 18:14:14.503 NotebookApp] 302 GET /notebooks/notes_images/suyu_question_1.jpeg (127.0.0.1) 10.250000ms
+[I 18:14:14.505 NotebookApp] 302 GET /notebooks/notes_images/suyu_question_2.jpeg (127.0.0.1) 1.640000ms
+[I 18:14:14.506 NotebookApp] 302 GET /notebooks/notes_images/suyu_question_3.jpeg (127.0.0.1) 1.920000ms
+[I 18:14:14.585 NotebookApp] 302 GET /notebooks/notes_images/lcs_A_brighter.png (127.0.0.1) 1.420000ms
+[I 18:14:14.589 NotebookApp] 302 GET /notebooks/notes_images/posterior_discussion.jpeg (127.0.0.1) 1.040000ms
+[I 18:14:14.701 NotebookApp] 302 GET /notebooks/notes_images/polar_lcs_g.png (127.0.0.1) 1.190000ms
+[I 18:14:14.874 NotebookApp] 302 GET /notebooks/notes_images/correction_mcmc.png (127.0.0.1) 1.380000ms
+[W 18:14:14.987 NotebookApp] 404 GET /notebooks/notes_images/SPDfermat_AB.png (127.0.0.1) 12.750000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[W 18:14:15.024 NotebookApp] 404 GET /notebooks/notes_images/conv_f105w_ws_f814w_ws.png (127.0.0.1) 1.750000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[I 18:14:15.059 NotebookApp] 302 GET /notebooks/notes_images/fermat_diff_sources_comb.png (127.0.0.1) 1.310000ms
+[I 18:14:15.267 NotebookApp] 302 GET /notebooks/notes_images/f475w_2qso.png (127.0.0.1) 1.060000ms
+[I 18:14:15.277 NotebookApp] 302 GET /notebooks/notes_images/f475w_2qso_MCMC_posterior.png (127.0.0.1) 9.570000ms
+[I 18:14:15.388 NotebookApp] 302 GET /notebooks/notes_images/DfAB_CP_FixedVsFree19.png (127.0.0.1) 1.210000ms
+[I 18:14:15.390 NotebookApp] 302 GET /notebooks/notes_images/DfAB_CP_FixedVsFree21.png (127.0.0.1) 1.620000ms
+[W 18:14:15.401 NotebookApp] 404 GET /notebooks/notes_images/conv_f814w_ws_f814w_ws_fixed19.png (127.0.0.1) 11.430000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[W 18:14:15.403 NotebookApp] 404 GET /notebooks/notes_images/conv_f814w_ws_f814w_ws_fixed21.png (127.0.0.1) 2.350000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[I 18:14:15.433 NotebookApp] 302 GET /notebooks/notes_images/source_shapelet_reconstruction.png (127.0.0.1) 1.290000ms
+[W 18:14:15.995 NotebookApp] 404 GET /notebooks/notes_images/conv_f814w_ws_f105w_ws.png (127.0.0.1) 10.640000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[I 18:14:16.425 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/new_CombinedProbability.png (127.0.0.1) 1.580000ms
+[I 18:14:16.428 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/CombinedProbability_orig.png (127.0.0.1) 1.710000ms
+[I 18:14:16.428 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/MCMC_multiplication_Df_orig.png (127.0.0.1) 2.040000ms
+[I 18:14:16.431 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/CombinedProbability_same_prior.png (127.0.0.1) 1.930000ms
+[I 18:14:16.431 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/MCMC_multiplication_Df_same_prior.png (127.0.0.1) 2.040000ms
+[I 18:14:16.432 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/CombinedProbability_CP1.png (127.0.0.1) 1.070000ms
+[I 18:14:16.434 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/MCMC_multiplication_Df_CP1.png (127.0.0.1) 1.270000ms
+[I 18:14:16.435 NotebookApp] 302 GET /notebooks/notes_images/conv_f475w_ws_f475w_CP_ws.png (127.0.0.1) 1.100000ms
+[I 18:14:16.554 NotebookApp] 302 GET /notebooks/notes_images/test_uniform_prior.png (127.0.0.1) 1.000000ms
+[W 18:14:16.697 NotebookApp] 404 GET /notebooks/notes_images/f475w_CP_I_very_wrong.png (127.0.0.1) 10.490000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[I 18:14:16.774 NotebookApp] 302 GET /notebooks/notes_images/f475w_CP_I_very_wrong2.png (127.0.0.1) 0.960000ms
+[I 18:14:17.124 NotebookApp] 302 GET /notebooks/notes_images/SPD_mu_AB.png (127.0.0.1) 1.370000ms
+[I 18:14:17.126 NotebookApp] 302 GET /notebooks/notes_images/SPD_mu_AC.png (127.0.0.1) 1.140000ms
+[I 18:14:17.394 NotebookApp] 302 GET /notebooks/notes_images/cov_calculation.jpeg (127.0.0.1) 1.320000ms
+[I 18:14:17.520 NotebookApp] 302 GET /notebooks/notes_images/Combined_prob_SPIII.png (127.0.0.1) 1.090000ms
+[I 18:14:17.521 NotebookApp] 302 GET /notebooks/notes_images/PH0_off.png (127.0.0.1) 0.800000ms
+[I 18:14:17.564 NotebookApp] 302 GET /notebooks/notes_images/new_h0.png (127.0.0.1) 1.160000ms
+[I 18:14:17.566 NotebookApp] 302 GET /notebooks/notes_images/new_dt.png (127.0.0.1) 1.170000ms
+[I 18:14:17.617 NotebookApp] 302 GET /notebooks/notes_images/corner_CP_SP_I.png (127.0.0.1) 1.240000ms
+[I 18:14:17.618 NotebookApp] 302 GET /notebooks/notes_images/coner_CP_SP_I_f160w_I.png (127.0.0.1) 1.190000ms
+[I 18:14:17.620 NotebookApp] 302 GET /notebooks/notes_images/coner_CP_SP_I_f160w.png (127.0.0.1) 1.190000ms
+[I 18:14:17.664 NotebookApp] 302 GET /notebooks/notes_images/CP_f140w_CP_SP_II.png (127.0.0.1) 1.400000ms
+[I 18:14:17.666 NotebookApp] 302 GET /notebooks/notes_images/SP_III_f140w_IV.png (127.0.0.1) 1.210000ms
+[I 18:14:17.790 NotebookApp] 302 GET /notebooks/notes_images/pointing_diff_f140.png (127.0.0.1) 1.550000ms
+[I 18:14:17.792 NotebookApp] 302 GET /notebooks/notes_images/pointing_diff_f160.png (127.0.0.1) 1.120000ms
+[I 18:14:17.794 NotebookApp] 302 GET /notebooks/notes_images/lens_model_pa_f160.png (127.0.0.1) 1.380000ms
+[I 18:14:17.796 NotebookApp] 302 GET /notebooks/notes_images/pointing_diff_f814.png (127.0.0.1) 2.200000ms
+[I 18:14:17.797 NotebookApp] 302 GET /notebooks/notes_images/e1e2_from_qphi.png (127.0.0.1) 2.790000ms
+[I 18:14:17.833 NotebookApp] 302 GET /notebooks/notes_images/f105w_prior_pert.png (127.0.0.1) 0.990000ms
+[I 18:14:17.976 NotebookApp] 302 GET /notebooks/notes_images/Df_ellipt.png (127.0.0.1) 1.890000ms
+[I 18:14:17.977 NotebookApp] 302 GET /notebooks/notes_images/Df_ellipt_2.png (127.0.0.1) 1.330000ms
+[I 18:14:17.979 NotebookApp] 302 GET /notebooks/notes_images/prior_qphi.png (127.0.0.1) 1.400000ms
+[I 18:14:17.982 NotebookApp] 302 GET /notebooks/notes_images/prior_qphi_init2.png (127.0.0.1) 2.030000ms
+[I 18:14:17.982 NotebookApp] 302 GET /notebooks/notes_images/prior_qphi_new2.png (127.0.0.1) 2.400000ms
+[I 18:14:18.030 NotebookApp] 302 GET /notebooks/notes_images/init_pos_vs_post.png (127.0.0.1) 1.510000ms
+[I 18:14:18.130 NotebookApp] 302 GET /notebooks/notes_images/f475w_pert.png (127.0.0.1) 1.520000ms
+[I 18:14:18.133 NotebookApp] 302 GET /notebooks/notes_images/f105w_SP_ellipt__vs_I.png (127.0.0.1) 2.090000ms
+[I 18:14:18.134 NotebookApp] 302 GET /notebooks/notes_images/f105w_prior_qphi_ellipt_ws_vs_I_ws.png (127.0.0.1) 2.560000ms
+[I 18:14:18.134 NotebookApp] 302 GET /notebooks/notes_images/SP_ellipt_I.png (127.0.0.1) 2.940000ms
+[I 18:14:18.136 NotebookApp] 302 GET /notebooks/notes_images/FL_compared.png (127.0.0.1) 1.650000ms
+[I 18:14:18.137 NotebookApp] 302 GET /notebooks/notes_images/new_qphi_prior.png (127.0.0.1) 2.020000ms
+[I 18:14:18.140 NotebookApp] 302 GET /notebooks/notes_images/dt_err_scatter.png (127.0.0.1) 1.230000ms
+[I 18:14:18.230 NotebookApp] 302 GET /notebooks/notes_images/f140w_SP_ellipt_FL_II_qphi_prior_vs_post.png (127.0.0.1) 1.180000ms
+[I 18:14:18.232 NotebookApp] 302 GET /notebooks/notes_images/df_FL_II.png (127.0.0.1) 1.070000ms
+[I 18:14:18.235 NotebookApp] 302 GET /notebooks/notes_images/qphi_f105w_elliptIII_vs_FL_II.png (127.0.0.1) 2.110000ms
+[I 18:14:18.235 NotebookApp] 302 GET /notebooks/notes_images/FL_I.png (127.0.0.1) 2.360000ms
+[I 18:14:18.236 NotebookApp] 302 GET /notebooks/notes_images/FL_I_ellipt.png (127.0.0.1) 2.660000ms
+[I 18:14:18.236 NotebookApp] 302 GET /notebooks/notes_images/df_ellipt_II.png (127.0.0.1) 2.860000ms
+[I 18:14:18.275 NotebookApp] 302 GET /notebooks/notes_images/tot_err_vs_knt_LFII.png (127.0.0.1) 1.820000ms
+[I 18:14:18.277 NotebookApp] 302 GET /notebooks/notes_images/intrinsic_dt_err_scatter.png (127.0.0.1) 1.670000ms
+[I 18:14:18.277 NotebookApp] 302 GET /notebooks/notes_images/dt_adapted.png (127.0.0.1) 2.050000ms
+[I 18:14:18.280 NotebookApp] 302 GET /notebooks/notes_images/f160w_f105w_ellipt_III_compare_H0.png (127.0.0.1) 1.910000ms
+[I 18:14:18.331 NotebookApp] 302 GET /notebooks/notes_images/ellipt_III_f105_f140.png (127.0.0.1) 1.410000ms
+[I 18:14:18.333 NotebookApp] 302 GET /notebooks/notes_images/f140_ellipt.png (127.0.0.1) 1.200000ms
+[I 18:14:18.334 NotebookApp] 302 GET /notebooks/notes_images/f105w_ellipt_IV_vs_f160w_ellipt_I.png (127.0.0.1) 1.300000ms
+[I 18:14:18.336 NotebookApp] 302 GET /notebooks/notes_images/f140_ellipt_III_ws.png (127.0.0.1) 1.500000ms
+[I 18:14:18.337 NotebookApp] 302 GET /notebooks/notes_images/df_ellipt_III.png (127.0.0.1) 1.640000ms
+[I 18:14:18.437 NotebookApp] 302 GET /notebooks/notes_images/f475w_lens_model_pa.png (127.0.0.1) 1.100000ms
+[I 18:14:18.438 NotebookApp] 302 GET /notebooks/notes_images/angle_convention.png (127.0.0.1) 0.880000ms
+[I 18:14:18.870 NotebookApp] 302 GET /notebooks/notes_images/source_light_comp.png (127.0.0.1) 1.270000ms
+[I 18:14:18.872 NotebookApp] 302 GET /notebooks/notes_images/lnstr_angle_conv.jpeg (127.0.0.1) 1.180000ms
+[I 18:14:18.872 NotebookApp] 302 GET /notebooks/notes_images/f140w_logL_IV.png (127.0.0.1) 1.380000ms
+[I 18:14:18.950 NotebookApp] 302 GET /notebooks/notes_images/f160w_logL_III_IV.png (127.0.0.1) 1.230000ms
+[I 18:14:18.951 NotebookApp] 302 GET /notebooks/notes_images/f160w_logL_III_IV_source.png (127.0.0.1) 0.840000ms
+[I 18:14:18.953 NotebookApp] 302 GET /notebooks/notes_images/f160_f140_logL_III_IV.png (127.0.0.1) 0.880000ms
+[I 18:14:19.086 NotebookApp] 302 GET /notebooks/notes_images/cp_logl.png (127.0.0.1) 1.440000ms
+[I 18:14:19.199 NotebookApp] 302 GET /notebooks/notes_images/qphi_post_vs_res.png (127.0.0.1) 1.350000ms
+[I 18:14:19.201 NotebookApp] 302 GET /notebooks/notes_images/precision_MtLratio_.png (127.0.0.1) 1.130000ms
+[I 18:14:19.474 NotebookApp] 302 GET /notebooks/notes_images/sub_lensed_image.png (127.0.0.1) 0.980000ms
+[I 18:14:19.476 NotebookApp] 302 GET /notebooks/notes_images/sky_err.png (127.0.0.1) 0.850000ms
+[I 18:14:19.483 NotebookApp] 302 GET /notebooks/notes_images/recap_latest_res.png (127.0.0.1) 0.970000ms
+[I 18:14:19.640 NotebookApp] Kernel started: 2ba2569f-a7b2-42df-811e-056f5a8ee7d3, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 5b586cd3-6dc9-418c-ae74-e1856eca463c
+[I 20:17:13.221 NotebookApp] Starting buffering for 2ba2569f-a7b2-42df-811e-056f5a8ee7d3:48f70f809649487492b744391d4060bd
+[W 20:23:06.911 NotebookApp] Notebook Notes.ipynb is not trusted
+[I 20:23:06.965 NotebookApp] 302 GET /notebooks/notes_images/correction_intg_posterior.jpeg (127.0.0.1) 0.790000ms
+[W 20:23:07.654 NotebookApp] 404 GET /notebooks/notes_images/conv_f814w_ws_f105w_ws.png (127.0.0.1) 1.980000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[I 20:23:07.867 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/new_CombinedProbability.png (127.0.0.1) 1.070000ms
+[I 20:23:07.868 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/CombinedProbability_orig.png (127.0.0.1) 0.780000ms
+[I 20:23:07.868 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/MCMC_multiplication_Df_orig.png (127.0.0.1) 0.820000ms
+[I 20:23:07.869 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/CombinedProbability_same_prior.png (127.0.0.1) 0.890000ms
+[I 20:23:07.869 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/MCMC_multiplication_Df_same_prior.png (127.0.0.1) 0.980000ms
+[I 20:23:07.870 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/CombinedProbability_CP1.png (127.0.0.1) 1.070000ms
+[I 20:23:07.870 NotebookApp] 302 GET /notebooks/notes_images/MultipliedPost/MCMC_multiplication_Df_CP1.png (127.0.0.1) 1.180000ms
+[I 20:23:07.870 NotebookApp] 302 GET /notebooks/notes_images/conv_f475w_ws_f475w_CP_ws.png (127.0.0.1) 1.280000ms
+[I 20:23:07.924 NotebookApp] 302 GET /notebooks/notes_images/test_uniform_prior.png (127.0.0.1) 0.620000ms
+[W 20:23:07.976 NotebookApp] 404 GET /notebooks/notes_images/f475w_CP_I_very_wrong.png (127.0.0.1) 1.250000ms referer=http://localhost:8938/notebooks/Notes.ipynb
+[I 20:23:08.282 NotebookApp] 302 GET /notebooks/notes_images/cov_calculation.jpeg (127.0.0.1) 0.580000ms
+[I 20:23:08.333 NotebookApp] 302 GET /notebooks/notes_images/Combined_prob_SPIII.png (127.0.0.1) 0.720000ms
+[I 20:23:08.334 NotebookApp] 302 GET /notebooks/notes_images/PH0_off.png (127.0.0.1) 0.460000ms
+[I 20:23:08.352 NotebookApp] 302 GET /notebooks/notes_images/new_h0.png (127.0.0.1) 0.680000ms
+[I 20:23:08.352 NotebookApp] 302 GET /notebooks/notes_images/new_dt.png (127.0.0.1) 0.730000ms
+[I 20:23:08.371 NotebookApp] 302 GET /notebooks/notes_images/coner_CP_SP_I_f160w_I.png (127.0.0.1) 0.690000ms
+[I 20:23:08.371 NotebookApp] 302 GET /notebooks/notes_images/coner_CP_SP_I_f160w.png (127.0.0.1) 0.730000ms
+[I 20:23:08.679 NotebookApp] 302 GET /notebooks/notes_images/df_ellipt_III.png (127.0.0.1) 0.590000ms
+[I 20:23:08.705 NotebookApp] 302 GET /notebooks/notes_images/f475w_lens_model_pa.png (127.0.0.1) 1.110000ms
+[I 20:23:08.706 NotebookApp] 302 GET /notebooks/notes_images/angle_convention.png (127.0.0.1) 1.170000ms
+[I 20:23:08.878 NotebookApp] 302 GET /notebooks/notes_images/lnstr_angle_conv.jpeg (127.0.0.1) 0.730000ms
+[I 20:23:08.878 NotebookApp] 302 GET /notebooks/notes_images/f140w_logL_IV.png (127.0.0.1) 0.800000ms
+[I 20:23:08.913 NotebookApp] 302 GET /notebooks/notes_images/f160w_logL_III_IV.png (127.0.0.1) 1.200000ms
+[I 20:23:08.913 NotebookApp] 302 GET /notebooks/notes_images/f160w_logL_III_IV_source.png (127.0.0.1) 1.170000ms
+[I 20:23:08.913 NotebookApp] 302 GET /notebooks/notes_images/f160_f140_logL_III_IV.png (127.0.0.1) 1.180000ms
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 5dbf5388-3ccf-499a-bda6-b2e70b31855b
+[I 20:43:20.726 NotebookApp] Starting buffering for 2ba2569f-a7b2-42df-811e-056f5a8ee7d3:5fd61c6477c6439b8b28dfcb98883703

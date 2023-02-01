@@ -1,0 +1,24 @@
+#3 Sigma results for settings_f140w_CP_logL2.py 
+#################################
+
+Parameter   Value   1-sigma(-)   1-sigma(+)   3-sigma(-)   3-sigma(+)
+=========   =====   ==========   ==========   ==========   ==========
+theta_E_lens0    1.62    0.016    0.013      0.043    0.046
+gamma_lens0    2.11    0.082    0.084      0.201    0.226
+e1_lens0    0.21    0.036    0.034      0.09    0.084
+e2_lens0    -0.04    0.021    0.023      0.05    0.062
+theta_E_lens1    0.2    0.027    0.026      0.072    0.069
+gamma_ext_lens2    0.12    0.017    0.017      0.045    0.048
+psi_ext_lens2    -1.37    0.044    0.036      0.108    0.082
+R_sersic_source_light0    0.46    0.012    0.021      0.016    0.078
+n_sersic_source_light0    1.25    0.21    0.138      0.857    0.207
+R_sersic_lens_light0    1.84    0.097    0.152      0.135    0.443
+n_sersic_lens_light0    4.87    0.193    0.277      0.451    0.886
+e1_lens_light0    0.23    0.003    0.003      0.009    0.009
+e2_lens_light0    -0.06    0.003    0.003      0.008    0.008
+center_x_lens_light0    0.95    0.002    0.002      0.006    0.006
+center_y_lens_light0    -2.05    0.001    0.001      0.004    0.004
+R_sersic_lens_light1    0.36    0.168    0.052      0.354    0.112
+n_sersic_lens_light1    4.64    0.102    0.204      0.137    0.876
+center_x_lens_light1    -1.12    0.008    0.016      0.017    0.053
+center_y_lens_light1    -1.85    0.007    0.006      0.02    0.017

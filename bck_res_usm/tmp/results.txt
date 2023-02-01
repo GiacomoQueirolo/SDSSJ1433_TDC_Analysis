@@ -1,0 +1,117 @@
+Results for settings_f814w_SP_logL_III_ws 
+#################################
+
+Date and time of start : 08/06/2022 19:29:11
+Results obtained with HST_HR_Main.py
+Setting file used settings/settings_f814w_SP_logL_III_ws
+Comments: Change wrt settings_f814w_SP_ellipt_logL_II_ws: change in the code and new model
+append_MC: False
+kwargs_model:{'lens_model_list': ['SIE', 'SIS', 'SHEAR_GAMMA_PSI'], 'lens_light_model_list': ['SERSIC', 'UNIFORM'], 'point_source_model_list': ['LENSED_POSITION'], 'additional_images_list': [False], 'fixed_magnification_list': [False]}
+kwargs_numerics:{'supersampling_factor': 5, 'supersampling_convolution': True, 'supersampling_kernel_size': 41, 'point_source_supersampling_factor': 5}
+kwargs_constraints:{'num_point_source_list': [4], 'solver_type': 'NONE', 'joint_lens_with_light': [[0, 1, ['center_x', 'center_y']]]}
+kwargs_likelihood:{'check_matched_source_position': True, 'source_position_tolerance': 0.01, 'force_no_add_image': True, 'check_positive_flux': True, 'custom_logL_addition': <custom_logL.logL_ellipticity_aligned object at 0x7f95a7aaa9d0>}
+MCMC run steps: 2400
+MCMC burn in steps: 600
+number of non-linear parameters in the MCMC process: 20
+parameters in order: ['theta_E_lens0', 'e1_lens0', 'e2_lens0', 'center_x_lens0', 'center_y_lens0', 'theta_E_lens1', 'gamma_ext_lens2', 'psi_ext_lens2', 'R_sersic_lens_light0', 'n_sersic_lens_light0', 'center_x_lens_light0', 'center_y_lens_light0', 'ra_image', 'ra_image', 'ra_image', 'ra_image', 'dec_image', 'dec_image', 'dec_image', 'dec_image']
+number of evaluations in the MCMC process: 480000
+#################################
+theta_E_lens0 1.633 - 0.024 + 0.029
+e1_lens0 0.175 - 0.036 + 0.03
+e2_lens0 -0.06 - 0.024 + 0.023
+center_x_lens0 0.947 - 0.031 + 0.037
+center_y_lens0 -2.0656 - 0.0031 + 0.0035
+theta_E_lens1 0.163 - 0.043 + 0.04
+gamma_ext_lens2 0.109 - 0.014 + 0.015
+psi_ext_lens2 -1.319 - 0.033 + 0.03
+R_sersic_lens_light0 0.774 - 0.075 + 0.062
+n_sersic_lens_light0 5.72 - 0.31 + 0.2
+center_x_lens_light0 -1.1311 - 0.0015 + 0.0016
+center_y_lens_light0 -1.8508 - 0.0014 + 0.0015
+ra_image 0.00123 - 0.00057 + 0.00053
+ra_image -0.76122 - 0.00067 + 0.00068
+ra_image -0.00482 - 0.00059 + 0.00057
+ra_image 2.04142 - 0.00104 + 0.00098
+dec_image 0.00153 - 0.00058 + 0.00054
+dec_image -2.13128 - 0.00064 + 0.00064
+dec_image -3.7558 - 0.0005 + 0.00053
+dec_image -2.17687 - 0.00094 + 0.00093
+
+#################################
+kwargs_results:
+kwargs_lens 0
+theta_E: 1.6332
+e1: 0.1479
+e2: -0.0656
+center_x: 0.9425
+center_y: -2.0628
+
+kwargs_lens 1
+theta_E: 0.1534
+center_x: -1.1303
+center_y: -1.8516
+
+kwargs_lens 2
+gamma_ext: 0.1203
+psi_ext: -1.3343
+ra_0: 0.0
+dec_0: 0.0
+
+
+
+kwargs_lens_light 0
+amp: 1.9283
+R_sersic: 0.7773
+n_sersic: 5.6772
+center_x: -1.1303
+center_y: -1.8516
+
+kwargs_lens_light 1
+amp: -0.4902
+
+
+kwargs_ps 0
+ra_image: [ 1.0000e-03 -7.6130e-01 -4.7000e-03  2.0413e+00]
+dec_image: [ 1.7000e-03 -2.1317e+00 -3.7555e+00 -2.1770e+00]
+point_amp: [ 92.3349  77.8609 100.5453  22.7747]
+
+
+
+
+
+#################################
+3.2135906996438717 reduced X^2 of all evaluated imaging data combined
+################################
+Flux ratio for f814w
+Flux ratio:0.8432447394627847 A/brightest
+Flux ratio:1.0889197393766221 C/brightest
+Flux ratio:0.24665400781781513 B/brightest
+########################
+
+#################################
+
+Time delay and fermat potential with MCMC-derived error
+$\phi_{Fermat}A$ -2.546 - 0.022 + 0.024
+$\phi_{Fermat}C$ -1.981 - 0.026 + 0.024
+$\phi_{Fermat}B$ -2.155 - 0.021 + 0.018
+$\phi_{Fermat}D$ -1.076 - 0.09 + 0.109
+$\Delta t_{A-C}$ -34.74 - 2.78 + 2.93
+$\Delta t_{A-B}$ -23.98 - 2.24 + 2.41
+$\Delta t_{A-D}$ -90.57 - 6.07 + 5.26
+
+#################################
+
+########################
+Time delay
+We are considering the standard cosmology of astropy
+time delays: -33.033344641381944 -22.883936509481572  -88.51394633526019
+Between images 0-1, 0-2, 0-3 with coord x:[ 1.08577471e-03 -7.61397936e-01 -4.75378367e-03  2.04131203e+00] 
+and coord y[ 1.79375853e-03 -2.13172306e+00 -3.75556523e+00 -2.17701016e+00]
+
+#################################
+
+Source position
+Combined source ra 0.446 - 0.022 + 0.023
+Combined source dec -1.72 - 0.025 + 0.026
+
+#################################

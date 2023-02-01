@@ -1,0 +1,247 @@
+[W 2023-01-20 16:47:14.999 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-20 16:47:14.999 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-20 16:47:15.003 ServerApp] jupyterlab | extension was successfully linked.
+[W 2023-01-20 16:47:15.005 NotebookApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-20 16:47:15.005 NotebookApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-20 16:47:15.009 ServerApp] nbclassic | extension was successfully linked.
+[I 2023-01-20 16:47:15.131 ServerApp] notebook_shim | extension was successfully linked.
+[W 2023-01-20 16:47:15.141 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 2023-01-20 16:47:15.141 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[I 2023-01-20 16:47:15.142 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2023-01-20 16:47:15.143 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2023-01-20 16:47:15.143 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 2023-01-20 16:47:15.145 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2023-01-20 16:47:15.147 ServerApp] nbclassic | extension was successfully loaded.
+[I 2023-01-20 16:47:15.147 ServerApp] The port 8888 is already in use, trying another port.
+[I 2023-01-20 16:47:15.147 ServerApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program
+[I 2023-01-20 16:47:15.147 ServerApp] Jupyter Server 1.17.0 is running at:
+[I 2023-01-20 16:47:15.147 ServerApp] http://localhost:8889/lab
+[I 2023-01-20 16:47:15.147 ServerApp]  or http://127.0.0.1:8889/lab
+[I 2023-01-20 16:47:15.147 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2023-01-20 16:47:17.316 LabApp] Could not determine jupyterlab build status without nodejs
+[W 2023-01-20 16:47:18.167 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-20 16:47:19.186 ServerApp] Kernel started: 18184237-a937-4df3-8332-162a3d606327
+[I 2023-01-20 16:47:19.190 ServerApp] Kernel started: a3d1b745-7da8-4821-967f-4aa461c864e4
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: db729e9c-3515-4400-9144-84e9dd3ab908
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 60926e9d-5c48-45b5-84eb-50278ffc4f4e
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 0e8d367d-bf15-4789-93e5-87f9b8add9c5
+[I 2023-01-20 16:51:29.917 ServerApp] Saving file at /get_res.py
+[I 2023-01-20 16:53:29.960 ServerApp] Saving file at /get_res.py
+[I 2023-01-20 16:53:57.140 ServerApp] Saving file at /pso_behaviour.ipynb
+[I 2023-01-20 16:54:05.294 ServerApp] Saving file at /get_res.py
+[I 2023-01-20 18:11:53.842 ServerApp] Kernel started: 6f36da48-0427-4794-8e57-72381f92eeb1
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 7c89df12-0c0d-4970-8767-db7157fa810a
+[I 2023-01-20 18:13:37.433 ServerApp] Kernel started: 3909ae41-f57d-45b9-967b-2bf4ed1de6e2
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 22912b4c-457c-4020-afaf-112262f7d8cf
+[I 2023-01-20 18:13:53.731 ServerApp] Saving file at /mcmc_behaviour_plot.ipynb
+[I 2023-01-20 18:14:51.352 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:16:51.413 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:18:51.461 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:20:51.543 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:22:51.605 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:22:58.254 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:24:09.175 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:26:32.902 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:27:29.575 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:56:12.492 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-20 18:56:16.725 ServerApp] Starting buffering for 6f36da48-0427-4794-8e57-72381f92eeb1:c698daaf-0e2a-4da9-96ca-1f49fa499977
+[I 2023-01-20 18:56:16.726 ServerApp] Starting buffering for a3d1b745-7da8-4821-967f-4aa461c864e4:2136914d-127b-43d2-b950-d35c74b0c37c
+[I 2023-01-20 18:56:16.726 ServerApp] Starting buffering for 18184237-a937-4df3-8332-162a3d606327:dcba2f5c-00af-4b12-b238-6df99a76ce91
+[I 2023-01-20 18:56:16.726 ServerApp] Starting buffering for 3909ae41-f57d-45b9-967b-2bf4ed1de6e2:5a1750b9-7efb-40c2-9977-8348c6c0190e
+[W 2023-01-23 15:28:22.544 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-23 15:28:22.544 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-23 15:28:22.548 ServerApp] jupyterlab | extension was successfully linked.
+[W 2023-01-23 15:28:22.550 NotebookApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-23 15:28:22.550 NotebookApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-23 15:28:22.553 ServerApp] nbclassic | extension was successfully linked.
+[I 2023-01-23 15:28:22.667 ServerApp] notebook_shim | extension was successfully linked.
+[W 2023-01-23 15:28:22.678 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 2023-01-23 15:28:22.678 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[I 2023-01-23 15:28:22.679 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2023-01-23 15:28:22.680 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2023-01-23 15:28:22.680 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 2023-01-23 15:28:22.682 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2023-01-23 15:28:22.685 ServerApp] nbclassic | extension was successfully loaded.
+[I 2023-01-23 15:28:22.685 ServerApp] The port 8888 is already in use, trying another port.
+[I 2023-01-23 15:28:22.685 ServerApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program
+[I 2023-01-23 15:28:22.685 ServerApp] Jupyter Server 1.17.0 is running at:
+[I 2023-01-23 15:28:22.686 ServerApp] http://localhost:8889/lab
+[I 2023-01-23 15:28:22.686 ServerApp]  or http://127.0.0.1:8889/lab
+[I 2023-01-23 15:28:22.686 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2023-01-23 15:28:24.694 LabApp] Could not determine jupyterlab build status without nodejs
+[W 2023-01-23 15:28:25.907 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-23 15:28:26.862 ServerApp] Kernel started: 65814daa-de69-4c0f-ac61-3de71fdd3466
+[I 2023-01-23 15:28:26.863 ServerApp] Kernel started: 0e6def13-68fc-4e90-8fd5-bbab44fa3a70
+[I 2023-01-23 15:28:26.870 ServerApp] Kernel started: 856dd2ca-6060-4b64-a3ba-5347e67473f0
+[I 2023-01-23 15:28:26.872 ServerApp] Kernel started: b046651d-02ef-4119-b600-96a1584258ef
+[I 2023-01-23 15:28:27.433 ServerApp] Starting buffering for b046651d-02ef-4119-b600-96a1584258ef:473b7f3c-ebde-4e00-8bee-5e20631f3099
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 94dfd4a0-8951-4206-96c8-bfe87abb747a
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: dcadc579-0968-4e24-8fae-e3a18444d3c2
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 8409130f-13b4-475f-aa52-adfc890add9e
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 78d15a43-60ea-4722-a861-9aaafb2dc988
+[I 2023-01-23 15:28:55.244 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-23 15:29:55.880 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-23 15:30:26.293 ServerApp] Saving file at /mcmc_behaviour_plot.ipynb
+[I 2023-01-23 16:48:09.151 ServerApp] Kernel started: b115ff68-fe75-438f-b28e-d84d06b1d18f
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 71cf15d8-8384-4397-b7d9-816f8a5efd17
+[I 2023-01-23 17:42:31.473 ServerApp] Kernel started: 60c7de0d-f1d9-4efe-ba5d-21eafe12928e
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 41dcdcaf-9a7e-41a4-bca7-02ccfe225fe6
+[I 2023-01-23 17:43:07.873 ServerApp] Saving file at /image_manipulation.ipynb
+[I 2023-01-23 17:44:15.797 ServerApp] Saving file at /image_manipulation.ipynb
+[I 2023-01-23 17:47:05.862 ServerApp] Saving file at /image_manipulation.ipynb
+[I 2023-01-23 17:47:25.927 ServerApp] Saving file at /image_manipulation.ipynb
+[I 2023-01-23 17:48:08.064 ServerApp] Saving file at /image_manipulation.ipynb
+[I 2023-01-23 17:48:41.345 ServerApp] Saving file at /image_manipulation.ipynb
+[I 2023-01-23 17:50:10.849 ServerApp] Saving file at /image_manipulation.ipynb
+[I 2023-01-23 23:19:26.685 ServerApp] Kernel started: 5bb0379e-53a1-41fc-985a-a651697f91e3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: f6d57c31-6b35-44c8-b517-f573dafa7283
+[I 2023-01-23 23:19:39.491 ServerApp] Saving file at /input_data.ipynb
+[I 2023-01-23 23:20:32.933 ServerApp] Saving file at /HST_HR_Main.ipynb
+[W 2023-01-23 23:20:32.933 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-23 23:20:57.334 ServerApp] Saving file at /HST_HR_Main.ipynb
+[W 2023-01-23 23:20:57.334 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-23 23:21:02.997 ServerApp] Saving file at /input_data.ipynb
+[I 2023-01-23 23:30:08.424 ServerApp] Saving file at /input_data.ipynb
+[I 2023-01-23 23:30:09.132 ServerApp] Starting buffering for 0e6def13-68fc-4e90-8fd5-bbab44fa3a70:7612dccb-84e4-469a-90b0-326f1bd16864
+[I 2023-01-23 23:30:09.132 ServerApp] Starting buffering for b115ff68-fe75-438f-b28e-d84d06b1d18f:4b985a2a-4cd5-4ed4-a716-0c3e04597e49
+[I 2023-01-23 23:30:09.132 ServerApp] Starting buffering for 856dd2ca-6060-4b64-a3ba-5347e67473f0:1960140b-6e2e-43ca-abe2-4d3113164cfc
+[I 2023-01-23 23:30:09.132 ServerApp] Starting buffering for 5bb0379e-53a1-41fc-985a-a651697f91e3:8cffc68f-deed-46d3-bc4a-2647a10692c5
+[I 2023-01-23 23:30:09.132 ServerApp] Starting buffering for b046651d-02ef-4119-b600-96a1584258ef:cfe86b4b-d306-4840-8f23-3a02f28a5447
+[I 2023-01-23 23:30:09.133 ServerApp] Starting buffering for 65814daa-de69-4c0f-ac61-3de71fdd3466:f6499cda-38c7-4d90-9097-0b7939e0eda8
+[I 2023-01-23 23:30:09.133 ServerApp] Starting buffering for 60c7de0d-f1d9-4efe-ba5d-21eafe12928e:b6b21c0d-dae5-471a-b527-205d87fe4af4
+[C 17:15:15.681 NotebookApp] No such file or directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program/pso_behaviour.
+[I 17:15:17.878 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 17:15:17.991 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 17:15:17.991 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2023-01-26 17:15:18.063 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-26 17:15:18.063 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-26 17:15:18.063 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-26 17:15:18.063 LabApp] 'file_to_run' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-26 17:15:18.063 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-26 17:15:18.063 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-26 17:15:18.067 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2023-01-26 17:15:18.067 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 17:15:18.070 NotebookApp] The port 8888 is already in use, trying another port.
+[I 17:15:18.070 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program
+[I 17:15:18.070 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 17:15:18.070 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8889/
+[I 17:15:18.070 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 17:15:19.049 NotebookApp] Kernel started: 12d93091-e22f-40f1-9595-23bd5286dc1c, name: python3
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 7b8f8158-8a8e-4575-bf67-fdf1ada1d78d
+[I 17:17:13.467 NotebookApp] Saving file at /pso_behaviour.ipynb
+[I 17:17:27.112 NotebookApp] Saving file at /pso_behaviour.ipynb
+[I 17:17:29.454 NotebookApp] Saving file at /pso_behaviour.ipynb
+[I 17:17:30.091 NotebookApp] Starting buffering for 12d93091-e22f-40f1-9595-23bd5286dc1c:38f06f488c9b40b0898a7a2e7c3b9f36
+[I 01:08:29.840 NotebookApp] Interrupted...
+[I 01:08:29.850 NotebookApp] Shutting down 1 kernel
+[I 01:08:29.852 NotebookApp] Kernel shutdown: 12d93091-e22f-40f1-9595-23bd5286dc1c
+[I 01:08:30.066 NotebookApp] Shutting down 0 terminals
+[W 2023-01-27 13:37:53.032 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-27 13:37:53.032 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-27 13:37:53.036 ServerApp] jupyterlab | extension was successfully linked.
+[W 2023-01-27 13:37:53.039 NotebookApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-27 13:37:53.039 NotebookApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-27 13:37:53.043 ServerApp] nbclassic | extension was successfully linked.
+[I 2023-01-27 13:37:53.156 ServerApp] notebook_shim | extension was successfully linked.
+[W 2023-01-27 13:37:53.164 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 2023-01-27 13:37:53.164 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[I 2023-01-27 13:37:53.165 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2023-01-27 13:37:53.165 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2023-01-27 13:37:53.166 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 2023-01-27 13:37:53.167 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2023-01-27 13:37:53.169 ServerApp] nbclassic | extension was successfully loaded.
+[I 2023-01-27 13:37:53.169 ServerApp] The port 8888 is already in use, trying another port.
+[I 2023-01-27 13:37:53.169 ServerApp] The port 8889 is already in use, trying another port.
+[I 2023-01-27 13:37:53.170 ServerApp] The port 8890 is already in use, trying another port.
+[I 2023-01-27 13:37:53.170 ServerApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program
+[I 2023-01-27 13:37:53.170 ServerApp] Jupyter Server 1.17.0 is running at:
+[I 2023-01-27 13:37:53.170 ServerApp] http://localhost:8891/lab
+[I 2023-01-27 13:37:53.170 ServerApp]  or http://127.0.0.1:8891/lab
+[I 2023-01-27 13:37:53.170 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2023-01-27 13:37:55.053 LabApp] Could not determine jupyterlab build status without nodejs
+[W 2023-01-27 13:37:55.732 ServerApp] 404 GET /api/contents/PSO_dummytest.ipynb?content=0&1674823075405 (127.0.0.1): No such file or directory: PSO_dummytest.ipynb
+[W 2023-01-27 13:37:55.732 ServerApp] No such file or directory: PSO_dummytest.ipynb
+[W 2023-01-27 13:37:55.732 ServerApp] 404 GET /api/contents/PSO_dummytest.ipynb?content=0&1674823075405 (127.0.0.1) 2.23ms referer=http://localhost:8891/lab
+[W 2023-01-27 13:38:07.041 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-27 13:38:07.706 ServerApp] Kernel started: 61c0a509-d581-41d7-9295-d02480d6a706
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: e5b8ca32-f14f-47d9-8852-a39b49751199
+[I 2023-01-27 18:56:51.322 ServerApp] Saving file at /HST_HR_Main.ipynb
+[W 2023-01-27 18:56:51.323 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-27 18:56:52.933 ServerApp] Starting buffering for 61c0a509-d581-41d7-9295-d02480d6a706:16ecc222-97bd-45d5-afce-3e064c863610
+[I 18:13:43.561 NotebookApp] Authentication of /metrics is OFF, since other authentication is disabled.
+[W 18:13:43.684 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 18:13:43.684 NotebookApp] WARNING: The notebook server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[W 2023-01-31 18:13:43.762 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-31 18:13:43.762 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-31 18:13:43.762 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-31 18:13:43.762 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-31 18:13:43.762 LabApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-31 18:13:43.766 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2023-01-31 18:13:43.766 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 18:13:43.769 NotebookApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program
+[I 18:13:43.769 NotebookApp] Jupyter Notebook 6.4.11 is running at:
+[I 18:13:43.769 NotebookApp] http://jackqueirolo-ThinkPad-X1-Carbon-Gen-9:8888/
+[I 18:13:43.769 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 18:13:44.145 NotebookApp] Interrupted...
+[I 18:13:44.145 NotebookApp] Shutting down 0 kernels
+[I 18:13:44.145 NotebookApp] Shutting down 0 terminals
+[W 2023-01-31 18:13:48.747 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-31 18:13:48.747 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-31 18:13:48.752 ServerApp] jupyterlab | extension was successfully linked.
+[W 2023-01-31 18:13:48.754 NotebookApp] 'use_redirect_file' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2023-01-31 18:13:48.754 NotebookApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2023-01-31 18:13:48.758 ServerApp] nbclassic | extension was successfully linked.
+[I 2023-01-31 18:13:48.874 ServerApp] notebook_shim | extension was successfully linked.
+[W 2023-01-31 18:13:48.884 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[W 2023-01-31 18:13:48.884 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using authentication. This is highly insecure and not recommended.
+[I 2023-01-31 18:13:48.885 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2023-01-31 18:13:48.886 LabApp] JupyterLab extension loaded from /home/jackquei/.local/lib/python3.10/site-packages/jupyterlab
+[I 2023-01-31 18:13:48.886 LabApp] JupyterLab application directory is /home/jackquei/.local/share/jupyter/lab
+[I 2023-01-31 18:13:48.888 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2023-01-31 18:13:48.890 ServerApp] nbclassic | extension was successfully loaded.
+[I 2023-01-31 18:13:48.890 ServerApp] Serving notebooks from local directory: /home/jackquei/Desktop/UNI_Muenchen/Thesis/lenstronomy/SDSSJ1433/general_program
+[I 2023-01-31 18:13:48.891 ServerApp] Jupyter Server 1.17.0 is running at:
+[I 2023-01-31 18:13:48.891 ServerApp] http://localhost:8888/lab
+[I 2023-01-31 18:13:48.891 ServerApp]  or http://127.0.0.1:8888/lab
+[I 2023-01-31 18:13:48.891 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2023-01-31 18:13:50.791 LabApp] Could not determine jupyterlab build status without nodejs
+[W 2023-01-31 18:13:51.995 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-31 18:13:52.696 ServerApp] Kernel started: 02b91c34-21f9-411f-813d-de321750727b
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: d3c1dcf9-d83f-4826-8689-e8e09ea71501
+[I 2023-01-31 18:15:52.342 ServerApp] Saving file at /HST_HR_Main.ipynb
+[W 2023-01-31 18:15:52.343 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-31 18:16:47.869 ServerApp] Saving file at /HST_HR_Main.ipynb
+[W 2023-01-31 18:16:47.878 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-31 18:17:47.961 ServerApp] Kernel started: 9ebde617-1dc7-4038-ad4f-f66d9efca07d
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 209d23fd-fc38-4bb6-b6d2-a530874af462
+[I 2023-01-31 18:25:14.873 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-31 18:25:17.852 ServerApp] Saving file at /plotting_tools.ipynb
+[I 2023-01-31 18:26:09.564 ServerApp] Kernel started: 2deab469-c710-4490-a70f-c7cc2d093c49
+[IPKernelApp] ERROR | No such comm target registered: jupyter.widget.control
+[IPKernelApp] WARNING | No such comm: 1de34b6f-8e74-4d3d-9aa2-68b5c36e6458
+[I 2023-01-31 18:29:39.718 ServerApp] Saving file at /input_data.ipynb
+[I 2023-01-31 19:38:50.890 ServerApp] Saving file at /HST_HR_Main.ipynb
+[W 2023-01-31 19:38:50.892 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-31 19:40:38.357 ServerApp] Saving file at /tools.py
+[I 2023-01-31 19:40:50.942 ServerApp] Saving file at /HST_HR_Main.ipynb
+[W 2023-01-31 19:40:50.942 ServerApp] Notebook HST_HR_Main.ipynb is not trusted
+[I 2023-01-31 19:42:38.395 ServerApp] Saving file at /tools.py
+[I 2023-01-31 19:43:39.814 ServerApp] Saving file at /tools.py
+[I 2023-01-31 19:44:13.343 ServerApp] Saving file at /tools.py
+[I 2023-01-31 19:44:31.210 ServerApp] Saving file at /tools.py

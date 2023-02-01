@@ -1,0 +1,1 @@
+settings_f140w_CP_logL2_SC_I.py

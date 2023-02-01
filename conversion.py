@@ -1,12 +1,13 @@
 # if we consider the new image we convert the pix_coord of the objects
 # and after that obtain the angle via pix_scale
 # !! Attention: we also correct here for the difference of starting indices for array in python and ds9
+import warnings
 import numpy as np
-from tools import get_setting_module
-from image_manipulation import get_transf_matrix
 from copy import copy
 from astropy import units as u
-import warnings
+from tools import get_setting_module
+from image_manipulation import get_transf_matrix
+
 #Idea: we need to change the frame of reference such that all filters has the same coordinates
 # the only idea I have is to consider A as center for the F.O.R. since it's the easiest position the measure  
 def conv_5 (x_im_pix,y_im_pix, \
@@ -62,6 +63,9 @@ def conv_5 (x_im_pix,y_im_pix, \
 	return x_image, y_image, x_pert, y_pert, center_x, center_y, pix_scale, ra_at_xy_0, dec_at_xy_0	
 
 
+def transf(x,y,trans_mat):
+    tr_x,tr_y = trans_mat.dot([x,y]).T
+    return (tr_x,tr_y)
 
 def conv_general(ref_pos, to_convert_pos,transform_pix2angle,angle_at_pix0):
     """ 
@@ -79,27 +83,25 @@ def conv_general(ref_pos, to_convert_pos,transform_pix2angle,angle_at_pix0):
     new_to_conv    = np.zeros_like(to_convert_pos)
     
     #conv in arcsec
-    def transf(xy,trans_mat):
-        tr_x,tr_y = np.array(trans_mat).dot(xy).T
-        return np.array([tr_x,tr_y])
     for i in range(len(to_convert_pos)):
-        t_x,t_y        = transf(to_convert_pos[i],transform_pix2angle)
+        t_x,t_y        = transf(*to_convert_pos[i],transform_pix2angle)
         new_to_conv[i] = [t_x+angle_at_pix0[0],t_y+angle_at_pix0[1]]
     
-    ref_conv = [transf(ref_pos,transform_pix2angle)[i]+angle_at_pix0[i] for i in range(len(ref_pos))]
+    ref_conv = [transf(*ref_pos,transform_pix2angle)[i]+angle_at_pix0[i] for i in range(len(ref_pos))]
     angle_at_pix0 = copy(np.array(ref_conv))
     for i in range(len(new_to_conv)):
         new_to_conv[i] = new_to_conv[i] - angle_at_pix0
     return new_to_conv,pix_scale,-1*angle_at_pix0
 
 
-
+"""
 def conv_total(setting,to_conv_pos):
-    sets = get_setting_module(setting).setting()
-    transform_pix2angle = get_transf_matrix(sets.data_path+sets.image_path,in_arcsec=True)
+    sets = get_setting_module(setting,sett=True)
+    transform_pix2angle = get_transf_matrix(sets.data_path+sets.image_name,in_arcsec=True)
     angle_at_pix0 = [0,0] # should be always 0,0
     return conv_general(to_conv_pos,transform_pix2angle,angle_at_pix0)
-    
+"""
+
 def find_center(x_im,y_im): # old
     # give pix coord of images
     # return pix coord of the "center" of the image
@@ -117,21 +119,14 @@ def find_barycenter(x_im,y_im):
     
 ###### Invert conversion #################
 
-def transf(x,y,trans_mat):
-    tr_x,tr_y = trans_mat.dot([x,y]).T
-    return (tr_x,tr_y)
-
 def inv_transf(ra,dec,trans_mat):
     inv_trans_mat = np.linalg.inv(trans_mat)
     x,y = inv_trans_mat.dot([ra,dec]).T
     return (x,y)
 
-def invert_conv_5 (ra_im, dec_im,A_x,A_y,transform_pix2angle): 
-
-    ra_A, dec_A = transf(A_x-1,A_y-1,transform_pix2angle) 
-    
-    ra_im = np.array(ra_im)+ra_A
-    dec_im = np.array(dec_im)+dec_A
+def invert_conv(ra_im,dec_im,A_ra,A_dec,transform_pix2angle):    
+    ra_im = np.array(ra_im)+A_ra
+    dec_im = np.array(dec_im)+A_dec
     
     x_im =[]
     y_im =[]
@@ -144,24 +139,47 @@ def invert_conv_5 (ra_im, dec_im,A_x,A_y,transform_pix2angle):
         tr_x,tr_y = inv_transf(ra_im,dec_im,transform_pix2angle)
         x_im.append(tr_x+1)
         y_im.append(tr_y+1)
-    
+    # this are in DS9 frame of reference (+1 wrt python)
     return x_im,y_im
 
-
-
-def conv_radec_to_xy(setting_name,ra,dec):
-    sets          = get_setting_module(setting_name).setting()
-    Ara,Adec      = sets.ps_params[0][0]["ra_image"][0],sets.ps_params[0][0]["dec_image"][0]
-    neg_Ax,neg_Ay = invert_conv_5([sets.ra_at_xy_0],[sets.dec_at_xy_0],Ara-1,Adec-1,sets.transform_pix2angle)
+def conv_radec_to_xy(setting,ra,dec,ref_radec=None):
+    sets = get_setting_module(setting,sett=True)
     try:
         ra,dec = np.array(ra),np.array(dec) 
     except:
         ra,dec = np.array([ra]),np.array([dec]) 
-    
-    X,Y = invert_conv_5(ra,dec,-neg_Ax[0],-neg_Ay[0],sets.transform_pix2angle)
-    
-    return X,Y
+    # by construction ra/dec_at_xy_0 are defined by pos of A image, which is now in the 0,0 coord
+    if ref_radec is None:
+        neg_ra_ref  = -sets.ra_at_xy_0
+        neg_dec_ref = -sets.dec_at_xy_0
+    else:
+        neg_ra_ref  = -ref_radec[0]
+        neg_dec_ref = -ref_radec[1]
+    X,Y = invert_conv(ra,dec,neg_ra_ref,neg_dec_ref,sets.transform_pix2angle)
+    # convert to python coord
+    X,Y = np.array(X)-1,np.array(Y)-1
+    return X.tolist(),Y.tolist()
+"""
+def conv_xy_to_radec(setting,x,y):
+    sets      = get_setting_module(setting,sett=True)
+    Ara,Adec  = sets.ps_params[0][0]["ra_image"][0],sets.ps_params[0][0]["dec_image"][0]
+    Axy       = np.reshape(conv_radec_to_xy(sets,Ara,Adec),2).tolist()
+    radec,_,_ = conv_general(Axy, [[x,y]] ,sets.transform_pix2angle,[sets.ra_at_xy_0,sets.dec_at_xy_0])
+    return radec
+"""
 
+def conv_xy_to_radec(setting,x,y,xy_ref=None):
+    sets      = get_setting_module(setting,sett=True)
+    if xy_ref is None:
+        # this should be 0 by construction:
+        #Ara,Adec  = sets.ps_params[0][0]["ra_image"][0],sets.ps_params[0][0]["dec_image"][0]
+        #xy_ref    = np.reshape(conv_radec_to_xy(sets,Ara,Adec),2)
+        # the /2 is bc it is summed with himself if not (same res. with 2* the input and *-1 the output)
+        xy_ref = np.reshape(np.array(conv_radec_to_xy(sets,ra=-sets.ra_at_xy_0,dec=-sets.dec_at_xy_0))/2.,2)
+    radec,_,_ = conv_general(xy_ref, [[x,y]] ,sets.transform_pix2angle,[sets.ra_at_xy_0,sets.dec_at_xy_0])
+    ra,dec    = [radec_i[0] for radec_i in radec],[radec_i[1] for radec_i in radec]
+    return ra,dec
+    
 def conv_xy_from_setting1_to_setting2(x1,y1,setting1,setting2):
     """
     x1,y1    = pixel coordinatex with respect to setting1
@@ -169,7 +187,7 @@ def conv_xy_from_setting1_to_setting2(x1,y1,setting1,setting2):
     setting2 = name of setting file over which we want to convert
     """
     ra,dec = conv_total(setting1,[x1,y1])
-    x2,y2 = conv_radec_to_xy(setting2,ra,dec)
+    x2,y2  = conv_radec_to_xy(setting2,ra,dec)
     return x2,y2
 
 

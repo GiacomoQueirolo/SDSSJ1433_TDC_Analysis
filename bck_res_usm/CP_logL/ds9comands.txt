@@ -1,0 +1,4 @@
+for i in 105 140 160 475 814 ; do
+    dir=`ls f${i}w_CP_logL* -d`
+    ds9 -rgb -red $dir/caustics_f${i}w.fits -scale zscale  -green $dir/crit_curves_f${i}w.fits -scale zscale   -lock frame wcs &
+done
