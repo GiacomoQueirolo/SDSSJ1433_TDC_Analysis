@@ -242,7 +242,7 @@ def get_backend_filename(setting,backup_path="backup_results"):
     savemcmc_path = get_savemcmcpath(setting,backup_path=backup_path)
     backend_name  = create_path_from_list([savemcmc_path,
                     "backend_"+setting_name.replace("settings_","mcmc_")+".hp5"])
-    return savemcmc_path
+    return backend_name
     
 
 def get_kwargs_params(setting_name):

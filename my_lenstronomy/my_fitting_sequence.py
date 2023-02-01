@@ -214,8 +214,13 @@ class MyFittingSequence(object):
         kwargs_result = param_class.args2kwargs(result, bijective=True)
         return kwargs_result
 
-    def mcmc(self, n_burn, n_run, walkerRatio, n_walkers=None, sigma_scale=1, threadCount=1, init_samples=None,
-             re_use_samples=True, sampler_type='EMCEE', progress=True, backup_filename=None, start_from_backup=False):
+    def mcmc(self, n_burn, n_run, walkerRatio=None, n_walkers=None, sigma_scale=1, threadCount=1, init_samples=None,
+             re_use_samples=True, sampler_type='EMCEE', progress=True, backend_filename=None, start_from_backend=False,
+             # zeus specific kwargs
+             moves=None, tune=True, tolerance=0.05, patience=5,
+             maxsteps=10000, mu=1.0, maxiter=10000, pool=None,
+             vectorize=False, blobs_dtype=None, verbose=True,
+             check_walkers=True, shuffle_ensemble=True, light_mode=False):
         """
         MCMC routine
 
@@ -226,12 +231,19 @@ class MyFittingSequence(object):
         :param sigma_scale: scaling of the initial parameter spread relative to the width in the initial settings
         :param threadCount: number of CPU threads. If MPI option is set, threadCount=1
         :param init_samples: initial sample from where to start the MCMC process
-        :param re_use_samples: bool, if True, re-uses the samples described in init_samples.nOtherwise starts from scratch.
-        :param sampler_type: string, which MCMC sampler to be used. Options are: 'EMCEE'
+        :param re_use_samples: bool, if True, re-uses the samples described in init_samples.nOtherwise starts from
+         scratch.
+        :param sampler_type: string, which MCMC sampler to be used. Options are: 'EMCEE', 'ZEUS'
         :param progress: boolean, if True shows progress bar in EMCEE
-        :return: list of output arguments, e.g. MCMC samples, parameter names, logL distances of all samples specified by the specific sampler used
+        :param backend_filename: name of the HDF5 file where sampling state is saved (through emcee backend engine)
+        :type backend_filename: string
+        :param start_from_backend: if True, start from the state saved in `backup_filename`.
+         Otherwise, create a new backup file with name `backup_filename` (any already existing file is overwritten!).
+        :type start_from_backend: bool
+        :return: list of output arguments, e.g. MCMC samples, parameter names, logL distances of all samples specified
+         by the specific sampler used
         """
-        print("my mcmc version")
+
         param_class = self.param_class
         # run PSO
         mcmc_class = MySampler(likelihoodModule=self.likelihoodModule)
@@ -241,9 +253,11 @@ class MyFittingSequence(object):
         sigma_start = np.array(param_class.kwargs2args(**kwargs_sigma)) * sigma_scale
         num_param, param_list = param_class.num_param()
         if n_walkers is None:
+            if walkerRatio is None:
+                raise ValueError('MCMC sampler needs either n_walkers or walkerRatio as input argument')
             n_walkers = num_param * walkerRatio
         # run MCMC
-        if not init_samples is None and re_use_samples is True:
+        if init_samples is not None and re_use_samples is True:
             num_samples, num_param_prev = np.shape(init_samples)
             if num_param_prev == num_param:
                 print("re-using previous samples to initialize the next MCMC run.")
@@ -257,7 +271,18 @@ class MyFittingSequence(object):
         if sampler_type == 'EMCEE':
             samples, dist = mcmc_class.mcmc_emcee(n_walkers, n_run, n_burn, mean_start, sigma_start, mpi=self._mpi,
                                                   threadCount=threadCount, progress=progress, initpos=initpos,
-                                                  backup_filename=backup_filename, start_from_backup=start_from_backup)
+                                                  backend_filename=backend_filename,
+                                                  start_from_backend=start_from_backend)
+            output = [sampler_type, samples, param_list, dist]
+
+        elif sampler_type == 'ZEUS':
+            samples, dist = mcmc_class.mcmc_zeus(n_walkers, n_run, n_burn, mean_start, sigma_start,
+                                                 mpi=self._mpi, threadCount=threadCount,
+                                                 progress=progress, initpos = initpos, backend_filename = backend_filename,
+                                                 moves=moves, tune=tune, tolerance=tolerance, patience=patience,
+                                                 maxsteps=maxsteps, mu=mu, maxiter=maxiter, pool=pool,
+                                                 vectorize=vectorize, blobs_dtype=blobs_dtype, verbose=verbose,
+                                                 check_walkers=check_walkers, shuffle_ensemble=shuffle_ensemble, light_mode=light_mode)
             output = [sampler_type, samples, param_list, dist]
         else:
             raise ValueError('sampler_type %s not supported!' % sampler_type)
