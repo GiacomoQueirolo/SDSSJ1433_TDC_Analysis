@@ -1,1 +1,0 @@
-/home/jackquei/Desktop/UNI_Muenchen/Thesis/programs/extractfits.py

@@ -1,1 +1,0 @@
-/home/jackquei/Desktop/Cretinate/programmi/tmp_dir/tmp_gridclass.py
