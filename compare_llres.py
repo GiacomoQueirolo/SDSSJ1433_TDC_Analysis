@@ -70,17 +70,6 @@ if __name__=="__main__":
     for isett,sett in enumerate(setting_names):
         setting = get_setting_module(sett,1)
         print_setting(setting)
-        bandmodel = get_bandmodel(setting=setting)
-        
-        if check_if_SUB(setting):
-            q = setting.q_ll 
-            phi = setting.phi_ll
-            e1,e2 = e12_from_qphi(phi=phi,q=q)
-            R_sersic,n_sersic = .75,6. # placeholders!!
-            print("R and n for sersic profiles are set fix with placeholders for the optical images")
-        else:
-            kw_res_ll = get_kwres(setting)["kwargs_results"]["kwargs_lens_light"][0]
-            R_sersic,n_sersic,e1,e2 = kw_res_ll["R_sersic"],kw_res_ll["n_sersic"],kw_res_ll["e1"],kw_res_ll["e2"]
         kwargs_model = {'z_lens':setting.z_lens,
                 'z_source':setting.z_source,
                 'lens_model_list': None,
@@ -91,6 +80,19 @@ if __name__=="__main__":
                  'fixed_magnification_list': setting.fixed_mag,  # list of bools (same length as point_source_type_list).
                 #If True, magnification ratio of point sources is fixed to the one given by the lens model 
                 }
+        multi_band_list,mask = init_multi_band_list(setting=setting,return_mask=True)
+        bandmodel = SingleBandMultiModel(multi_band_list, kwargs_model, likelihood_mask_list=[mask.tolist()],band_index=0)  
+        
+        if check_if_SUB(setting):
+            q = setting.q_ll 
+            phi = setting.phi_ll
+            e1,e2 = e12_from_qphi(phi=phi,q=q)
+            R_sersic,n_sersic = .75,6. # placeholders!!
+            print("R and n for sersic profiles are set fix with placeholders for the optical images")
+        else:
+            kw_res_ll = get_kwres(setting)["kwargs_results"]["kwargs_lens_light"][0]
+            R_sersic,n_sersic,e1,e2 = kw_res_ll["R_sersic"],kw_res_ll["n_sersic"],kw_res_ll["e1"],kw_res_ll["e2"]
+        
         kwargs_result["kwargs_lens_light"][0]["R_sersic"] = R_sersic
         kwargs_result["kwargs_lens_light"][0]["n_sersic"] = n_sersic
         kwargs_result["kwargs_lens_light"][0]["e1"] = e1

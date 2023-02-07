@@ -61,7 +61,7 @@ def sig_H0(D_phi,D_t,k,sig_phi=0,sig_Dt=0):
     return sig_ho
 
 
-def Dt_XY (Df_XY,H0,k): 
+def Dt_XY (Df_XY,H0,k=None,setting=None): 
     """
     # Gives the time delay [days] of Y wrt X, obtained from Delta fermat, which is
     # the difference in fermat potential at position Y wrt position X (usually X=A)
@@ -73,11 +73,17 @@ def Dt_XY (Df_XY,H0,k):
     #    H0 in km/s/Mpc
     # k  : float
     #     = (1+z_lens)*H0*Dd*Ds/(c*Dds) (non-dimensional, small cosmological denpendence)
+    # setting  : class instance or string
+    #     indicate the setting file to use to obtain k with k_analytical
     # Return:
     #########
     # Dt_XY: float or array
     #     time delay btw position Y and X in days
     """
+    if k is None and setting is None:
+        raise RuntimeWarning("At least k or setting have to be given as input")
+    if k is None:
+        k = k_analytical(setting)
     Df_XY_  = copy.deepcopy(Df_XY)
     H0_     = copy.deepcopy(H0)
     Df_XY_ *= u.arcsec.to("rad")**2       # convert from arcsec^2 to rad^2
@@ -86,7 +92,7 @@ def Dt_XY (Df_XY,H0,k):
     Dt_XY  *= u.second.to("d")            # convert from sec to day
     return Dt_XY
 
-def Df_XY (Dt_XY,H0,k): 
+def Df_XY (Dt_XY,H0,k=None,setting=None):
     """
     # Gives the Delta fermat [arcsec^2] of Y wrt X, obtained from Delta time, which is
     # the difference in arrival time at position Y wrt position X (usually X=A)
@@ -98,11 +104,17 @@ def Df_XY (Dt_XY,H0,k):
     #    H0 in km/s/Mpc
     # k  : float
     #     = (1+z_lens)*H0*Dd*Ds/(c*Dds) (non-dimensional, small cosmological denpendence)
+    # setting  : class instance or string
+    #     indicate the setting file to use to obtain k with k_analytical
     # Return:
     #########
     # Df_XY: float or array
     #     differences in fermat pot btw position Y and X in arcsec^2
     """
+    if k is None and setting is None:
+        raise RuntimeWarning("At least k or setting have to be given as input")
+    if k is None:
+        k = k_analytical(setting)
     Dt_XY_  = copy.deepcopy(Dt_XY)
     H0_     = copy.deepcopy(H0)
     Dt_XY_ *= u.day.to("s")            # convert from day to sec

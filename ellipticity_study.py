@@ -22,6 +22,12 @@ from get_res import *
 from conversion import qphi_from_e1e2
 
 
+# In[ ]:
+
+
+
+
+
 # In[4]:
 
 
@@ -107,7 +113,10 @@ if __name__=="__main__":
         # compare prior and post for q,phi
         legend_elements  = []
         fg,ax = plt.subplots(2,2,figsize=(6,6))
-        corner(np.transpose([q_prior,phi_prior]),labels=["$q^{prior}$",r"$\phi^{prior}$"],show_titles=True,color="b",hist_kwargs= {"density":True},fig=fg)
+                truths_qphi = [None,None]
+        if check_if_SUB(sets):
+            truths_qphi = [sets.q_ll,sets.phi_ll]
+        corner(np.transpose([q_prior,phi_prior]),truths=truths_qphi,labels=["$q^{prior}$",r"$\phi^{prior}$"],show_titles=True,color="b",hist_kwargs= {"density":True},fig=fg)
         legend_elements.append(Patch(facecolor="b",label="Prior"))
         corner(np.transpose([q,phi]), fig=fg,color="g",hist_kwargs= {"density":True})
         legend_elements.append(Patch(facecolor="g",label="Post. from Lens model"))
@@ -126,12 +135,12 @@ if __name__=="__main__":
         #TEST -> result from PSO vs mcmc posterior of q,phi
         kw_lens         = get_kwres(sets)["kwargs_results"]["kwargs_lens"]
         e1,e2           = kw_lens[0]["e1"],kw_lens[0]["e2"]
-        q_res,phi_res   = qphi_from_e1e2(e1,e2)
+        q_res,phi_res   = qphi_from_e1e2(e1,e2,ret_deg=True)
         print("max(phi),min(phi),phi_res")
         print(max(phi),min(phi),phi_res)
         kw_lens_mcmc    = get_kwres(sets,updated=True)["kwargs_results"]
         e1_mcmc,e2_mcmc = kw_lens_mcmc["e1_lens0"],kw_lens_mcmc["e2_lens0"]
-        q_mcmc,phi_mcmc = qphi_from_e1e2(e1_mcmc,e2_mcmc)
+        q_mcmc,phi_mcmc = qphi_from_e1e2(e1_mcmc,e2_mcmc,ret_deg=True)
         print("max(phi),min(phi),phi_mcmc")
         print(max(phi),min(phi),phi_mcmc)
         fg = corner(np.transpose([q,phi]),truths=[q_res,phi_res],labels=["$q^{post}$",r"$\phi^{post}$"],color="b",truth_color="r",show_titles=True,hist_kwargs= {"density":True})

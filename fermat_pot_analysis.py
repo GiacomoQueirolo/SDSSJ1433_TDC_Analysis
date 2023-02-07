@@ -11,14 +11,19 @@
 # In[30]:
 
 
+#!/usr/bin/env python
+# coding: utf-8
+
+#  I want to correct the images position, which now is fixed, to be set to the one of the corresponding
+#  mcmc step
+
 import sys
-import numpy as np
-import os
-from lenstronomy.LensModel.lens_model import LensModel
-import importlib
-import corner
 import json
+import corner
 import argparse
+import numpy as np
+from lenstronomy.LensModel.lens_model import LensModel
+#import multiprocessing  # doesn't work with non-pickable objects, as the lensmodel and other fnct
 
 from get_res import *
 from tools import *
@@ -30,9 +35,15 @@ labels_Fermat = ["$\phi_A$", "$\phi_B$","$\phi_C$" ,"$\phi_D$"]
 labels_Df     = ["$\Delta\phi_{AB}$", "$\Delta\phi_{AC}$","$\Delta\phi_{AD}$"]
 
 
-def gen_mcmc_fermat(mcmc,param_mcmc,setting):
+def _get_fermat(mcmc_i,param_class,lensModel):
+    kwargs_result_i = param_class.args2kwargs(mcmc_i, bijective=True)
+    x_image = kwargs_result_i["kwargs_ps"][0]["ra_image"]
+    y_image = kwargs_result_i["kwargs_ps"][0]["dec_image"]
+    fermat_potential_i = lensModel.fermat_potential(x_image,y_image,kwargs_result_i["kwargs_lens"])
+    return fermat_potential_i.tolist()
+
+def gen_mcmc_fermat(mcmc,setting):
     # mcmc_prior shape = param, n_points
-    # param_mcmc = list of name of params  
     # setting   = setting module
     
     if not check_if_CP(setting):
@@ -41,27 +52,23 @@ def gen_mcmc_fermat(mcmc,param_mcmc,setting):
         print("WARNING: Considering the PEMD profile for the main lens")
         lens_model_list = ['PEMD']
     lens_model_list =[*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
-    
     lensModel = LensModel(lens_model_list=lens_model_list, 
                           z_lens=setting.z_lens,
                           z_source=setting.z_source)
 
     mcmc_fermat = []
-    for i in range(len(mcmc)):
-        kwargs_result_i = setting.produce_kwargs_result(mcmc,param_mcmc,i)
-        x_image= kwargs_result_i["kwargs_ps"][0]["ra_image"][0]
-        y_image= kwargs_result_i["kwargs_ps"][0]["dec_image"][0]
-        fermat_potential = lensModel.fermat_potential(x_image,y_image,kwargs_result_i["kwargs_lens"])
-        mcmc_fermat.append(fermat_potential.tolist())
+    param_class = get_Param(setting)
+    mcmc_fermat = [_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
+
     #I want to obtain the correct image order
     ########################################
     new_order = get_new_image_order(setting,mcmc)
-    tmp_mcmc = np.array(mcmc_fermat).transpose()
+    tmp_mcmc  = np.array(mcmc_fermat).transpose()
     mcmc_fermat = np.transpose([tmp_mcmc[i] for i in new_order])
     return mcmc_fermat.tolist() # shape: (steps, f(i) )
 
-def gen_mcmc_Df(mcmc,param_mcmc,setting):
-    mcmc_fermat = gen_mcmc_fermat(mcmc,param_mcmc,setting)
+def gen_mcmc_Df(mcmc,setting):
+    mcmc_fermat = gen_mcmc_fermat(mcmc,setting)
     mcmc_Df = np.transpose(mcmc_fermat)[1:]-np.transpose(mcmc_fermat)[0] 
     mcmc_Df = mcmc_Df.T.tolist()  #shape: steps, D_AB, D_AC, D_AD, meaning Df_i - Df_A
     return mcmc_Df
@@ -148,60 +155,37 @@ print_res.close()
 """
 
 
-# In[ ]:
+def save_Df(setting,no_plot=False):
+    print_setting(setting)
+    ############################################################
+    #This should be the same for all settings
+    if not check_if_CP(setting):
+        lens_model_list = ['SIE']
+    else:
+        print("WARNING: Considering the PEMD profile for the main lens")
+        lens_model_list = ['PEMD']
+    lens_model_list= [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
+    ############################################################
 
+    savemcmc_path = get_savemcmcpath(setting )
+    savefig_path  = get_savefigpath(setting )
 
-if __name__=="__main__":
-    #############################
-    present_program(sys.argv[0])
-    #############################
-    parser = argparse.ArgumentParser(description="Produces the stacked MCMC results for the fermat potential \
-                                     at the position of the images")
-    parser.add_argument("-c", "--cut_mcmc", type=int, dest="cut_mcmc", default=0,
-                        help="cut the first <c> steps of the mcmc to ignore them")
-    parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
-    
-    args = parser.parse_args()
+    ############################################
+    setting_name = get_setting_name(setting)
 
-    setting_names =  args.SETTING_FILES.replace(".py","")
-    cut_mcmc = int(args.cut_mcmc)
-    backup_path="backup_results"
+    #MCMC sample
+    samples_mcmc = get_mcmc_smpl(setting,backup_path)
 
-    for setting_name in setting_names:
-        ############################################################
-        #This should be the same for all settings
-        if not check_if_CP(setting_name):
-            lens_model_list = ['SIE']
-        else:     
-            print("WARNING: Considering the PEMD profile for the main lens")
-            lens_model_list = ['PEMD']
-        lens_model_list= [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
-        ############################################################
+    mcmc_fermat = gen_mcmc_fermat(samples_mcmc,setting)
+    mcmc_DfT    = np.transpose(mcmc_fermat)[1:]-np.transpose(mcmc_fermat)[0]
+    mcmc_Df     = mcmc_DfT.T
 
-        savemcmc_path = get_savemcmcpath(setting_name)
-        savefig_path  = get_savefigpath(setting_name)
+    #Save the mcmc in a file, NOTE: they are ordered A,B,C,D
+    mcmc_file_name = savemcmc_path + setting_name.replace(".py","").replace("settings","mcmc_ordered_fermat")+".json"
 
-        ############################################
-        setting_module = get_setting_module(setting_name) 
-        setting        = setting_module.setting()
-        ############################################
-
-
-        #MCMC sample
-        samples_mcmc = get_mcmc_smpl(setting_name,backup_path)
-
-        #parameters' name
-        param_mcmc  = get_mcmc_prm(setting_name,backup_path)
-
-        mcmc_fermat = gen_mcmc_fermat(samples_mcmc,param_mcmc,setting)
-        mcmc_DfT    = np.transpose(mcmc_fermat)[1:]-np.transpose(mcmc_fermat)[0] 
-        mcmc_Df     = mcmc_DfT.T
-        
-        #Save the mcmc in a file, NOTE: they are ordered A,B,C,D
-        mcmc_file_name=savemcmc_path+setting_name.replace(".py","").replace("settings","mcmc_ordered_fermat")+".json"
-        with open(mcmc_file_name, 'w+') as mcmc_file:
-            json.dump(mcmc_fermat, mcmc_file)
-
+    with open(mcmc_file_name, 'w+') as mcmc_file:
+        json.dump(mcmc_fermat, mcmc_file)
+    if plot:
         mcmc_fermat = np.array(mcmc_fermat[cut_mcmc:])
         mcmc_Df     = mcmc_Df[cut_mcmc:]
 
@@ -212,5 +196,32 @@ if __name__=="__main__":
         plot = corner.corner(mcmc_Df, labels=labels_Df, show_titles=True)
         plot.savefig(savefig_path+"Single_Df.png")
 
+
+
+if __name__=="__main__":
+    #############################
+    present_program(sys.argv[0])
+    #############################
+    parser = argparse.ArgumentParser(description="Produces the stacked MCMC results for the fermat potential at the position of the images")
+    parser.add_argument("-c", "--cut_mcmc", type=int, dest="cut_mcmc", default=0,
+                        help="cut the first <c> steps of the mcmc to ignore them")
+    parser.add_argument("-NP", "--no_plot", type=int, dest="no_plot", default=False,action="store_true",
+                        help="Ignore the corner plots")
+    parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
+    
+    args = parser.parse_args()
+    setting_names =  args.SETTING_FILES
+    cut_mcmc = int(args.cut_mcmc)
+    no_plot  = args.no_plot 
+    backup_path="backup_results"
+
+    for sett in setting_names:
+        save_Df(get_setting_module(sett,1),no_plot)
     success(sys.argv[0])
+
+
+# In[ ]:
+
+
+
 

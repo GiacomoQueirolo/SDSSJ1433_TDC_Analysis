@@ -1,0 +1,1 @@
+/home/jackquei/Desktop/UNI_Muenchen/Thesis/steps/step4_lightcurves/Remastered/my_pycs_scripts/inspect_results.py

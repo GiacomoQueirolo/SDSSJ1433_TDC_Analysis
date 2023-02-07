@@ -191,13 +191,3 @@ def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True):
     else:
         return {"read_sigma_low":kwargs_sigma_lower,"read_sigma_up":kwargs_sigma_upper}
     
-def print_res_w_err(res,err,outstr=True):
-    exp=int(str("{:.1e}".format(err)).split("e")[-1])
-    if exp>-2 and exp<1:
-        exp=-1
-    str_res = str(np.round(res,abs(exp)))+"$\pm$"+str(np.round(err,abs(exp)))
-    # to implement in case of very large/small numbers to use the scientific notation -> not the case here
-    if outstr:
-        return str_res
-    else:
-        print(str_res)

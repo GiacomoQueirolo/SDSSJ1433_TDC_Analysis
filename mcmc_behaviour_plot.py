@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 from tools import *
 from get_res import *
-from plotting_tools import base_colors
+from plotting_tools import base_colors,averaged_plot
 
 parser = argparse.ArgumentParser(description="Produces the MCMC behaviour plots of ALL parameter separately for the given filter model")
 parser.add_argument("-c", "--cut_mcmc", type=int, dest="cut_mcmc", default=0,
@@ -32,7 +32,7 @@ all_logL = args.all_logL
 
 present_program(sys.argv[0])
 
-setting      = get_setting_module(arg.SETTING_FILE).setting()
+setting      = get_setting_module(args.SETTING_FILE).setting()
 backup_path  = "backup_results/" 
 savefig_path = get_savefigpath(setting,backup_path)+"/MCMC_bhv/"
 mkdir(savefig_path)
@@ -49,7 +49,6 @@ except FileNotFoundError:
     logL_go = False
 
 
-    
 
 def my_plot_mcmc_behaviour(ax, samples_mcmc, param_mcmc, col="b", num_average=100):
     """
@@ -239,7 +238,7 @@ for i in range(len(param_mcmc)):
 
 # Time delay behaviour
 ########################
-from Dt_from_Df import Dt_XY
+from Dt_from_Df_reworked import Dt_XY
 param_mcmc_dt = ["Dt AB","Dt AC","Dt AD"]
 #D_fermat ordered as D_AB, D_AC, D_AD
 mcmc_Df = (np.array(mcmc_fermat.T[1:])-mcmc_fermat.T[0]).T
