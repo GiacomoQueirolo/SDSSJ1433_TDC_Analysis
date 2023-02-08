@@ -27,8 +27,8 @@ import pycs_get_res
 from get_res import *
 from Dt_from_Df_reworked import *
 from H0_Combined_reworked import *
-from statistical_tools as quantiles
 from plotting_tools import base_colors
+from statistical_tools import quantiles
 
 from tools_H0 import *
 from H0_Combined_reworked import get_PH0

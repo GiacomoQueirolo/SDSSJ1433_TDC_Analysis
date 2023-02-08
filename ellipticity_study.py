@@ -113,9 +113,10 @@ if __name__=="__main__":
         # compare prior and post for q,phi
         legend_elements  = []
         fg,ax = plt.subplots(2,2,figsize=(6,6))
-                truths_qphi = [None,None]
+        truths_qphi = [None,None]
         if check_if_SUB(sets):
-            truths_qphi = [sets.q_ll,sets.phi_ll]
+            setm = get_setting_module(sets,1)
+            truths_qphi = [setm.q_ll,setm.phi_ll]
         corner(np.transpose([q_prior,phi_prior]),truths=truths_qphi,labels=["$q^{prior}$",r"$\phi^{prior}$"],show_titles=True,color="b",hist_kwargs= {"density":True},fig=fg)
         legend_elements.append(Patch(facecolor="b",label="Prior"))
         corner(np.transpose([q,phi]), fig=fg,color="g",hist_kwargs= {"density":True})

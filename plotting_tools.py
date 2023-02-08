@@ -340,7 +340,9 @@ def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),co
 from tools import *
 
 def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=None,contour_levels=4,
-                      colors=base_colors,alpha=.3):
+                      colors=base_colors,alpha=.3,vaxes=None):
+    # vaxes: list of list of dict. lenght0=N* params, ordered as samples_name, lenght1=N* of values
+    #   keys: "value", "label" (optional) , "color" (optional) 
     if figsize is None:
         figsize= (3*len(samples[0]),3*len(samples[0]))
     if samples_names is None or len(samples_names)<len(samples):
@@ -401,6 +403,9 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
                             ax_ij.set_title(labels[i])
                             if i==len(samples[0])-1 :
                                 ax_ij.set_xlabel(labels[i])
+                        if vaxes is not None:
+                            for v in vaxes[i]:
+                                ax_ij.axvline(v["value"],labels=v.get("label",None),color=v.get("color",col))
                     else:
                         mat = [MCMC[j],MCMC[i]]
                         if labels is not None and k==0:
@@ -419,6 +424,10 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
                         kernel = st.gaussian_kde(values)
                         f = np.reshape(kernel(positions).T, xx.shape)
                         ax_ij.contour(xx, yy, f, levels=contour_levels,alpha=alpha,colors=col)
+                        if vaxes is not None:
+                            for vi,vj in zip(vaxes[i],vaxes[j]):
+                                ax_ij.axhline(vi["value"],labels=vi.get("label",None),color=vi.get("color",col))
+                                ax_ij.axvline(vj["value"],labels=vj.get("label",None),color=vj.get("color",col))
                         #if k==0:
                         ax_ij.set_yticks(ticks[i])
                         ax_ij.set_xticks(ticks[j])
@@ -510,4 +519,55 @@ def overplot_probability3D(prob3D_list,bins_list,labels=None,labels_list=None,ud
     plt.tight_layout()
 
     return plt
+
+
+# In[ ]:
+
+
+def averaged_plot(ax,prm_steps,col="b", num_average=100,plot_scatter=False,param_name=None,renorm=False):
+    # general plot for the behaviour of non-linear solver for 1 param
+    """
+    :param prm_steps: parameters sampled 2d numpy array
+    :param num_average: number of samples to average (should coincide with the number of samples in the emcee process)
+    :return:
+    """
+    prm_steps = np.array(prm_steps)
+    num_average = int(num_average)
+    num_steps   = len(prm_steps)
+    n_points = int((num_steps - num_steps % num_average) / num_average)
+    sliced_steps = prm_steps[:int(n_points * num_average)].reshape(n_points, num_average)
+    steps_averaged = np.average(sliced_steps, axis=1)
+    if renorm:
+        end_point = np.mean(steps_averaged)
+        steps_renormed = (steps_averaged - end_point) / np.std(steps_averaged)
+    else:
+        steps_renormed = steps_averaged
+    x=np.arange(0,len(steps_renormed)) 
+    ax.plot(x,steps_renormed, label=param_name,color=col)
+    mn = min(steps_renormed)
+    fac_mn = 1-0.002
+    if mn<0:
+        fac_mn = 1+0.002
+    mx = max(steps_renormed)
+    fac_mx = 1+0.002
+    if mx<0:
+        fac_mx = 1-0.002
+    ax.set_ylim(mn*fac_mn,mx*fac_mx)
+
+    if plot_scatter:
+        # MOD_SCATTER
+        sigma_up,sigma_down = [],[]
+        for j in range(len(steps_averaged)):
+            sg = np.std(sliced_steps[j])
+            sigma_up.append(steps_averaged[j]+sg)
+            sigma_down.append(steps_averaged[j]-sg)
+        if renorm:
+            sigma_up_ren   = (sigma_up-end_point)/np.std(steps_averaged)
+            sigma_down_ren = (sigma_down-end_point)/np.std(steps_averaged)
+        else:
+            sigma_up_ren   = sigma_up
+            sigma_down_ren = sigma_down
+        ax.fill_between(x,sigma_up_ren,sigma_down_ren,alpha=0.3,color=col,label=r"1-$\sigma$ scatter")            
+    ax.legend()
+    return ax
 

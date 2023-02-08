@@ -10,14 +10,6 @@ from get_res import *
 from fermat_pot_analysis import labels_Df
 from mag_remastered import labels as labels_mag
 
-def load_json(path,name=None,numpy=True):
-    if name:
-        path = path+"/"+name
-    with open(path,"r") as f:
-        if numpy:
-            return np.array(json.load(f))
-        else:
-            return json.load(f)
             
 if __name__=="__main__":
     ############################
@@ -32,9 +24,9 @@ if __name__=="__main__":
     for sett in settings:
         mcmc_path = get_savemcmcpath(sett)
         sett_str  = strip_setting_name(sett)
-        mag = load_json(mcmc_path,"mcmc_mag_rt_"+sett_str+".json")
+        mag    = np.array(load_whatever(mcmc_path+"/mcmc_mag_rt_"+sett_str+".json"))
         # mag is already a ratio
-        fermat = load_json(mcmc_path,"mcmc_ordered_fermat_"+sett_str+".json")
+        fermat = np.array(load_whatever(mcmc_path+"/mcmc_ordered_fermat_"+sett_str+".json"))
         # fermat is still to be taken as a difference
         fermat = fermat.T[1:] - fermat.T[0]
         fermat = fermat.T

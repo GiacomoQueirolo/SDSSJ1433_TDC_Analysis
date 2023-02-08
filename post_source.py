@@ -74,7 +74,7 @@ if __name__=="__main__":
             src_pr_x,src_pr_y = get_prior_src_pos(sett,npoints=1000,saveprior=False)
             kw_source_pso = get_source_pos_PSO(sets)
             src_pso_x,src_pso_y = kw_source_pso["source_ra"],kw_source_pso["source_dec"]
-            corner(np.array([src_pr_x,src_pr_y],lables=["Ra prior Source","Dec prior Source"],truths=[src_pso_x,src_pso_y])
+            corner(np.array([src_pr_x,src_pr_y],lables=["Ra prior Source","Dec prior Source"],truths=[src_pso_x,src_pso_y]))
             plt.savefig(savefig_path+"/Prior_source_pos.png")
         smpl_mcmc_prior.append(mcmc_prior)
         prm_mcmc_prior.append(param_mcmc)

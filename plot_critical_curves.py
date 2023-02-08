@@ -201,7 +201,7 @@ if __name__=="__main__":
         ra_caus,dec_caus = _caustic_plot(ra_points=ra_crit,dec_points=dec_crit,kwargs_lens=kwres_lens,lens_model=lens_model)
         
         kwres_images = get_kwres(sett)["kwargs_results"]["kwargs_ps"][0]
-        radec_images = [ra,dec for ra,dec in zip(kwres_images["ra_image"],kwres_images["dec_image"])]
+        radec_images = [[ra,dec] for ra,dec in zip(kwres_images["ra_image"],kwres_images["dec_image"])]
         
         kwres_source = load_whatever(get_savefigpath(sett)+"/read_source.data")
         radec_source = kwres_source["source_ra"][0],kwres_source["source_dec"][0]
@@ -227,7 +227,7 @@ if __name__=="__main__":
             images = [newpixel_grid.map_coord2pix(*radec_i) for radec_i in radec_images]
             source = newpixel_grid.map_coord2pix(*radec_source)
             for i in range(len(images)):
-                canvas = plot_cross(canvas,images)
+                canvas = plot_cross(canvas,images[i])
             canvas2    = plot_cross(canvas2,source)
 
             image_file = sett.data_path+sett.image_name

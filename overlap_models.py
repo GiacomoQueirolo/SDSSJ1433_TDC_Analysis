@@ -317,7 +317,7 @@ def compare_pos(kw_sets,npix=10,savefig=None):
     else:
         if type(savefig) is str:
             plt.savefig(savefig)
-            print("saving "savefig)
+            print("saving "+savefig)
         else:# list of savefig
             for svfg in savefig:
                 plt.savefig(svfg)

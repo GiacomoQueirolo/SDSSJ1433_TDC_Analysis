@@ -17,7 +17,7 @@ import multiprocessing
 
 from tools import *
 from input_data import init_kwrg_psf
-from grid_class import Grid_Class,Length
+from grid_class import Circ_Grid,Length
 from conversion import conv_xy_to_radec
         
 
@@ -69,12 +69,12 @@ def create_PSF(sett):
     sett.ra_at_xy0,sett.dec_at_xy0 = [0,0]
 
     aper,EE   = _get_EE(sett)
-    radius_pix = Length(max(aper),sett,input_type="radec").length_pix 
+    radius_pix = int(Length(max(aper),sett,input_type="radec").length_pix )
     if radius_pix%2==0:
         radius_pix+=1
-    new_psf    = np.zeros((radius_pix,radius_pix))
+    new_psf    = np.zeros([radius_pix,radius_pix])
 
-    grid = Grid_Class(center=[int(radius_pix/2),int(radius_pix/2)],radius=radius_pix+1,precision=.5,setting=sett,input_type="pixel")
+    grid = Circ_Grid(center=[int(radius_pix/2),int(radius_pix/2)],radius=radius_pix+1,precision=.5,setting=sett,input_type="pixel")
 
     for i_aper,r in enumerate(aper):
         print("aperture ",r)
