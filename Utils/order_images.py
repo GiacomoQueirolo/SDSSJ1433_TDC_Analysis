@@ -47,11 +47,11 @@ def image_order(ra,dec,ret_order=True,verbose=True):
 
 
 from Utils.tools import get_setting_module
-from Utils.get_res import get_mcmc_prm,get_mcmc_smpl
+from Utils.get_res import get_prm_list,get_mcmc_smpl
 
 def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results"):
     setting = get_setting_module(setting,1)
-    param_mcmc   = get_mcmc_prm(setting,backup_path)
+    param_mcmc   = get_prm_list(setting,backup_path)
     if mcmc is None:
         mcmc = get_mcmc_smpl(setting,backup_path)
     len_radec = min([300,len(mcmc)])

@@ -44,7 +44,7 @@ if __name__=="__main__":
     #lens params
     priors = []
     for sets in settings:
-        priors.append(get_prior(sets,npoints)[0])
+        priors.append(get_prior(sets,npoints))
     plt_sup_corner_lnsprm(settings,smpl_mcmc=priors,prm_mcmc=None,stnd_lnsprm=True,savefig_dir=save_dir,cut_mcmc=None,simple_legend=simple_legend)
     # Dfs
     save_dir_Df = create_dir_name(settings,save_dir=save_dir,dir_name="/Df",backup_path=".")    

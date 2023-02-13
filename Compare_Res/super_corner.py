@@ -80,9 +80,9 @@ def plt_sup_corner_lnsprm(setting_list,smpl_mcmc=None,prm_mcmc=None,stnd_lnsprm=
         print("Producing lens params superposed corner plot")
         setting_name = get_setting_name(setting_list)
         if smpl_mcmc is None:
-            smpl_mcmc = [get_mcmc_smpl(st,backup_path) for st in setting_name]
+            smpl_mcmc = [get_mcmc_smpl(st,backup_path=backup_path) for st in setting_name]
         if prm_mcmc is None:
-            prm_mcmc  = [get_mcmc_prm(st,backup_path) for st in setting_name]
+            prm_mcmc  = [get_prm_list(st,backup_path=backup_path) for st in setting_name]
         all_CP    = all([check_if_CP(st) for st in setting_name])
         all_WWS   = all([not check_if_WS(st) for st in setting_name]) # with source
         param_to_compare= ['theta_E_lens0', 'e1_lens0', 'e2_lens0','theta_E_lens1', 'gamma_ext_lens2','psi_ext_lens2']

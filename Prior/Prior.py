@@ -24,22 +24,20 @@ from Utils.tools import *
 from Posterior_analysis.mag_remastered import get_mag_mcmc
 from Posterior_analysis.fermat_pot_analysis import gen_mcmc_Df
 from Utils.order_images import get_new_image_order
-
-
+from Utils.get_res import get_prm_list
 # In[1]:
 
 
 # This parts give the mcmc of the fermat potential given the samples_mcmc prior
 
 
-def get_mcmc_Df_prior(mcmc_prior,param_mcmc,setting,Df_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
+def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
     # mcmc_prior shape = param, n_points
-    # param_mcmc = list of name of params
     # setting = setting module
     # Df_boundaries = [[min_AB,max_AB],[min_A..],..]
     # threshold_mcmc_points = int, minumum number of poiints in the boundaries
     # previous_mcmc = previous points to append to the sampling
-    mcmc_prior_Df = gen_mcmc_Df(mcmc_prior,param_mcmc,setting)  #D_AB, D_AC, D_AD, meaning Df_i - Df_A
+    mcmc_prior_Df = gen_mcmc_Df(mcmc_prior,setting)  #D_AB, D_AC, D_AD, meaning Df_i - Df_A
     if previous_mcmc is not None:
         mcmc_prior_Df=np.vstack((mcmc_prior_Df,previous_mcmc))    
     # cut points out of boundaries
@@ -75,15 +73,15 @@ def get_mcmc_Df_prior(mcmc_prior,param_mcmc,setting,Df_boundaries=None,threshold
 # In[ ]:
 
 
-def get_mcmc_mag_prior(mcmc_prior,param_mcmc,setting,mag_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
+def get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
     # mcmc_prior shape = param, n_points
-    # param_mcmc = list of name of params
     # setting = setting module
     # mag_boundaries = [[min_AB,max_AB],[min_A..],..]
     # threshold_mcmc_points = int, minumum number of poiints in the boundaries
     # previous_mcmc = previous points to append to the sampling
-    CP       = check_if_CP(setting)
-    mcmc_mag = get_mag_mcmc(mcmc_prior,param_mcmc,setting,CP)
+    CP         = check_if_CP(setting)
+    param_mcmc = get_prm_list(setting)
+    mcmc_mag   = get_mag_mcmc(mcmc_prior,param_mcmc,setting,CP)
     #I want to obtain the correct image order
     #########################################
     new_order = get_new_image_order(setting,mcmc_prior,starting_from_A=False)
@@ -174,7 +172,7 @@ def is_in_boundaries(dfi,Df_boundaries):
 
 
 def get_prior(setting,npoints):
-    params     = param_list(setting) #mcmc params like
+    params     = get_prm_list(setting) #mcmc params like
     n_images   = count_images(params)
     kw_models  = get_kwargs_to_model(setting)
     mcmc_prior = []
@@ -185,14 +183,8 @@ def get_prior(setting,npoints):
             par_min,par_max = get_boundary_param(param,kw_models)
         mcmc_prior.append(np.random.uniform(par_min,par_max,npoints))
     mcmc_prior = np.transpose(mcmc_prior).tolist()
-    return mcmc_prior, params
+    return mcmc_prior
     
-
-def param_list(setting):
-    # TODO: find a way to do that even before running the mcmc
-    # Easy way out, but depends on the modelling already been run:
-    from get_res import get_mcmc_prm
-    return get_mcmc_prm(setting)
 
 def count_images(params):
     n_im_ra  = 0
@@ -278,8 +270,8 @@ def Df_prior(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_pat
     setting = get_setting_module(setting_name).setting()
     mcmc_Df_prior_ = None 
     while True:
-        mcmc_prior,param_mcmc  = get_prior(setting,npoints)
-        mcmc_Df_prior,success,Ntot  = get_mcmc_Df_prior(mcmc_prior,param_mcmc,setting,Df_boundaries,previous_mcmc=mcmc_Df_prior_)
+        mcmc_prior  = get_prior(setting,npoints)
+        mcmc_Df_prior,success,Ntot  = get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries,previous_mcmc=mcmc_Df_prior_)
         if success[0]:
             break
         else:
@@ -328,8 +320,8 @@ def mag_prior(setting,npoints=10000,mag_boundaries=None,save_mcmc=False,backup_p
     setting = get_setting_module(setting,1)
     mcmc_mag_prior_ = None 
     while True:
-        mcmc_prior,param_mcmc = get_prior(setting,npoints)
-        mcmc_mag_prior,success,Ntot  = get_mcmc_mag_prior(mcmc_prior,param_mcmc,setting,mag_boundaries,previous_mcmc=mcmc_mag_prior_)
+        mcmc_prior = get_prior(setting,npoints)
+        mcmc_mag_prior,success,Ntot  = get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries,previous_mcmc=mcmc_mag_prior_)
         if success[0]:
             break
         else:

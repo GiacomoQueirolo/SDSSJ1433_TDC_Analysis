@@ -492,7 +492,7 @@ if __name__=="__main__":
     rewrite_read_results.rewrite_read_results(setting,cut_mcmc=0,backup_path=backup_path,save=True)
 
     for i in last_commands.progs:
-        last_commands.last_command(setting_name, i,log=True) 
+        last_commands.last_command(setting_name, i,log=True,run=True) 
 
     check_success(setting_name,verbose=1)
 
