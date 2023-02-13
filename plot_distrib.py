@@ -1,1 +1,0 @@
-/home/jackquei/Desktop/UNI_Muenchen/Thesis/steps/step4_lightcurves/Remastered/my_pycs_scripts/plot_distrib.py
