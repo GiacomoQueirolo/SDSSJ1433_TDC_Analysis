@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
+import numpy as np
 
 from Data.conversion import qphi_from_e1e2
-import numpy as np
+from Data.input_data import init_kwrg_likelihood
+
 
 class logL_ellipticity_aligned(object):
 
@@ -51,10 +51,6 @@ class logL_ellipticity_aligned(object):
         
         logL  = self.logL_ellipt(phi,phi_ll)
         return logL
-
-
-# In[ ]:
-
 
 class logL_ellipticity_qphi(object):
 
@@ -111,9 +107,6 @@ class logL_ellipticity_qphi(object):
         logL  =  self.logL_ellipt_phi(phi,phi_ll)
         logL  += self.logL_ellipt_q(q,q_ll)
         return logL
-
-
-# In[ ]:
 
 
 #################### TEST #######################
@@ -204,3 +197,19 @@ class logL_combined(object):
         logL  += self.logL_ellipt_q(q,q_ll)
         return logL
 
+
+def init_kwrg_custom_likelihood(setting,mask=None,custom="qphi"):
+    kwargs_likelihood = init_kwrg_likelihood(setting,mask)
+    phi_ll = setting.phi_ll if setting.sub else None
+    q_ll   = setting.q_ll   if setting.sub else None
+    if custom=="aligned":
+        kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_aligned(SUB=setting.sub,phi_ll=phi_ll)
+    elif custom=="qphi":
+        kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_qphi(SUB=setting.sub,phi_ll=phi_ll,q_ll=q_ll)
+    elif custom=="combined":
+        #pragma=no cover
+        raise RuntimeError("the logL_ellipticiy_combined has to be implemented")
+        #kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_combined()
+    else:
+        raise RuntimeError("The 'custom' string parameter must be :'aligned','qphi' or 'combined'(WIP). Not "+str(custom))
+    return kwargs_likelihood

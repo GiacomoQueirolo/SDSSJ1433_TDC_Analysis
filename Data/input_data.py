@@ -1,21 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 # Define functions to get kwargs_data, kwargs_numerics and kwargs_psf in order to obtain multi_band_list prior/indep.to the model itself
-
-
-# In[2]:
-
 
 from Utils.tools import *
 from Data.image_manipulation import *
 from lenstronomy.LensModel.lens_model import LensModel
-from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity
-# In[6]:
-
+#from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity
 
 def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_mask=False):
     if saveplots:
@@ -61,10 +52,6 @@ def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_m
     else:
         return kwargs_data,mask
 
-
-# In[4]:
-
-
 def init_kwrg_psf(setting,saveplots=False,backup_path="backup_results"):
     if isinstance(setting,str):
         # else is already the function setting()
@@ -94,9 +81,6 @@ def init_kwrg_psf(setting,saveplots=False,backup_path="backup_results"):
     return kwargs_psf
 
 
-# In[5]:
-
-
 def init_kwrg_numerics(setting):
     if isinstance(setting,str):
         # else is already the function setting()
@@ -118,10 +102,12 @@ def init_kwrg_likelihood(setting,mask=None):
     kwargs_likelihood["source_position_tolerance"]=0.01
     kwargs_likelihood["force_no_add_image"] = True 
     kwargs_likelihood["check_positive_flux"] = True  
+    """
     # MOD_CUSTOM_LIKE
     phi_ll = setting.phi_ll if setting.sub else None
     q_ll   = setting.q_ll   if setting.sub else None
     kwargs_likelihood["custom_logL_addition"] = logL_ellipticity(SUB=setting.sub,phi_ll=phi_ll,q_ll=q_ll)
+    """
     if mask is None:
         _,mask=init_kwrg_data(setting,saveplots=False,return_mask=True)
     if str(type(mask))=="<class 'numpy.ndarray'>":
@@ -142,10 +128,6 @@ def init_multi_band_list(setting,saveplots=False,backup_path="backup_results",re
         kwargs_data     = init_kwrg_data(setting,saveplots,backup_path,return_mask=False)
         multi_band_list = [[kwargs_data, kwargs_psf, kwargs_numerics]]
         return multi_band_list
-
-
-# In[ ]:
-
 
 def init_lens_model_list(setting):
     setting = get_setting_module(setting).setting()
@@ -179,9 +161,6 @@ def init_source_model_list(setting):
     else:
         source_model_list = None
     return source_model_list
-
-
-# In[ ]:
 
 
 def get_kwargs_model(setting):

@@ -35,8 +35,9 @@ from Utils.check_success import check_success
 from Posterior_analysis import mag_remastered
 from Data.image_manipulation import *
 #from custom_logL import logL_ellipticity_aligned as logL_ellipticity # MOD_CUSTOM_LIKE
-from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity # MOD_CUSTOM_LIKE_II
-from Data.input_data import init_lens_model,init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_kwargs_model,init_kwrg_likelihood
+#from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity # MOD_CUSTOM_LIKE_II
+from Data.input_data import init_lens_model,init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_kwargs_model
+from Custom_Model.custom_logL import init_kwrg_custom_likelihood
 
 
 from Posterior_analysis.source_pos import get_source_pos_MCMC
@@ -195,7 +196,8 @@ _prior_likelihood
 
     # ### Parameters for the PSO/MCMC runs
     
-    kwargs_likelihood = init_kwrg_likelihood(setting,mask)
+    #kwargs_likelihood = init_kwrg_likelihood(setting,mask)
+    kwargs_likelihood = init_kwrg_custom_likelihood(setting,mask,custom="qphi")
      
 
     ######
