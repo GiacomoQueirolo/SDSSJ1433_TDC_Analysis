@@ -20,10 +20,7 @@ from Data.input_data import init_kwrg_psf
 from MassToLight.grid_class import Circ_Grid,Length
 from Data.conversion import conv_xy_to_radec
         
-
-
-# In[ ]:
-
+from Utils.math_tools import sqrt_sum_list
 
 def _get_EE(setting):
     setting   = get_setting_module(setting,1)
@@ -61,7 +58,25 @@ def flux_in_grid(lens_light_pix,grid):
     flux = np.sum([lens_light_pix[i[0]][i[1]] for i in grid.get_degraded_pixel_grid()])
     return flux
     
-
+def resample_psf_grid(sett,subgrid_deg_pixel):
+    # we want the resampled version of the grid given the original pixel resolution
+    # which we have in the error frame of the PSF
+    
+    # exact pixel index in the orig resolution
+    index = np.array(subgrid_deg_pixel)/sett.pssf
+    # integer version of the pixel index
+    pix_index = index.astype(int)
+    # we only want the unique values, so that we can count the occurence
+    unique_pix = np.unique(pix_index,axis=0)
+    
+    resampled_psf_grid = []
+    for p in unique_pix:
+        # how many subpixel are there in this pixel
+        hmsp = len(np.where(pix_index==p)[0])
+        if hmsp>sett.pssf:
+            resampled_psf_grid.append(p)
+    return resampled_psf_grid
+    
 def compare_EE(sett):
     print_setting(sett)
     sett = get_setting_module(sett,1)
@@ -71,19 +86,22 @@ def compare_EE(sett):
         sett.pix_scale = sett.pix_scale/sett.pssf
         sett.transform_pix2angle = sett.transform_pix2angle / sett.pssf
     ###########
-    psf_image  = init_kwrg_psf(sett,saveplots=False)["kernel_point_source"]
-    center     = np.array(np.where(psf_image==np.max(psf_image))).reshape(2).tolist()
-    center_radec =  np.reshape(conv_xy_to_radec(sett,*center),2).tolist()
-    sett.ra_at_xy0,sett.dec_at_xy0 = center_radec
+    kwrg_psf   = init_kwrg_psf(sett,saveplots=False)
+    psf_image  = kwrg_psf["kernel_point_source"]
+    err_psf    = kwrg_psf["psf_error_map"]
     
     aper,EE    = _get_EE(sett)
     naxis1,naxis2 = len(psf_image),len(psf_image[0])
     if naxis1!=naxis2:
         raise RuntimeError("psf is not a square?")
     naxis = naxis1
-    
+    brightest     = np.array(np.where(psf_image==np.max(psf_image))).reshape(2).tolist()
     print("center image  |   brightest pixel")
-    print(naxis/2.,"  |   ",center)
+    print(naxis/2.,"  |   ",brightest)
+    
+    center       = [naxis/2.,naxis/2.]
+    center_radec =  np.reshape(conv_xy_to_radec(sett,*center),2).tolist()
+    sett.ra_at_xy0,sett.dec_at_xy0 = center_radec
     ############
     # PSF_small: we cut out the EE which are not in the PSF
     radius_pix = Length(max(aper),sett,input_type="radec").length_pix 
@@ -96,11 +114,13 @@ def compare_EE(sett):
     ############
     grid = Circ_Grid(center=center,radius=radius_pix+1,edge=.5,setting=sett,input_type="pixel")
     EE_psf = []
+    err_EE = []
     daper = [aper[i+1]-aper[i] for i in range(len(aper[:-1]))]
     daper.append(daper[-1])
     for r_i,r in enumerate(aper):
         print("aperture ",r)
         flux = []
+        err_flux = []
         previous_center=[]
         for dither_i in range(10):
             rnd_bound = .5
@@ -114,13 +134,18 @@ def compare_EE(sett):
                 break
             subgrid = grid.get_subgrid(r,newCenter=newCenter,input_type="radec")
             subgrid_deg_pixel = subgrid.get_degraded_pixel_circ_grid()
+            if int(sett.pssf)==1:
+                Err_subgrid_deg_pixel = subgrid_deg_pixel
+            else:
+                Err_subgrid_deg_pixel = resample_psf_grid(sett,subgrid_deg_pixel)
             _flux = np.sum([psf_image[i[0]][i[1]] for i in subgrid_deg_pixel])
+            _err  = [err_psf[i[0]][i[1]] for i in Err_subgrid_deg_pixel]
             flux.append(_flux)
+            err_flux.append(sqrt_sum_list(_err))#=sqrt(SUM(sig_pixi**2))
             previous_center.append(newCenter)
         EE_psf.append(np.average(flux))
-        err_EE.append(np.std(flux))
-    
-    EE_psf = np.array(EE_psf)*max(EE)/max(EE_psf)
+        err_EE.append(sqrt_sum_list(err_flux)/np.sqrt(len(flux)-1))
+    EE_psf = np.array(EE_psf)*max(EE)/max(EE_psf)	
     err_EE = np.array(err_EE)*max(EE)/max(EE_psf)
     plt.scatter(aper,EE,label="theo. EE")
     plt.scatter(aper,EE_psf,color="darkorange",label="measured EE")

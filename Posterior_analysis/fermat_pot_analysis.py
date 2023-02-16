@@ -9,13 +9,14 @@ import json
 import corner
 import argparse
 import numpy as np
+import multiprocess
 from lenstronomy.LensModel.lens_model import LensModel
 #import multiprocessing  # doesn't work with non-pickable objects, as the lensmodel and other fnct
 
 from Utils.get_res import *
 from Utils.tools import *
 from Utils.order_images import get_new_image_order
-
+from Data.Param import get_Param
 #labels_Fermat = ["$\phi_{Fermat}A$", "$\phi_{Fermat}B$","$\phi_{Fermat}C$" ,"$\phi_{Fermat}D$"]
 #labels_Df     = ["$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} AD$"]
 labels_Fermat = ["$\phi_A$", "$\phi_B$","$\phi_C$" ,"$\phi_D$"]
@@ -45,7 +46,11 @@ def gen_mcmc_fermat(mcmc,setting):
 
     mcmc_fermat = []
     param_class = get_Param(setting)
-    mcmc_fermat = [_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
+    pool = multiprocess.Pool()
+    def getferm(mcmc_i):
+        return _get_fermat(mcmc_i,param_class,lensModel)
+        
+    mcmc_fermat = pool.map(getferm,mcmc) #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
 
     #I want to obtain the correct image order
     ########################################

@@ -30,8 +30,9 @@ def _get_Param(setting):
 
     return param_class
 
-def get_Param(setting,save=True):
-    try:
+def get_Param(setting):#,save=True):
+    # problem: can't pickle objects
+    """try:
         with open(get_savefigpath(setting)+"/Prm_class.pkl","rb") as f:
             param_class = pickle.load(f)
     except FileNotFoundError:
@@ -39,7 +40,8 @@ def get_Param(setting,save=True):
         if save:
             with open(get_savefigpath(setting)+"/Prm_class.pkl","wb") as f:
                 pickle.dump(param_class,f)
-    return param_class
+    """
+    return _get_Param(setting)
 
 def get_prm_list(setting,backup_path="./backup_path"):
     param_class = get_Param(setting)

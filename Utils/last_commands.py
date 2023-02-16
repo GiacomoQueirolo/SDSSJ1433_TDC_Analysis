@@ -56,7 +56,7 @@ def last_command(setting_name,prog,log=False,run=False):
         now = datetime.now()
         str_com+=" &> logs/"+setting_name_wo_py.replace("settings_","")+"_"+prog+"_"+str(now.strftime("%d%b"))+".log "
     if "fermat_pot"  not in prog and "rewrite_read_results" not in prog :
-        str_com+" &"
+        str_com+=" &"
     if run:
         os.system(str_com)
     return(str_com)

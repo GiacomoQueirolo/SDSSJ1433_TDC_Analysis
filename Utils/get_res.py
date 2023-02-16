@@ -21,11 +21,12 @@ def load_whatever(name):
 
 def get_kwres(setting_name,updated=False,backup_path="backup_results"):
     setting_name  = get_setting_name(setting_name)
-    savefig_path = get_savefigpath(setting_name,backup_path)
     if not updated:
+        savefig_path = get_savefigpath(setting_name,backup_path)
         name =  savefig_path+'/read_results.data'
     else:
-        name =  savefig_path+'/read_results_updated.data'
+        savemcmc_path = get_savemcmcpath(setting_name,backup_path)
+        name =  savemcmc_path+'/read_results_updated.data'
     kwargs_result = load_whatever(name)
     return {"kwargs_results":kwargs_result}
 
