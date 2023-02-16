@@ -13,8 +13,7 @@
 from Utils.tools import *
 from Data.image_manipulation import *
 from lenstronomy.LensModel.lens_model import LensModel
-
-
+from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity
 # In[6]:
 
 
@@ -112,8 +111,23 @@ def init_kwrg_numerics(setting):
                             'point_source_supersampling_factor':setting.pssf} #not sure this is needed -> it is
     return kwargs_numerics
 
-
-# In[7]:
+def init_kwrg_likelihood(setting,mask=None):
+    setting = get_setting_module(setting,1)
+    kwargs_likelihood = {}
+    kwargs_likelihood["check_matched_source_position"]=True
+    kwargs_likelihood["source_position_tolerance"]=0.01
+    kwargs_likelihood["force_no_add_image"] = True 
+    kwargs_likelihood["check_positive_flux"] = True  
+    # MOD_CUSTOM_LIKE
+    phi_ll = setting.phi_ll if setting.sub else None
+    q_ll   = setting.q_ll   if setting.sub else None
+    kwargs_likelihood["custom_logL_addition"] = logL_ellipticity(SUB=setting.sub,phi_ll=phi_ll,q_ll=q_ll)
+    if mask is None:
+        _,mask=init_kwrg_data(setting,saveplots=False,return_mask=True)
+    if str(type(mask))=="<class 'numpy.ndarray'>":
+        mask=mask.tolist()
+    kwargs_likelihood["image_likelihood_mask_list"] =  [mask]
+    return kwargs_likelihood
 
 
 def init_multi_band_list(setting,saveplots=False,backup_path="backup_results",return_mask=False):
@@ -211,13 +225,11 @@ def get_kwargs_constraints(setting):
     return kwargs_constraints
 
 
-# In[ ]:
-
-
 def init_lens_model(setting,lens_model_list=None):
     setting = get_setting_module(setting,True)
     if lens_model_list is None:
         lens_model_list = init_lens_model_list(setting)
     lensModel = LensModel(lens_model_list=lens_model_list, z_lens=setting.z_lens, z_source=setting.z_source)
     return lensModel
+
 

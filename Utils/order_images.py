@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
 
 # A general way to order the images in a standardised order
 
 
-# In[38]:
-
-
 import numpy as np
+from Utils.tools import get_setting_module
+from Utils.get_res import get_mcmc_smpl
+from Data.Param import get_prm_list
+
 #wo A order   x    B       ,     C      ,    D
 ra_ordered  = [-0.00221745, -0.76000637, 2.04098104 ] 
 dec_ordered = [-3.75414086, -2.12910109, -2.17638207 ]
@@ -46,8 +45,6 @@ def image_order(ra,dec,ret_order=True,verbose=True):
 # In[ ]:
 
 
-from Utils.tools import get_setting_module
-from Utils.get_res import get_prm_list,get_mcmc_smpl
 
 def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results"):
     setting = get_setting_module(setting,1)

@@ -11,8 +11,11 @@ from matplotlib.patches import Patch
 #my libs
 from Utils.tools import *
 from Utils.get_res import *
-from Data.conversion import qphi_from_e1e2
 from Utils.get_param_title import newProfile
+
+from Data.Param import get_prm_list
+from Data.conversion import qphi_from_e1e2
+
 from Plots.plotting_tools import my_corner_general,base_colors
 from Posterior_analysis.fermat_pot_analysis import labels_Df as  param_names    
 #################################################################

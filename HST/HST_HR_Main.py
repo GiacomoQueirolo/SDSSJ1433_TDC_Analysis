@@ -36,7 +36,7 @@ from Posterior_analysis import mag_remastered
 from Data.image_manipulation import *
 #from custom_logL import logL_ellipticity_aligned as logL_ellipticity # MOD_CUSTOM_LIKE
 from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity # MOD_CUSTOM_LIKE_II
-from Data.input_data import init_lens_model,init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_kwargs_model
+from Data.input_data import init_lens_model,init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_kwargs_model,init_kwrg_likelihood
 
 
 from Posterior_analysis.source_pos import get_source_pos_MCMC
@@ -172,7 +172,7 @@ if __name__=="__main__":
 
 
     kwargs_data,mask = init_kwrg_data(setting,saveplots=True,backup_path=backup_path,return_mask=True)
-
+_prior_likelihood
 
     # ### PSF 
     kwargs_psf = init_kwrg_psf(setting,saveplots=True,backup_path=backup_path)
@@ -194,30 +194,8 @@ if __name__=="__main__":
 
 
     # ### Parameters for the PSO/MCMC runs
-
-    # In[ ]:
-
-
-    kwargs_likelihood = {}
-    kwargs_likelihood["check_matched_source_position"]=True
-    kwargs_likelihood["source_position_tolerance"]=0.01
-    kwargs_likelihood["force_no_add_image"] = True 
-    kwargs_likelihood["check_positive_flux"] = True  
-
-
-    # In[ ]:
-
-
-    # MOD_CUSTOM_LIKE
-    phi_ll = setting.phi_ll if setting.sub else None
-    q_ll   = setting.q_ll   if setting.sub else None
-    kwargs_likelihood["custom_logL_addition"] = logL_ellipticity(SUB=setting.sub,phi_ll=phi_ll,q_ll=q_ll)
-
-
-    # In[ ]:
-
-
-    kwargs_likelihood["image_likelihood_mask_list"] =  [mask.tolist()]
+    
+    kwargs_likelihood = init_kwrg_likelihood(setting,mask)
      
 
     ######

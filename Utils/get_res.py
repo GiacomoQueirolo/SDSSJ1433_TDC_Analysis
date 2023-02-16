@@ -1,11 +1,9 @@
 ## little functions to easily get the results from previous calculations
-from Utils.tools import *
 import json,pickle 
 from corner import quantile
 from numpy import abs as npabs
 
-from lenstronomy.Sampling.parameters import Param
-from Data.input_data import get_kwargs_model,get_kwargs_constraints
+from Utils.tools import *
 
 def load_whatever(name):
     try:        
@@ -34,9 +32,7 @@ def get_kwres(setting_name,updated=False,backup_path="backup_results"):
 
 def get_mcmc_prm(setting_name,backup_path="backup_results"):  
     setting_name  = get_setting_name(setting_name)
-    savemcmc_patdef get_prm_list(setting):
-    return get_Param(setting).num_param()[1]
-h = get_savemcmcpath(setting_name,backup_path)
+    savemcmc_path = get_savemcmcpath(setting_name,backup_path)
     file_name = setting_name.replace("settings","mcmc_prm").replace(".py","")+".dat"
     mcmc_prm_file_name = savemcmc_path+file_name
     mcmc_prm = load_whatever(mcmc_prm_file_name)
@@ -87,9 +83,7 @@ def get_pso_chain(setting_name,backup_path="backup_results"):
     pso_file_name = create_path_from_list([savemcmc_path,file_name])
     pso_chain     = load_whatever(pso_file_name)
     return pso_chain
-    def get_prm_list(setting):
-    return get_Param(setting).num_param()[1]
-
+    
 def get_mcmc(setting_name,backup_path="backup_results"):
     mcmc_smpl = get_mcmc_smpl(setting_name,backup_path)
     mcmc_prm  = get_mcmc_prm(setting_name,backup_path)
@@ -118,46 +112,6 @@ def check_logL(setting_name,backup_path="backup_results",max_diff=5,index_logl=2
             break 
     return accepted 
 
-
-def conv_mcmc_i_to_kwargs(setting,mcmc_i):
-    param_class   = get_Param(setting)
-    kwargs_result = param_class.args2kwargs(mcmc_i, bijective=True)
-    return kwargs_result
-
-def get_Param(setting):
-    setting = get_setting_module(setting,1)
-    kwargs_lens_init, kwargs_lens_sigma, kwargs_fixed_lens, kwargs_lower_lens, kwargs_upper_lens = setting.lens_params
-    kwargs_ps_init, kwargs_ps_sigma, kwargs_fixed_ps, kwargs_lower_ps, kwargs_upper_ps = setting.ps_params
-    kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_fixed_lens_light, kwargs_lower_lens_light, kwargs_upper_lens_light = setting.lens_light_params
-    if not setting.WS:
-        kwargs_source_init, kwargs_source_sigma, kwargs_fixed_source, kwargs_lower_source, kwargs_upper_source = setting.source_params
-    else:
-        kwargs_source_init, kwargs_source_sigma, kwargs_fixed_source, kwargs_lower_source, kwargs_upper_source = None,None,None,None,None
-    
-    kwargs_model       = get_kwargs_model(setting)
-    kwargs_constraints = get_kwargs_constraints(setting)
-    param_class = Param(kwargs_model, kwargs_fixed_lens=kwargs_fixed_lens, kwargs_fixed_source=kwargs_fixed_source,
-                        kwargs_fixed_lens_light=kwargs_fixed_lens_light, kwargs_fixed_ps=kwargs_fixed_ps, kwargs_fixed_special=None,
-                        kwargs_fixed_extinction=None, 
-                        kwargs_lower_lens=kwargs_lower_lens, kwargs_lower_source=kwargs_lower_source, 
-                        kwargs_lower_lens_light=kwargs_lower_lens_light, kwargs_lower_ps=kwargs_lower_ps,
-                        kwargs_lower_special=None, kwargs_lower_extinction=None,
-                        kwargs_upper_lens=kwargs_upper_lens, kwargs_upper_source=kwargs_upper_source, 
-                        kwargs_upper_lens_light=kwargs_upper_lens_light, kwargs_upper_ps=kwargs_upper_ps,
-                        kwargs_upper_special=None, kwargs_upper_extinction=None,
-                        kwargs_lens_init=None, **kwargs_constraints)
-    return param_class
-
-def get_prm_list(setting,backup_path="./backup_path"):
-    list_prm = get_Param(setting).num_param()[1]
-    # validity check:
-    try:
-        list_prm_mcmc=get_mcmc_prm(setting,backup_path=backup_path)
-        if list_prm!=list_prm_mcmc:
-            raise RuntimeError("The parameter have changed since the MCMC run!")
-    except FileNotFoundError:
-        print("warning: I couldn't double check that the parameter didn't change since the MCMC run")
-    return list_prm
 
 
 def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True):

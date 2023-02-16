@@ -24,7 +24,7 @@ from Utils.tools import *
 from Posterior_analysis.mag_remastered import get_mag_mcmc
 from Posterior_analysis.fermat_pot_analysis import gen_mcmc_Df
 from Utils.order_images import get_new_image_order
-from Utils.get_res import get_prm_list
+from Data.Param import get_prm_list
 # In[1]:
 
 
@@ -79,9 +79,9 @@ def get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries=None,threshold_mcmc_poi
     # mag_boundaries = [[min_AB,max_AB],[min_A..],..]
     # threshold_mcmc_points = int, minumum number of poiints in the boundaries
     # previous_mcmc = previous points to append to the sampling
-    CP         = check_if_CP(setting)
-    param_mcmc = get_prm_list(setting)
-    mcmc_mag   = get_mag_mcmc(mcmc_prior,param_mcmc,setting,CP)
+    CP          = check_if_CP(setting)
+    param_mcmc  = get_prm_list(setting)
+    mcmc_mag    = get_mag_mcmc(mcmc_prior,param_mcmc,setting,CP)
     #I want to obtain the correct image order
     #########################################
     new_order = get_new_image_order(setting,mcmc_prior,starting_from_A=False)
@@ -172,13 +172,13 @@ def is_in_boundaries(dfi,Df_boundaries):
 
 
 def get_prior(setting,npoints):
-    params     = get_prm_list(setting) #mcmc params like
-    n_images   = count_images(params)
+    param_mcmc = get_prm_list(setting)
+    n_images   = count_images(param_mcmc)
     kw_models  = get_kwargs_to_model(setting)
     mcmc_prior = []
-    for ip,param in enumerate(params):
+    for ip,param in enumerate(param_mcmc):
         if "image" in param:
-            par_min,par_max = get_boundary_param(param,kw_models,ip,len(params),n_images)
+            par_min,par_max = get_boundary_param(param,kw_models,ip,len(param_mcmc),n_images)
         else:
             par_min,par_max = get_boundary_param(param,kw_models)
         mcmc_prior.append(np.random.uniform(par_min,par_max,npoints))
@@ -187,13 +187,15 @@ def get_prior(setting,npoints):
     
 
 def count_images(params):
-    n_im_ra  = 0
-    n_im_dec = 0
+    n_im_ra  = params.count("ra_image")
+    n_im_dec = params.count("dec_image")
+    """
     for p in params:
         if "ra_image" in p:
             n_im_ra+=1
         elif "dec_image" in p:
             n_im_dec+=1
+    """
     if n_im_dec!=n_im_ra:
         raise RuntimeError("Number of coordinates for images in parameters not matching")
     return n_im_ra
