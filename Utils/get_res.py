@@ -78,10 +78,8 @@ def get_mcmc_smpl_for_prm(setting_name,prm_name,backup_path="backup_results"):
     
 
 def get_pso_chain(setting_name,backup_path="backup_results"): 
-    setting_name  = get_setting_name(setting_name)
     savemcmc_path = get_savemcmcpath(setting_name,backup_path)
-    file_name     = setting_name.replace("settings","pso").replace(".py","")+".json"
-    pso_file_name = create_path_from_list([savemcmc_path,file_name])
+    pso_file_name = save_json_name(setting_name,savemcmc_path,"pso")
     pso_chain     = load_whatever(pso_file_name)
     return pso_chain
     
@@ -144,7 +142,7 @@ def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True):
             kwargs_sigma_upper[param_mcmc[i]]=sig_max
 
         elif param_mcmc[i]=="ra_image":
-            kwargs_sigma_lower["ra_image_"+plottingstr(n_ra)]=sig_min
+            kwargs_sigma_lower["ra_image_"+str(n_ra)]=sig_min
             kwargs_sigma_upper["ra_image_"+str(n_ra)]=sig_max            
             n_ra+=1
         else:

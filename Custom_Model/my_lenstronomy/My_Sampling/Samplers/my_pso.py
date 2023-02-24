@@ -42,7 +42,7 @@ class MyParticleSwarmOptimizer(object):
     """
 
     def __init__(self, func, low, high, particle_count=25,
-                 pool=None,path="backup_results/",name="mypsosampling.json", args=None, kwargs=None):
+                 pool=None,path="backup_results/",name="psobackup.json", args=None, kwargs=None):
 
         """
 
@@ -353,29 +353,26 @@ class MyParticleSwarmOptimizer(object):
         else:
             return False
             
-    def my_distance(self,pos1,pos2,maxmin):
+    def get_distance(self,pos):
         # implement MY definition of distance in the parameter space:
         # each difference in each parameter of the param. space is scaled by the difference between the maximum and minimum 
         # value ever considered for that parameter (maxmin), obtaining for each param : p_i_norm = p_i /(max_p - min_p)
         # then dist = sqrt ( sum dx_i**2 )  
-        
-        pos1_norm,pos2_norm=np.array(pos1)/maxmin,np.array(pos2)/maxmin
-        dist = np.sqrt(np.sum([ (ps2-ps1)**2 for ps1,ps2 in zip(pos1_norm,pos2_norm)]))
-        return float(dist)
+        maxmin      = np.max(pos,axis=0) - np.min(pos,axis=0)
+        scaled_pos  = np.array(pos)/maxmin
+        scaled_best = self.global_best.position/maxmin
+        dpos_sqrt   = (scaled_pos - scaled_best)**2
+        dist        = np.sqrt(np.sum(dpos_sqrt,axis=1))
+        return dist
     
     def my_save_psos(self,pos,lkl):
         #save the array of distances and likelihood of every particle
-        pos=np.array(pos)
-        maxmin=[]
-        for k in range(len(pos.T)):
-            param_k=pos.T[k]
-            maxmin.append(np.max(param_k) - np.min(param_k))
-        maxmin= np.array(maxmin)
-        dist = [self.my_distance(pos_i,self.global_best.position,maxmin) for pos_i in pos ]
-        data_sampling = [dist,lkl]
+        pos    = np.array(pos)
+        dist   = self.get_distance(pos)
+        data_sampling = [lkl,pos.tolist(),dist.tolist()]
         with open(self.savingname,"w") as fl:
             json.dump(data_sampling,fl)
-        return
+        return 0
 
 
 class Particle(object):

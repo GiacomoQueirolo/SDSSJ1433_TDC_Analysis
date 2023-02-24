@@ -119,7 +119,7 @@ def compare_pos(kw_sets,npix=10,savefig=None):
     elif type(savefig) is list:
         for svfg in savefig:
             plt.savefig(svfg)
-            print("svfg "+savefig)
+            print("svfg "+svfg)
 
 
 
@@ -371,7 +371,7 @@ if __name__=="__main__":
     cmap = ["winter","gist_heat"]
     for i,model in enumerate(model_plots):
         model.my_third_convergence_plot(axes,text=filters[i],alpha=.3,
-                                        levels=k,
+                                        levels=50,
                                         flipped=flipped[i],
                                         cmap=cmap[i])
         model.my_image_plot(axes,names=["A","C","B","D"],color=col[i])

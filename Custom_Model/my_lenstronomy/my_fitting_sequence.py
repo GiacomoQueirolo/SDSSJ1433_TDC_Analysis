@@ -553,7 +553,7 @@ class MyFittingSequence(object):
         return kwargs_result
 
     ###### My modification: MOD_PSOS ##################
-    def my_pso(self, n_particles, n_iterations, sigma_scale=1, print_key='PSO', threadCount=1,path="backup_results/",name="mypsosampling.json"):
+    def my_pso(self, n_particles, n_iterations, sigma_scale=1, print_key='PSO', threadCount=1,path="backup_results/",name="psobackup.json"):
         """
         MY Particle Swarm Optimization -> also save the position of the particles and corresponding likelihood at every step
 

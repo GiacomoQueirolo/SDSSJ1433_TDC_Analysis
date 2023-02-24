@@ -59,3 +59,14 @@ def conv_mcmc_i_to_kwargs(setting,mcmc_i):
     param_class   = get_Param(setting)
     kwargs_result = param_class.args2kwargs(mcmc_i, bijective=True)
     return kwargs_result
+
+def get_sigma(setting):
+    setting = get_setting_module(setting,1)
+    keywords = "lens","source","lens_light","ps","special","extinction"
+    sigma_dic = {}
+    for kw in keywords:
+        not_present = []
+        if kw is "special":
+            not_present = {}
+        sigma_dic[f"kwargs_{kw}"] = getattr(setting,f"{kw}_params",[None,not_present])[1]
+    return sigma_dic

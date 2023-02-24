@@ -18,7 +18,7 @@ import multiprocessing
 from Utils.tools import *
 from Data.input_data import init_kwrg_psf
 from MassToLight.grid_class import Circ_Grid,Length
-from Data.conversion import conv_xy_to_radec
+from Data.conversion import conv_xy_to_radec,conv_radec_to_xy
         
 from Utils.math_tools import sqrt_sum_list
 
@@ -77,6 +77,20 @@ def resample_psf_grid(sett,subgrid_deg_pixel):
             resampled_psf_grid.append(p)
     return resampled_psf_grid
     
+def acceptable_newcenter(newCenter_xy,naxis,ri):
+    # check that the new center is not too close to the edges
+    # assuming naxis1==naxis2
+    xc,yc = newCenter_xy
+    if xc-ri<=0:
+        return False
+    if xc+ri>=naxis:
+        return False
+    if yc-ri<=0:
+        return False
+    if yc+ri>=naxis:
+        return False
+    return True
+ 
 def compare_EE(sett):
     print_setting(sett)
     sett = get_setting_module(sett,1)
@@ -125,7 +139,7 @@ def compare_EE(sett):
         for dither_i in range(10):
             rnd_bound = .5
             newCenter =  np.random.normal(grid.Center.get_radec(),daper[r_i]*.5).tolist()
-            while newCenter in previous_center:
+            while ( not acceptable_newcenter(conv_radec_to_xy(sett,*newCenter),naxis,r) ) or ( newCenter in previous_center):
                 rnd_bound+=.1
                 if rnd_bound>1:
                     break
@@ -155,8 +169,8 @@ def compare_EE(sett):
     plt.xlabel("Aperture [\"]")
     plt.ylabel("Norm. Flux [pix count]")
     plt.legend()
-    plt.savefig(get_savefigpath(sett)+"/EE_dither_pll.png")
-    print("Saved "+get_savefigpath(sett)+"/EE_dither_pll.png")
+    plt.savefig(get_savefigpath(sett)+"/EE_dither_pll.pdf")
+    print("Saved "+get_savefigpath(sett)+"/EE_dither_pll.pdf")
     #plt.savefig(get_savefigpath(sett)+"/EE.png")
     #print("Saved "+get_savefigpath(sett)+"/EE.png")
     plt.close()

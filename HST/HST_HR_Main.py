@@ -30,7 +30,7 @@ from lenstronomy.PointSource.point_source import PointSource
 from Utils import get_res
 from Utils.tools import *
 from Utils import rewrite_read_results
-from Utils  import last_commands
+from Utils import last_commands
 from Utils.check_success import check_success
 from Posterior_analysis import mag_remastered
 from Data.image_manipulation import *
@@ -49,15 +49,15 @@ if __name__=="__main__":
     ############################
 
 
-    # In[ ]:
+    
 
 
     parser = ArgumentParser(description="Lens modelling program")
     parser.add_argument('-rt','--run_type',type=int,dest="run_type",default=0,help="Type of run: \n \
-                    0 = standard, PSO_it = 400*rf   PSO_prt = 200*rf      MCMCr = 800*rf  MCMCb = 200*rf\n \
-                    1 = append  MCMCr=800*rf\n\
-                    2 = test run  PSO_it = 3   PSO_prt = 3   MCMCr = 2 MCMCb = 1\n\
-                    3 = append test   MCMCr=1\n\
+                    0 = standard, PSO_it = 700*rf   PSO_prt = 400*rf    MCMCb = 200*rf  MCMCr = 800*rf\n \
+                    1 = append  MCMCb = 200*rf (only used if no previous MCMC found )  MCMCr=800*rf\n\
+                    2 = test run  PSO_it = 3   PSO_prt = 3   MCMCb = 1 MCMCr = 2\n\
+                    3 = append test   MCMCb = 2  MCMCr=2\n\
                     (PSO_it: PSO iterations, PSO_prt: PSO particles, MCMCr: MCMC run steps, MCMCb: MCMC burn in steps)")
     parser.add_argument('-rf','--run_factor',type=float,dest="run_factor",default=20.,help="Run factor to have longer run")
     parser.add_argument('-tc','--threadCount',type=int,dest="threadCount",default=150,help="Number of CPU threads for the MCMC parallelisation (max=160)")
@@ -73,12 +73,14 @@ if __name__=="__main__":
     #Model PSO/MCMC settings
     append_MC=False
     if run_type==0:
-        n_iterations = int(400*run_fact) #number of iteration of the PSO run
-        n_particles  = int(200*run_fact) #number of particles in PSO run
+        n_iterations = int(700*run_fact) #number of iteration of the PSO run
+        n_particles  = int(400*run_fact) #number of particles in PSO run
         n_run  = int(800*run_fact) #MCMC total steps 
         n_burn = int(200*run_fact) #MCMC burn in steps
     elif run_type ==1:
         append_MC=True
+        # n_burn only used if previous MCMC not found
+        n_burn = int(200*run_fact) #MCMC burn in steps
         n_run  = int(800*run_fact) #MCMC total steps 
     elif run_type==2:
         n_iterations = int(3) #number of iteration of the PSO run
@@ -87,7 +89,8 @@ if __name__=="__main__":
         n_burn = int(1) #MCMC burn in steps
     elif run_type==3:
         append_MC   = True
-        n_run  = int(1) #MCMC total steps 
+        n_run  = int(2) #MCMC total steps 
+        n_burn = int(1) #MCMC burn in steps
     else:
         raise RuntimeError("Give a valid run_type or implement it your own")
 
@@ -103,7 +106,7 @@ if __name__=="__main__":
     mkdir(savefig_path)
     mkdir(savemcmc_path)
     save_log_command(save_dir=savefig_path)
-
+    backend_filename = get_backend_filename(setting_name)
     setting_path = find_setting_path(setting_name)
     os.system("cp "+setting_path+"/"+setting_name+".py "+savefig_path+".") #we copy the setting file to that directory
     sys.path.append(setting_path)
@@ -116,18 +119,10 @@ if __name__=="__main__":
     CP = check_if_CP(setting)
     WS = check_if_WS(setting)
 
-
-    # In[ ]:
-
-
     if CP:
         print("WARNING: Considering the PEMD mass profile for the main lens")
     if WS:
         print("WARNING: this model DO NOT consider the source")
-
-
-    # In[ ]:
-
 
     if WS and setting_nam[-3:]!="_ws":
         setting_dir=find_setting_path(setting_name)
@@ -137,7 +132,7 @@ if __name__=="__main__":
         setting_name=setting_name+"_ws"
 
 
-    # In[ ]:
+    
 
 
     # datetime object containing current date and time
@@ -149,10 +144,6 @@ if __name__=="__main__":
     print("Machine: ",os.uname()[1]) 
     print("Setting file:", setting_name)
     print("Started the :", dt_string)
-
-
-    # In[ ]:
-
 
     """
     image_file   = setting.data_path+setting.image_name
@@ -173,16 +164,12 @@ if __name__=="__main__":
 
 
     kwargs_data,mask = init_kwrg_data(setting,saveplots=True,backup_path=backup_path,return_mask=True)
-_prior_likelihood
 
     # ### PSF 
     kwargs_psf = init_kwrg_psf(setting,saveplots=True,backup_path=backup_path)
 
 
     # ## Modelling
-
-    # In[ ]:
-
 
     # Choice of profiles for the modelling
     # Lens (mass) profile with perturber and the Shear
@@ -220,16 +207,13 @@ _prior_likelihood
                         }
 
 
-    # In[ ]:
-
-
     if setting.sub ==False:
         joint_lens_with_light=[[0,0,["center_x","center_y"]],[1,1,["center_x","center_y"]]]
     else:
         joint_lens_with_light=[[0,1,["center_x","center_y"]]]
 
 
-    # In[ ]:
+    
 
 
     kwargs_constraints = {'num_point_source_list': [4], 
@@ -242,27 +226,28 @@ _prior_likelihood
     #  'joint_lens_with_light': list [[i_light, k_lens, ['param_name1', 'param_name2', ...]], [...], ...],
     #   joint parameter between lens model and lens light model
 
-
-    # In[ ]:
-
-
     if append_MC :
-        mcmc_file_name = savemcmc_path+setting_name.replace("settings","mcmc_smpl")+".json"
-        with open(mcmc_file_name, 'r') as f:
-            mc_init_sample= np.array(json.load(f))
+        mcmc_file_name = save_json_name(setting,savemcmc_path,filename="mcmc_smpl")
         try:
-            mcmc_logL_file_name = savemcmc_path+setting_name.replace("settings","mcmc_logL")+".json"
-            with open(mcmc_logL_file_name, 'r') as f:
-                mc_init_logL= np.array(json.load(f))
+            try:
+                mc_init_sample = get_res.load_whatever(mcmc_file_name)
+            except:
+                print("TEST: load hp5 backend file")
+                import emcee
+                mc_init_sample = emcee.backends.HDFBackend(backend_filename, read_only=True).get_chain(flat=True)
+            n_burn = 0
+        except:
+            print(f"Both files {mcmc_file_name} and {backend_filename} not found or corrupted. Starting MCMC from scratch.")
+            mc_init_sample = None
+        
+        mcmc_logL_file_name = save_json_name(setting,savemcmc_path,filename="mcmc_logL")
+        try:
+            mc_init_logL = get_res.load_whatever(mcmc_logL_file_name)
         except:
             mc_init_logL= np.array([])
     else:
         mc_init_sample = None
-        mc_init_logL= None
-
-
-    # In[ ]:
-
+        mc_init_logL   = None
 
     # Try to solve the "OSError: [Errno 24] Too many open files" by deleting the 
     # n_run_cut implementation
@@ -274,28 +259,43 @@ _prior_likelihood
         fitting_kwargs_list = [['MY_PSO', {'sigma_scale': 1., 'n_particles': n_particles, 
                                            'n_iterations': n_iterations,"path":savemcmc_path,"threadCount":threadCount}]]
     else:
-        fitting_kwargs_list = []
-        n_burn=0
+        ####################################################################
+        # if append True but no mcmc found, then we try to find the PSO and
+        # start the MCMC from its best result. If no PSO, then we have to 
+        # run it as usual
+        ####################################################################
+        if mc_init_sample is None:
+            fitting_kwargs_list =[]
+            from Custom_Model.init_mcmc_from_pso import create_mcmc_init
+            mc_init_sample = create_mcmc_init(setting,backup_path=backup_path)
+            if mc_init_sample is None:
+                n_iterations = int(700*run_fact) #number of iteration of the PSO run PSO_it  = 700*rf
+                n_particles  = int(400*run_fact) #number of particles in the PSO run PSO_prt = 400*rf 
+                print("append is True, but no mcmc or PSO files were possible to be found/open. ")
+                print(f"Starting standard run with PSO_it={n_iterations} , PSO_prt={n_particles}")
+
+                fitting_kwargs_list = [['MY_PSO', {'sigma_scale': 1., 'n_particles': n_particles, 
+                                               'n_iterations': n_iterations,"path":savemcmc_path,"threadCount":threadCount}]]
+
     if RND == False:
         np.random.seed(3)
 
 
     fitting_kwargs_list.append(['MCMC', {'n_burn': n_burn, 'n_run': n_run, 'walkerRatio': 10, 'sigma_scale': .1,\
-                                         "threadCount":threadCount, 'init_samples':mc_init_sample}])
+                                         "threadCount":threadCount, 'init_samples':mc_init_sample,"backend_filename":backend_filename}])
     # First chain_list with only the PSO, the burn_in sequence and the first n_run_cut
     chain_list = fitting_seq.fit_sequence(fitting_kwargs_list) 
-    sampler_type, mc_init_sample_i, param_mcmc, mc_init_logL_i  = chain_list[-1]
+    sampler_type, mc_sample, param_mcmc, mc_logL  = chain_list[-1]
     #append the previous results
     if append_MC:
-        mc_init_sample = np.array([*mc_init_sample,*mc_init_sample_i])
-        mc_init_logL   = np.array([*mc_init_logL,*mc_init_logL_i])
-    else:
-        mc_init_sample = mc_init_sample_i
-        mc_init_logL   = mc_init_logL_i
+        mc_sample = np.array([*mc_init_sample,*mc_sample])
+        mc_logL   = np.array([*mc_init_logL,*mc_logL])
 
     # save here chain_list results
-    save_mcmc_json(setting=setting,data=mc_init_sample,filename="mcmc_smpl",backup_path=backup_path)
-    save_mcmc_json(setting=setting,data=mc_init_logL,  filename="mcmc_logL",backup_path=backup_path)
+    save_json(data=mc_sample,name=mcmc_file_name) 
+    #save_mcmc_json(setting=setting,data=mc_sample, filename="mcmc_smpl",backup_path=backup_path)
+    save_json(data=mc_logL,name=mcmc_logL_file_name)
+    #save_mcmc_json(setting=setting,data=mc_logL,   filename="mcmc_logL",backup_path=backup_path)
     if "PSO" in chain_list[0][0]:
         save_mcmc_json(setting=setting,data=chain_list[0],filename="pso",backup_path=backup_path)
         
@@ -306,17 +306,10 @@ _prior_likelihood
             param_file.writelines(param_mcmc[i]+",\n")
 
 
-    # In[ ]:
-
-
     # Reconstruct mcmc chain
     kw_mcmc        = get_res.get_mcmc(setting_name,backup_path)
     chain_list[-1] = ['MCMC',kw_mcmc["mcmc_smpl"],kw_mcmc["mcmc_prm"],kw_mcmc["mcmc_logL"]]
     samples_mcmc   = kw_mcmc["mcmc_smpl"]
-
-
-    # In[ ]:
-
 
     print_res.write("kwargs_model:"+str(kwargs_model)+"\n")
     print_res.write("kwargs_numerics:"+str(kwargs_numerics)+"\n")
@@ -336,15 +329,11 @@ _prior_likelihood
     ##Printout of the results with errors
     get_res.get_sigma_kw(setting,mcmc_chain=chain_list[-1],print_res=print_res,save=True)
 
-
-    # In[ ]:
-
-
     # Plot of the obtained models
     v_min,v_max     = setting.v_min,setting.v_max
     res_min,res_max = setting.res_min,setting.res_max
 
-    modelPlot = ModelPlot(multi_band_list, kwargs_model, kwargs_result,likelihood_mask_list=[mask.tolist()],\
+    modelPlot = ModelPlot(multi_band_list, kwargs_model, kwargs_result,image_likelihood_mask_list=[mask.tolist()],\
                           arrow_size=0.02, cmap_string="gist_heat")
 
     if not WS:
@@ -353,11 +342,7 @@ _prior_likelihood
         from plotting_tools import plot_model_WS as PM
         
     PM(modelPlot,savefig_path,v_min,v_max,res_min,res_max)
-
-
-    # In[ ]:
-
-
+    
     #Printout of all results after obtaining the amplitude
     with open(savefig_path+"/read_results.data","wb") as f:
             pickle.dump(kwargs_result, f)
@@ -373,18 +358,11 @@ _prior_likelihood
         print_res.write("\n")
 
     print_res.write("\n#################################\n")
-
-
-    # In[ ]:
-
-
+    
     logL   = modelPlot._imageModel.likelihood_data_given_model(source_marg=False, linear_prior=None, **kwargs_result)
     n_data = modelPlot._imageModel.num_data_evaluate
     print_res.write(str(-logL * 2 / n_data)+' reduced X^2 of all evaluated imaging data combined\n')
     print_res.write("################################\n")
-
-
-    # In[ ]:
 
 
     #Normalised plot
@@ -392,10 +370,6 @@ _prior_likelihood
     modelPlot.normalized_residual_plot(ax=axes,v_min=res_min, v_max=res_max)
     plt.savefig(savefig_path+"normalised_residuals.png")
     plt.close()
-
-
-    # In[ ]:
-
 
     #Caustics
     f, axes = plt.subplots(figsize=(10,7))
@@ -405,19 +379,11 @@ _prior_likelihood
     plt.savefig(savefig_path+"caustics.png")
     plt.close()
 
-
-    # In[ ]:
-
-
     f, axes = plt.subplots(figsize=(10,7))
     modelPlot.decomposition_plot(ax=axes, text='Point source position', source_add=False, \
                     lens_light_add=False, point_source_add=True, v_min=v_min, v_max=v_max)
     plt.savefig(savefig_path+"point_source_position.png")
     plt.close()
-
-
-    # In[ ]:
-
 
     #CHECK_FR
 
@@ -432,24 +398,13 @@ _prior_likelihood
     print_res.write("########################\n")
 
 
-    # In[ ]:
-
-
     # the results of the MCMC chain
     #MOD_SOURCE 
     kwargs_source,str_src = get_source_pos_MCMC(setting,svfg=True)
     print_res.write(str_src)
 
-
-    # In[ ]:
-
-
     #Closing result.txt
     print_res.close()
-
-
-    # In[ ]:
-
 
     # I save the kwargs result in a pickly, readable way
     def pickle_results(res,name):
@@ -475,10 +430,6 @@ _prior_likelihood
         last_commands.last_command(setting_name, i,log=True,run=True) 
 
     check_success(setting_name,verbose=1)
-
-
-    # In[ ]:
-
 
     success(sys.argv[0])
 

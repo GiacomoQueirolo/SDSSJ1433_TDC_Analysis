@@ -6,7 +6,7 @@ from matplotlib.collections import PatchCollection
 
 from Utils.tools import *
 from Data.conversion import conv_radec_to_xy,conv_xy_to_radec
-from Data.image_manipulation import get_numPix
+from Data.image_manipulation import get_numPix,get_rotangle,fits_with_copied_hdr
 
 
 def dist(xy0,xy1):

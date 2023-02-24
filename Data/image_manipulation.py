@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+#2]:
 
 
 import csv
 import warnings
 import numpy as np
+from astropy.io import fits
 import matplotlib.pyplot as plt
 
 from Utils.tools import *
@@ -62,10 +63,6 @@ def create_mask(image,setting):
     return mask
 
 
-# In[3]:
-
-
-from astropy.io import fits
 
 def load_fits(image_path,HDU=0):
     #load the image and read it as numpy array
@@ -176,7 +173,7 @@ def get_transf_matrix(image_path_or_setting,in_arcsec=True):
     return transform_pix2angle
 
 
-# In[4]:
+#4]:
 
 
 def plot_image(image,setting,savefig_path_name=None,err_image=False):
@@ -208,10 +205,6 @@ def plot_image(image,setting,savefig_path_name=None,err_image=False):
         return ax
     else:
         plt.savefig(savefig_path_name)
-
-
-# In[ ]:
-
 
 def plot_projection(data,savefigpath=None,ax0=None,udm="<e-/sec>",title="PSF profile",filename="PSF_projection",plot_midax=True):
     # by default this is implemented for the PSF projection
@@ -246,10 +239,6 @@ def plot_projection(data,savefigpath=None,ax0=None,udm="<e-/sec>",title="PSF pro
     else:
         return ax
 
-
-# In[5]:
-
-
 def crop_egdes(image,setting):
     setting  = get_setting_module(setting).setting()
     # Crop image
@@ -278,10 +267,6 @@ def crop_egdes(image,setting):
     image_cut = np.array(image_cut)
     return image_cut
 
-
-# In[ ]:
-
-
 def psf_correction(psf,setting):
     corr_psf = psf
     setting  = get_setting_module(setting).setting()
@@ -304,7 +289,102 @@ def psf_correction(psf,setting):
     return corr_psf
 
 
-# In[ ]:
+
+#########################
+def _acceptable(matrix_shape,coord):
+    x,y = coord
+    if x>=0 and y>=0:
+        if x<=matrix_shape[0]-1 and y<=matrix_shape[1]-1:
+            return True
+    return False
+
+class Px_Contour():
+    def __init__(self,row,col,fam=None,type="mask"):
+        self.row = row
+        self.col = col
+        self.fam = fam
+        self.type = type
+        self.bounds = []
+    def coord(self):
+        return [self.row,self.col]
+    def get_bordering_coord(self):
+        bord_coords = [[self.row-1,self.col],
+                       [self.row,self.col-1],
+                       [self.row,self.col+1],
+                       [self.row+1,self.col]]
+        return bord_coords
+    def get_bordering_pixels(self):
+        bord_coords = self.get_bordering_coord()
+        boord_pxs = [Px_Contour(col=bc[0],row=bc[1],fam=self.fam) for bc in bord_coords]
+        return boord_pxs
+    def __eq__(self, __o: object):
+        return __o.row==self.row and __o.col==self.col
+
+def get_neighboring_coords(matrix, coords):
+    # find the neighboring pixels to the given ones 
+    # and to which "family" of pixel it belongs to
+    # divided into one for the pixels and one for the neighbors
+    #neighbors = [] #the contours pixels
+    #mpix_fam  = [] #family of the single pixel 
+    #neigh_fam = [] #family of the contour pixel
+    index_fam   = np.arange(len(matrix)*len(matrix[1])).reshape(np.shape(matrix))
+    Px_Cnt_list= []
+    for coord in coords:
+        row, col = coord
+        pxC = Px_Contour(row,col,fam=index_fam[row][col])
+        if pxC in Px_Cnt_list:
+            for pxCi in Px_Cnt_list:
+                if pxC==pxCi:
+                    pxC.fam = pxCi.fam
+                    break
+        else:
+            Px_Cnt_list.append(pxC)
+        nwpix = pxC.get_bordering_pixels()
+        for nwP in nwpix:
+            if _acceptable(np.shape(matrix),nwP.coord()):
+                if nwP.coord() not in np.array(coords).tolist():
+                    nwP.type="bound"
+                if nwP in Px_Cnt_list and nwP.type=="mask":
+                    for pxCi in Px_Cnt_list:
+                        if nwP==pxCi:
+                            fam_to_change=pxCi.fam
+                            pxCi.fam = nwP.fam
+                            break
+                    for pxCi in Px_Cnt_list:
+                        if pxCi.fam==fam_to_change:
+                            pxCi.fam = nwP.fam
+                else:
+                    Px_Cnt_list.append(nwP)
+    return Px_Cnt_list
+
+def extract_family(px_list):
+    return list(set([px.fam for px in px_list]))
+
+def interpolate_2D(data,pix,order=0):
+    # data:2D matrix
+    # pix: coordinate of the pixel to interpolate
+    # order: order of interpolation. O=mean between neighboor pixels
+    #contours_pix, contours_families_px,contours_families_cont = get_neighboring_coords(data,pix)
+    Pix_Cont_list = get_neighboring_coords(data,pix)
+    fml_list      =  extract_family(Pix_Cont_list)
+    for fam in fml_list:
+        vlpx_fm_i  = []
+        mskpx_fm_i =[]
+        for px in Pix_Cont_list:
+            if px.fam==fam:
+                row,col = px.coord()
+                if px.type=="bound":
+                    vlpx_fm_i.append(data[row][col])
+                else:
+                    mskpx_fm_i.append(px.coord())
+        if order==0:
+            interp_val = np.nanmean(vlpx_fm_i)
+        else:
+            #pragma: no cover
+            raise
+        for i,j in mskpx_fm_i:
+            data[i][j] = interp_val
+    return data 
 
 
 def get_numPix(setting,twodim=False):
@@ -318,10 +398,6 @@ def get_numPix(setting,twodim=False):
         return numPix[0]
     else: #pragma: no cover
         raise RuntimeError("Image must be squared, numPix should be indentical in both xy not",numPix)
-
-
-# In[ ]:
-
 
 def get_pixscale(setting_or_tm,only_one=True):
     # check
@@ -358,10 +434,6 @@ def get_rotangle(setting_or_tm,in_deg=True):
         warnings.warn("Return rotation angle in degrees") 
         return rot_angle*180/np.pi
 
-
-# In[ ]:
-
-
 def extract_phi_ll(model_name,setting,min_ra=0.):
     data_path  = setting.data_path
     trasnforM  = setting.transform_pix2angle
@@ -375,7 +447,7 @@ def extract_phi_ll(model_name,setting,min_ra=0.):
     
     # ignore PA close to the center:
     pa_cut = pa[np.where(np.array(ra14)>min_ra**(1./4))]
-    PA     = np.mean(pa_cut) # this should be in the ref. Frame of the image
+    PA     = np.mean(   ) # this should be in the ref. Frame of the image
     # have to be converted first in WST FoR    
     
     rotang    = get_rotangle(trasnforM)
@@ -398,9 +470,6 @@ def extract_q_ll(model_name,setting,min_ra=0.):
     eps_cut = eps[np.where(np.array(ra14)>min_ra**(1./4))]
     EPS     = np.mean(eps_cut)
     return EPS
-
-
-# In[1]:
 
 
 def fits_with_copied_hdr(data,fits_parent_path,data_object="",data_history="",fits_res_namepath=None,overwrite=True,verbose=True):
@@ -446,9 +515,6 @@ def multifits_with_copied_hdr(data_list,fits_parent_path,data_object=[],fits_res
         return 0
 
 
-# In[ ]:
-
-
 def _shift_astrometry(data_fits,coord,xy):
     data_fits.header["CRVAL1"]  = coord[0]
     data_fits.header["CRVAL2"]  = coord[1]
@@ -464,9 +530,6 @@ def shift_astrometry(data_fits,coord,xy):
     else:
         shifted_f = _shift_astrometry(data_fits,coord,xy)
     return shifted_f
-
-
-# In[ ]:
 
 
 def get_header(path,hdr_name):

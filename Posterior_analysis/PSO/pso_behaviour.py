@@ -5,27 +5,23 @@
 
 
 #With argparse which should help make it easier
-
+.ipynb_checkpoints/Notes-checkpoint.ipynb
 
 # In[1]:
 
-
-import numpy as np
-import json
-from scipy import stats
-import os
-from datetime import datetime
-import time 
-import pickle
-import importlib
+import os,sys
 import corner
-import matplotlib.pyplot as plt
-import sys
 import argparse
-from Plots.plotting_tools import base_colors
+import importlib
+import numpy as np
+from scipy import stats
+from datetime import datetime
+import matplotlib.pyplot as plt
+
 
 from Utils.tools import *
 from Utils.get_res import *
+from Plots.plotting_tools import base_colors
 
 def pso_behaviour(ax, pso_pos, param_name, col="b", num_average=1):
     """
@@ -246,14 +242,15 @@ if __name__=="__main__":
     backup_path   = "backup_results/" 
     for setting_name in setting_names:
         if len(setting_names)>1:
-            print(setting_name)
+            print_setting(setting_name)
         setting       = get_setting_module(setting_name).setting()
         savefig_path  = get_savefigpath(setting_name,backup_path)+"/PSO_bhv/"
         mkdir(savefig_path)
         savemcmc_path = get_savemcmcpath(setting_name,backup_path) 
         
         param_mcmc    = get_mcmc_prm(setting_name,backup_path)
-        pso_chain     = load_whatever(savemcmc_path+"/pso_"+strip_setting_name(setting_name)+".json")
+        pso_file      = save_json_name(setting_name,path=savemcmc_path,filename="pso"):
+        pso_chain     = load_whatever(pso_file)
         plot_pso_chain(pso_chain=pso_chain,setting=setting,savefig_path=savefig_path)
     success(sys.argv[0])
 

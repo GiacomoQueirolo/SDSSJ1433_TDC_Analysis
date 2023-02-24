@@ -52,12 +52,14 @@ def _get_EE(setting):
     EE   = np.array([float(ee) for ee in EErow_i])
     return aper,EE
 
+"""
 def flux_in_grid(lens_light_pix,grid): 
     # now the problem is, the grid is not discretised in pixels
     # we now have a grid with the coord of the pixels
     flux = np.sum([lens_light_pix[i[0]][i[1]] for i in flat_grid_degraded])
     return flux
-    
+"""
+
 def create_PSF(sett):
     print_setting(sett)
     sett   = get_setting_module(sett,1)

@@ -177,7 +177,7 @@ def save_Df(setting,no_plot=False):
 
     with open(mcmc_file_name, 'w+') as mcmc_file:
         json.dump(mcmc_fermat, mcmc_file)
-    if plot:
+    if not no_plot:
         mcmc_fermat = np.array(mcmc_fermat[cut_mcmc:])
         mcmc_Df     = mcmc_Df[cut_mcmc:]
 

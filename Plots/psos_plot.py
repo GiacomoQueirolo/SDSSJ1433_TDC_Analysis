@@ -1,11 +1,8 @@
-import argparse
-
-
-import matplotlib.pyplot as plt
-import json
-from numpy import inf
-import numpy as np
 import sys
+import json
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
 
 from Utils.tools import *
 from Utils.get_res import *
@@ -13,20 +10,20 @@ from Utils.get_res import *
 def plot_PSO(setting_name,backup_path="./backup_results/",verbose=False,logL=True):
     savemcmc_path = get_savemcmcpath(setting_name,backup_path)
     savefig_path  = get_savefigpath(setting_name,backup_path)
-    distance,likelihood= load_whatever(savemcmc_path+"/mypsosampling.json")
-
-
-    if all(l==-inf for l in likelihood):
+    data_sampling = load_whatever(savemcmc_path+"/psobackup.json")
+    likelihood,pos,distance = data_sampling
+    
+    if all(l==-np.inf for l in likelihood):
         raise RuntimeError("All likelihood are -inf")
         
     l = []
     d = []
     for i,dis in zip(likelihood,distance):
-        if i != -inf:
+        if i != -np.inf:
             l.append(i)
             d.append(dis)
     if logL : 
-       l = np.log(-np.array(l))
+        l = np.log(-np.array(l))
     #min_lkl  = np.min(l)
     if logL:
         res      = np.min(l)

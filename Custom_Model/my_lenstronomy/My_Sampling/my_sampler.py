@@ -195,7 +195,7 @@ class MySampler(object):
         return flat_samples, dist
         
     def my_pso(self, n_particles, n_iterations, lower_start=None, upper_start=None,
-            threadCount=1, init_pos=None, mpi=False, print_key='PSO',path="backup_results/",name="mypsosampling.json"):
+            threadCount=1, init_pos=None, mpi=False, print_key='PSO',path="backup_results/",name="psobackup.json"):
         """
         Return the best fit for the lens model on catalogue basis with
         particle swarm optimizer.  ->>> My mod: save the position and likelihood of every particle at each moment

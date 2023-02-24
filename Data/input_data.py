@@ -5,17 +5,14 @@
 
 from Utils.tools import *
 from Data.image_manipulation import *
+from Data.interpolation import interpolate_2D
 from lenstronomy.LensModel.lens_model import LensModel
 #from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity
 
 def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_mask=False):
     if saveplots:
         savefig_path  = get_savefigpath(setting,backup_path) 
-    if isinstance(setting,str):
-        # else is already the function setting()
-        setting_module = get_setting_module(setting) 
-        setting = setting_module.setting()
-
+    setting      = get_setting_module(setting,1)
     image_file   = setting.data_path+setting.image_name
     err_file     = setting.data_path+setting.err_name
 
@@ -52,14 +49,23 @@ def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_m
     else:
         return kwargs_data,mask
 
-def init_kwrg_psf(setting,saveplots=False,backup_path="backup_results"):
-    if isinstance(setting,str):
-        # else is already the function setting()
-        setting_module = get_setting_module(setting) 
-        setting = setting_module.setting()
+def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_results"):
+    setting      = get_setting_module(setting,1)
     psf_file     = setting.data_path+setting.psf_name 
     err_psf_file = setting.data_path+setting.err_psf
-    psf_image = load_fits(psf_file)
+    psf_image = np.array(load_fits(psf_file))
+    mask_zero = np.vstack(list(np.where(psf_image<0))).T
+    if mask_zero.shape[0]!=0:
+        psf_file_interp = psf_file.replace(".fits","_interp.fits") 
+        try:
+            psf_image = np.array(load_fits(psf_file_interp))
+        except:
+            print("No interpolated PSF found, doing it now")
+            psf_image = interpolate_2D(psf_image,mask_zero)
+            if saveinterp:
+                fits_with_copied_hdr(psf_image,fits_parent_path=psf_file,data_object="PSF image (neg. values interpolated)",data_history="Used image_manipulation.interpolate_2D to interpolate negative values",
+                fits_res_namepath=psf_file_interp,overwrite=True,verbose=True)
+    
     if saveplots:
         savefig_path  = get_savefigpath(setting,backup_path) 
         if setting.pssf>1:
@@ -72,7 +78,6 @@ def init_kwrg_psf(setting,saveplots=False,backup_path="backup_results"):
     err_psf_image = psf_correction(err_psf_image,setting)
     if saveplots:
         plot_image(err_psf_image,setting,savefig_path+"/err_psf.png",err_image=True)
-
 
     kwargs_psf = {'psf_type': "PIXEL", 
                   'kernel_point_source':psf_image,
@@ -205,7 +210,7 @@ def get_kwargs_constraints(setting):
 
 
 def init_lens_model(setting,lens_model_list=None):
-    setting = get_setting_module(setting,True)
+    setting = get_setting_module(setting,1)
     if lens_model_list is None:
         lens_model_list = init_lens_model_list(setting)
     lensModel = LensModel(lens_model_list=lens_model_list, z_lens=setting.z_lens, z_source=setting.z_source)
