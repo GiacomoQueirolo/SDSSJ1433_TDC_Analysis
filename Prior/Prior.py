@@ -70,7 +70,7 @@ def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_point
     #print("test result in "+savefig_path+"test_uniform_df.png")
 
 
-# In[ ]:
+
 
 
 def get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
@@ -158,7 +158,7 @@ def get_mcmc_mag_prior(mcmc_prior,param_mcmc,setting,mag_boundaries=None,thresho
 """
 
 
-# In[ ]:
+
 
 
 def is_in_boundaries(dfi,Df_boundaries):
@@ -168,7 +168,7 @@ def is_in_boundaries(dfi,Df_boundaries):
     return True
 
 
-# In[ ]:
+
 
 
 def get_prior(setting,npoints):
@@ -264,7 +264,7 @@ def index_image(param,ip,nparam,n_images=4):
         raise RuntimeError("These params should be image")
 
 
-# In[ ]:
+
 
 
 def Df_prior(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_path = "./backup_results/",output_name="mcmc_Df_prior"):
@@ -291,7 +291,7 @@ def Df_prior(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_pat
     return mcmc_Df_prior,Ntot
 
 
-# In[ ]:
+
 
 
 def Df_prior_ABC(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_path = "./backup_results/",output_name="mcmc_Df_prior_ABC"):
@@ -315,7 +315,7 @@ def Df_prior_ABC(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup
     return mcmc_Df_prior_ABC,Ntot
 
 
-# In[ ]:
+
 
 
 def mag_prior(setting,npoints=10000,mag_boundaries=None,save_mcmc=False,backup_path = "./backup_results/",output_name="mcmc_mag_rt_prior"):
@@ -361,7 +361,7 @@ def mag_prior_ABC(setting,npoints=10000,mag_boundaries=None,save_mcmc=False,back
     return mcmc_mag_prior_ABC,Ntot
 
 
-# In[ ]:
+
 
 
 """
@@ -408,7 +408,7 @@ def mag_prior_ABC(setting,npoints=10000,mag_boundaries=None,save_mcmc=False,back
 """
 
 
-# In[ ]:
+
 
 
 

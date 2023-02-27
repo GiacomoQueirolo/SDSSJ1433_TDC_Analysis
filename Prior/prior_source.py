@@ -14,12 +14,13 @@ from Data.conversion import qphi_from_e1e2
 from Plots.plotting_tools import base_colors
 from Utils.get_param_title import newProfile
 from Posterior_analysis.source_pos import get_source_gen,get_source_pos_PSO
+from Data.Param import conv_mcmc_i_to_kwargs,get_prm_list
 
 def get_prior_src_pos(sett,npoints=1000,saveprior=False):
     # this function is not used here (yet) but might be useful
     # from priors get mcmc prior of source pos
     sett = get_setting_module(sett).setting()
-    mcmc_prior,param_mcmc = get_prior(sett,npoints)
+    mcmc_prior = get_prior(sett,npoints)
     MCP_src_ra,MCP_src_dec = [],[] #MCMC prior source ra and dec
     for i in range(len(mcmc_prior)):
         kwres_i = conv_mcmc_i_to_kwargs(sett,mcmc_prior[i])
@@ -64,20 +65,21 @@ if __name__=="__main__":
     for sets in settings:
         savefig_path = get_savefigpath(sets)
         print_setting(sets)
-        mcmc_prior,param_mcmc = get_prior(sets,npoints)
+        mcmc_prior = get_prior(sets,npoints)
+        prm_mcmc_prior_i = get_prm_list (sets)
         if plot_prior:
             savefig_path = get_savefigpath(sets,backup_path)
-            lbls = [newProfile(prm)[0] for prm in param_mcmc]
+            lbls = [newProfile(prm)[0] for prm in prm_mcmc_prior_i]
             corner(mcmc_prior,labels=lbls,show_titles=True)
             plt.savefig(savefig_path+"/"+prior_name)
             plt.close()
-            src_pr_x,src_pr_y = get_prior_src_pos(sett,npoints=1000,saveprior=False)
+            src_pr_x,src_pr_y = get_prior_src_pos(sets,npoints=1000,saveprior=False)
             kw_source_pso = get_source_pos_PSO(sets)
             src_pso_x,src_pso_y = kw_source_pso["source_ra"],kw_source_pso["source_dec"]
             corner(np.array([src_pr_x,src_pr_y],lables=["Ra prior Source","Dec prior Source"],truths=[src_pso_x,src_pso_y]) )
             plt.savefig(savefig_path+"/Prior_source_pos.png")
         smpl_mcmc_prior.append(mcmc_prior)
-        prm_mcmc_prior.append(param_mcmc)
+        prm_mcmc_prior.append(prm_mcmc_prior_i)
         
     if len(settings)>1:
         save_dir_sup = create_dir_name(settings,save_dir="PDF_Sup_Corner/priors/",dir_name=dir_name,backup_path=backup_path,copy_settings=True)

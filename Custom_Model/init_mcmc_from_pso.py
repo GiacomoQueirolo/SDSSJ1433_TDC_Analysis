@@ -2,6 +2,7 @@
 # for HST_Main.py
 # recreate initial mcmc step from previous PSO backup results
 # so that we don't have to repeat it
+import numpy as np
 from lenstronomy.Util import sampling_util
 
 from Utils.tools import *
@@ -38,7 +39,7 @@ def create_mcmc_init(setting,backup_path="./backup_results/"):
         
         mc_init_sample =  sampling_util.sample_ball_truncated(best_pso,sigma_init,lower_limit,upper_limit)
 
-        return mc_init_sample
+        return np.array(mc_init_sample)
     except FileNotFoundError:
         print("No PSO files found, returning None mcmc initial sample")
         return None

@@ -6,6 +6,7 @@ import json,pickle
 from os import walk
 import pathlib as pth
 from datetime import datetime
+from numpy import round as npround
 
 def pycommand_info(date=True,toprint=False):
     # print the command and the time when the script was called 
@@ -97,7 +98,7 @@ def print_res_w_err(res,err,outstr=True):
     exp=int(str("{:.1e}".format(err)).split("e")[-1])
     if exp>-2 and exp<1:
         exp=-1
-    str_res = str(np.round(res,abs(exp)))+" $\pm$ "+str(np.round(err,abs(exp)))
+    str_res = str(npround(res,abs(exp)))+" $\pm$ "+str(npround(err,abs(exp)))
     # to implement in case of very large/small numbers to use the scientific notation -> not the case here
     if outstr:
         return str_res
@@ -424,6 +425,13 @@ def str_date():
     now      = datetime.now()
     t_string = now.strftime("%d/%m/%Y %H:%M:%S")
     return t_string
+
+def pickle_results(res,name,savefig_path=""):
+    # I save the kwargs result in a pickle, readable way
+    if not ".data" in name:
+        name+=".data"
+    with open(savefig_path+name,"wb") as f:
+        pickle.dump(res, f)
 
 # for pycs3
 ##########################################

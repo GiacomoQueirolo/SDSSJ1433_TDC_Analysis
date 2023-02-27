@@ -1,5 +1,4 @@
 import sys
-import json
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
