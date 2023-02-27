@@ -124,7 +124,7 @@ if __name__=="__main__":
     if WS:
         print("WARNING: this model DO NOT consider the source")
 
-    if WS and setting_nam[-3:]!="_ws":
+    if WS and setting_name[-3:]!="_ws":
         setting_dir=find_setting_path(setting_name)
         new_name = setting_dir+"/"+setting_name+"_ws.py"
         os.system("cp "+setting_dir+"/"+setting_name+".py "+new_name )
@@ -230,11 +230,11 @@ if __name__=="__main__":
         mcmc_file_name = save_json_name(setting,savemcmc_path,filename="mcmc_smpl")
         try:
             try:
-                mc_init_sample = get_res.load_whatever(mcmc_file_name)
+                mc_init_sample = np.array(get_res.load_whatever(mcmc_file_name))
             except:
                 print("TEST: load hp5 backend file")
                 import emcee
-                mc_init_sample = emcee.backends.HDFBackend(backend_filename, read_only=True).get_chain(flat=True)
+                mc_init_sample = np.array(emcee.backends.HDFBackend(backend_filename, read_only=True).get_chain(flat=True))
             n_burn = 0
         except:
             print(f"Both files {mcmc_file_name} and {backend_filename} not found or corrupted. Starting MCMC from scratch.")
@@ -251,7 +251,7 @@ if __name__=="__main__":
 
     # Try to solve the "OSError: [Errno 24] Too many open files" by deleting the 
     # n_run_cut implementation
-    from Custom_Model.my_lenstronomy.my_fitting_sequence import MyFittingSequence # ONLY IMPORT IT HERE OR IT BREAK THE CODE
+    from Custom_Model.my_lenstronomy.my_fitting_sequence import MyFittingSequence # ONLY IMPORT IT HERE OR IT BREAKS THE CODE
 
     fitting_seq = MyFittingSequence(kwargs_data_joint, kwargs_model, kwargs_constraints,\
                                   kwargs_likelihood, kwargs_params)
@@ -264,8 +264,8 @@ if __name__=="__main__":
         # start the MCMC from its best result. If no PSO, then we have to 
         # run it as usual
         ####################################################################
+        fitting_kwargs_list =[]
         if mc_init_sample is None:
-            fitting_kwargs_list =[]
             from Custom_Model.init_mcmc_from_pso import create_mcmc_init
             mc_init_sample = create_mcmc_init(setting,backup_path=backup_path)
             if mc_init_sample is None:
@@ -292,9 +292,9 @@ if __name__=="__main__":
         mc_logL   = np.array([*mc_init_logL,*mc_logL])
 
     # save here chain_list results
-    save_json(data=mc_sample,name=mcmc_file_name) 
+    save_json(data=mc_sample,filename=mcmc_file_name) 
     #save_mcmc_json(setting=setting,data=mc_sample, filename="mcmc_smpl",backup_path=backup_path)
-    save_json(data=mc_logL,name=mcmc_logL_file_name)
+    save_json(data=mc_logL,filename=mcmc_logL_file_name)
     #save_mcmc_json(setting=setting,data=mc_logL,   filename="mcmc_logL",backup_path=backup_path)
     if "PSO" in chain_list[0][0]:
         save_mcmc_json(setting=setting,data=chain_list[0],filename="pso",backup_path=backup_path)
@@ -316,9 +316,11 @@ if __name__=="__main__":
     print_res.write("kwargs_constraints:"+str(kwargs_constraints)+"\n")
     del kwargs_likelihood["image_likelihood_mask_list"]
     print_res.write("kwargs_likelihood:"+str(kwargs_likelihood)+"\n")
-    if run_type%1==0:
+    try:
         print_res.write("PSO particles: "+str(n_particles)+"\n")
         print_res.write("PSO run steps: "+str(n_iterations)+"\n")
+    except NameError:
+        pass
     print_res.write("MCMC run steps: "+str(n_run)+"\n")
     print_res.write("MCMC burn in steps: "+str(n_burn)+"\n")
     print_res.write("number of non-linear parameters in the MCMC process: "+ str(len(param_mcmc))+"\n")
@@ -337,9 +339,9 @@ if __name__=="__main__":
                           arrow_size=0.02, cmap_string="gist_heat")
 
     if not WS:
-        from plotting_tools import plot_model    as PM
+        from Plots.plotting_tools import plot_model    as PM
     else:
-        from plotting_tools import plot_model_WS as PM
+        from Plots.plotting_tools import plot_model_WS as PM
         
     PM(modelPlot,savefig_path,v_min,v_max,res_min,res_max)
     
@@ -406,12 +408,6 @@ if __name__=="__main__":
     #Closing result.txt
     print_res.close()
 
-    # I save the kwargs result in a pickly, readable way
-    def pickle_results(res,name):
-        if not ".data" in name:
-            name+=".data"
-        with open(savefig_path+name,"wb") as f:
-            pickle.dump(res, f)
     last_kw = {"read_results":kwargs_result,
     #           "read_sigma_up":kwargs_sigma_upper,
     #           "read_sigma_low":kwargs_sigma_lower,
@@ -419,7 +415,7 @@ if __name__=="__main__":
                "read_source":kwargs_source,
                "FR":FR}
     for nm in last_kw:
-        pickle_results(last_kw[nm],nm)
+        pickle_results(last_kw[nm],nm,savefig_path=savefig_path)
 
 
     # add some final commands
