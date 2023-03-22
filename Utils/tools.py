@@ -18,9 +18,15 @@ def pycommand_info(date=True,toprint=False):
         print(cmd)
     return cmd 
     
-def save_log_command(save_dir="."):
+def save_log_command(save_dir=".",date=True):
     # save the command line in a log file to relunch the program if needed
-    with open(save_dir+'/log_cmd.txt', 'w') as f:
+    str_date=""
+    if date:
+        if type(date) is str:
+            str_date="_"+date
+        else:
+            str_date="_"+datetime.now().strftime("%d%m%Y")
+    with open(save_dir+'/log_cmd'+str_date+'.txt', 'w') as f:
         f.write(pycommand_info())
 
 def present_program(name_prog=""):
@@ -432,6 +438,13 @@ def pickle_results(res,name,savefig_path=""):
         name+=".data"
     with open(savefig_path+name,"wb") as f:
         pickle.dump(res, f)
+
+###
+# for nice formatting:
+import argparse
+class CustomFormatter(argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
+    pass 
+###
 
 # for pycs3
 ##########################################
