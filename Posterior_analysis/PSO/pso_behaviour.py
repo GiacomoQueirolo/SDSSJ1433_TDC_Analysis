@@ -249,7 +249,7 @@ if __name__=="__main__":
         savemcmc_path = get_savemcmcpath(setting_name,backup_path) 
         
         param_mcmc    = get_mcmc_prm(setting_name,backup_path)
-        pso_file      = save_json_name(setting_name,path=savemcmc_path,filename="pso"):
+        pso_file      = save_json_name(setting_name,path=savemcmc_path,filename="pso")
         pso_chain     = load_whatever(pso_file)
         plot_pso_chain(pso_chain=pso_chain,setting=setting,savefig_path=savefig_path)
     success(sys.argv[0])

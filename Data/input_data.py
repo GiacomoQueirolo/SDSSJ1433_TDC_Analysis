@@ -59,7 +59,7 @@ def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_re
         psf_file_interp = psf_file.replace(".fits","_interp.fits") 
         try:
             psf_image = np.array(load_fits(psf_file_interp))
-        except:
+        except FileNotFoundError:
             print("No interpolated PSF found, doing it now")
             psf_image = interpolate_2D(psf_image,mask_zero)
             if saveinterp:

@@ -17,16 +17,8 @@ from astropy.io import fits
 from argparse import ArgumentParser
 from lenstronomy.ImSim.MultiBand.single_band_multi_model import SingleBandMultiModel
 
-
-# In[ ]:
-
-
 def get_bandmodel(setting):
-    kwargs_model     = get_kwargs_model(setting)
-    kwargs_data,mask = init_kwrg_data(setting,return_mask=True)
-    kwargs_numerics  = init_kwrg_numerics(setting)
-    kwargs_psf       = init_kwrg_psf(setting,saveplots=False)
-    multi_band_list  = [[kwargs_data, kwargs_psf, kwargs_numerics]]
+    multi_band_list,mask = init_multi_band_list(setting=setting,return_mask=True,saveplots=False)
     image_likelihood_mask_list = [mask.tolist()]
     bandmodel = SingleBandMultiModel(multi_band_list, kwargs_model, likelihood_mask_list=image_likelihood_mask_list,band_index=0)
     return bandmodel

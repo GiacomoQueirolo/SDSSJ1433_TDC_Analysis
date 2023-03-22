@@ -12,7 +12,6 @@ class logL_ellipticity_aligned(object):
     def __init__(self, SUB, phi_ll=None):
         self.SUB    = SUB
         self.phi_ll = phi_ll
-        pass
     
     def __call__(self, kwargs_lens=None, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
         return self.logL_addition(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
@@ -56,12 +55,11 @@ class logL_ellipticity_qphi(object):
 
     def __init__(self, SUB, phi_ll=None, q_ll=None):
         self.SUB    = SUB
-        self.phi_ll = phi_ll
         self.q_ll   = q_ll
-        pass
+        self.phi_ll = phi_ll
     
-    def __call__(self, kwargs_lens=None, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
-        return self.logL_addition(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
+    def __call__(self, kwargs_lens, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
+        return self.logL_addition(kwargs_lens,kwargs_lens_light)
 
     def logL_ellipt_phi(self,phi,phi_ll,sigma_phi=4.5,bound=None):
         # give the log_L of a clipped normal likel.
@@ -84,7 +82,7 @@ class logL_ellipticity_qphi(object):
             return -diff**2/sigma_q**2/2
         
 
-    def logL_addition(self, kwargs_lens, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
+    def logL_addition(self, kwargs_lens, kwargs_lens_light=None):
         """
         a definition taking as arguments 
         (kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
@@ -104,9 +102,9 @@ class logL_ellipticity_qphi(object):
         e1,e2 = kwargs_lens[0]["e1"],kwargs_lens[0]["e2"]
         q,phi = qphi_from_e1e2(e1,e2,ret_deg=True)
         
-        logL  =  self.logL_ellipt_phi(phi,phi_ll)
-        logL  += self.logL_ellipt_q(q,q_ll)
-        return logL
+        logL_add  =  self.logL_ellipt_phi(phi,phi_ll)
+        logL_add  += self.logL_ellipt_q(q,q_ll)
+        return logL_add
 
 
 #################### TEST #######################
@@ -133,7 +131,6 @@ class logL_combined(object):
         self.SUB    = SUB
         self.phi_ll = phi_ll
         self.q_ll   = q_ll
-        pass
     
     def __call__(self, kwargs_lens=None, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
         return self.logL_addition(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)

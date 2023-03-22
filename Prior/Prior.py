@@ -35,7 +35,7 @@ def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_point
     # mcmc_prior shape = param, n_points
     # setting = setting module
     # Df_boundaries = [[min_AB,max_AB],[min_A..],..]
-    # threshold_mcmc_points = int, minumum number of poiints in the boundaries
+    # threshold_mcmc_points = int, minimum number of points in the boundaries
     # previous_mcmc = previous points to append to the sampling
     mcmc_prior_Df = gen_mcmc_Df(mcmc_prior,setting)  #D_AB, D_AC, D_AD, meaning Df_i - Df_A
     if previous_mcmc is not None:
@@ -58,7 +58,7 @@ def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_point
             if not is_in_boundaries(mcmc_prior_Df_cut[i],Df_boundaries):
                 del mcmc_prior_Df_cut[i]
         if len(mcmc_prior_Df_cut)<threshold_mcmc_points:
-            success_string = "The excluded points are {}, leaving only {} points in the final fermat MCMC. Run with larger n_points".format(excluded_points,len(mcmc_prior_Df_cut))
+            success_string = f"The excluded points are {excluded_points}, leaving only {len(mcmc_prior_Df_cut)} points in the final fermat MCMC. Run with larger n_points"
             success=[False,success_string]
         return mcmc_prior_Df_cut,success,Ntot
         
@@ -108,7 +108,7 @@ def get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries=None,threshold_mcmc_poi
             if not is_in_boundaries(mcmc_prior_mag_cut[i],mag_boundaries):
                 del mcmc_prior_mag_cut[i]
         if len(mcmc_prior_mag_cut)<threshold_mcmc_points:
-            success_string = "The excluded points are {}, leaving only {} points in the final mag MCMC. Run with larger n_points".format(excluded_points,len(mcmc_prior_mag_cut))
+            success_string = f"The excluded points are {excluded_points}, leaving only {len(mcmc_prior_mag_cut)} points in the final fermat MCMC. Run with larger n_points" 
             success=[False,success_string]
         return mcmc_prior_mag_cut,success,Ntot
     

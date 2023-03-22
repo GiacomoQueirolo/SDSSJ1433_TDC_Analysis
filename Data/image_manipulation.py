@@ -447,7 +447,7 @@ def extract_phi_ll(model_name,setting,min_ra=0.):
     
     # ignore PA close to the center:
     pa_cut = pa[np.where(np.array(ra14)>min_ra**(1./4))]
-    PA     = np.mean(   ) # this should be in the ref. Frame of the image
+    PA     = np.mean(pa_cut) # this should be in the ref. Frame of the image
     # have to be converted first in WST FoR    
     
     rotang    = get_rotangle(trasnforM)

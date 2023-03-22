@@ -1,4 +1,4 @@
-import os,sys
+import sys
 import corner
 import argparse
 import warnings
@@ -13,8 +13,8 @@ from Prior.Prior import get_prior
 from Data.conversion import qphi_from_e1e2
 from Plots.plotting_tools import base_colors
 from Utils.get_param_title import newProfile
-from Posterior_analysis.source_pos import get_source_gen,get_source_pos_PSO
 from Data.Param import conv_mcmc_i_to_kwargs,get_prm_list
+from Posterior_analysis.source_pos import get_source_gen,get_source_pos_PSO
 
 def get_prior_src_pos(sett,npoints=1000,saveprior=False):
     # this function is not used here (yet) but might be useful

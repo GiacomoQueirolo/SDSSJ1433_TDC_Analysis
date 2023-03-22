@@ -53,7 +53,7 @@ def _get_EE(setting):
     return aper,EE
 
 """
-def flux_in_grid(lens_light_pix,grid): 
+def flux_in_grid(lens_light_pix,flat_grid_degraded): 
     # now the problem is, the grid is not discretised in pixels
     # we now have a grid with the coord of the pixels
     flux = np.sum([lens_light_pix[i[0]][i[1]] for i in flat_grid_degraded])

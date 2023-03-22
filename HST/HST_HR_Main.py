@@ -3,29 +3,15 @@
 
 # # Modelling of the Quad SDSSJ144+6007 with HST image
 # Copy from HST_HR.ipynb, modelling both _ws and not _ws setting file with the same program
-# In[1]:
 
-
-import os,sys
-import corner
-import importlib
+import os,sys 
+import pickle
+import argparse
 import numpy as np
-import json,copy,pickle
-from astropy.io import fits
 from datetime import datetime
 import matplotlib.pyplot as plt
-from argparse import ArgumentParser
-from lenstronomy.Data.psf import PSF
-from lenstronomy.Plots.model_plot import ModelPlot
-from lenstronomy.Data.imaging_data import ImageData
-from lenstronomy.ImSim.image_model import ImageModel
-from lenstronomy.LensModel.lens_model import LensModel
-from lenstronomy.LightModel.light_model import LightModel
-from lenstronomy.PointSource.point_source import PointSource
 
-
-# In[2]:
-
+from lenstronomy.Plots.model_plot import ModelPlot 
 
 from Utils import get_res
 from Utils.tools import *
@@ -36,10 +22,8 @@ from Posterior_analysis import mag_remastered
 from Data.image_manipulation import *
 #from custom_logL import logL_ellipticity_aligned as logL_ellipticity # MOD_CUSTOM_LIKE
 #from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity # MOD_CUSTOM_LIKE_II
-from Data.input_data import init_lens_model,init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_kwargs_model
+from Data.input_data import init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_kwargs_model
 from Custom_Model.custom_logL import init_kwrg_custom_likelihood
-
-
 from Posterior_analysis.source_pos import get_source_pos_MCMC
 
 
@@ -47,19 +31,14 @@ if __name__=="__main__":
     ############################
     present_program(sys.argv[0])
     ############################
-
-
-    
-
-
-    parser = ArgumentParser(description="Lens modelling program")
-    parser.add_argument('-rt','--run_type',type=int,dest="run_type",default=0,help="Type of run: \n \
-                    0 = standard, PSO_it = 700*rf   PSO_prt = 400*rf    MCMCb = 200*rf  MCMCr = 800*rf\n \
-                    1 = append  MCMCb = 200*rf (only used if no previous MCMC found )  MCMCr=800*rf\n\
-                    2 = test run  PSO_it = 3   PSO_prt = 3   MCMCb = 1 MCMCr = 2\n\
-                    3 = append test   MCMCb = 2  MCMCr=2\n\
-                    (PSO_it: PSO iterations, PSO_prt: PSO particles, MCMCr: MCMC run steps, MCMCb: MCMC burn in steps)")
-    parser.add_argument('-rf','--run_factor',type=float,dest="run_factor",default=20.,help="Run factor to have longer run")
+    parser = argparse.ArgumentParser(prog=sys.argv[0],description="Lens modelling program",formatter_class=CustomFormatter)
+    parser.add_argument('-rt','--run_type',type=int,dest="run_type",default=0,help= """Type of run: 
+        0 = standard, PSO_it = 800*rf   PSO_prt = 300*rf    MCMCb = 2000*rf  MCMCr = 8000*rf 
+        1 = append  MCMCb = 2000*rf (only used if no previous MCMC found )  MCMCr=8000*rf 
+        2 = test run  PSO_it = 3   PSO_prt = 3   MCMCb = 1 MCMCr = 2 
+        3 = append test   MCMCb = 2  MCMCr=2 
+    (PSO_it: PSO iterations, PSO_prt: PSO particles, MCMCr: MCMC run steps, MCMCb: MCMC burn in steps)\n""")
+    parser.add_argument('-rf','--run_factor',type=float,dest="run_factor",default=2.,help="Run factor to have longer run")
     parser.add_argument('-tc','--threadCount',type=int,dest="threadCount",default=150,help="Number of CPU threads for the MCMC parallelisation (max=160)")
     parser.add_argument('SETTING_FILE',default="",help="setting file to model")
 
@@ -75,13 +54,13 @@ if __name__=="__main__":
     if run_type==0:
         n_iterations = int(700*run_fact) #number of iteration of the PSO run
         n_particles  = int(400*run_fact) #number of particles in PSO run
-        n_run  = int(800*run_fact) #MCMC total steps 
-        n_burn = int(200*run_fact) #MCMC burn in steps
+        n_run  = int(8000*run_fact) #MCMC total steps 
+        n_burn = int(2000*run_fact) #MCMC burn in steps
     elif run_type ==1:
         append_MC=True
         # n_burn only used if previous MCMC not found
-        n_burn = int(200*run_fact) #MCMC burn in steps
-        n_run  = int(800*run_fact) #MCMC total steps 
+        n_burn = int(2000*run_fact) #MCMC burn in steps
+        n_run  = int(8000*run_fact) #MCMC total steps 
     elif run_type==2:
         n_iterations = int(3) #number of iteration of the PSO run
         n_particles  = int(3) #number of particles in PSO run
@@ -94,10 +73,7 @@ if __name__=="__main__":
     else:
         raise RuntimeError("Give a valid run_type or implement it your own")
 
-    np.seterr(all="ignore");
-
-
-    # In[3]:
+    np.seterr(all="ignore")
 
 
     backup_path   = "backup_results"
@@ -110,9 +86,6 @@ if __name__=="__main__":
     setting_path = find_setting_path(setting_name)
     os.system("cp "+setting_path+"/"+setting_name+".py "+savefig_path+".") #we copy the setting file to that directory
     sys.path.append(setting_path)
-
-
-    # In[6]:
 
 
     setting = get_setting_module(setting_name).setting()
@@ -144,14 +117,7 @@ if __name__=="__main__":
     print("Machine: ",os.uname()[1]) 
     print("Setting file:", setting_name)
     print("Started the :", dt_string)
-
-    """
-    image_file   = setting.data_path+setting.image_name
-    err_file     = setting.data_path+setting.err_name
-    psf_file     = setting.data_path+setting.psf_name 
-    err_psf_file = setting.data_path+setting.err_psf
-    """
-
+ 
     ##Printout of the results
     print_res = open(savefig_path+"results.txt","w")
     print_res.write("Results for "+setting_name+" \n")
@@ -182,8 +148,7 @@ if __name__=="__main__":
 
 
     # ### Parameters for the PSO/MCMC runs
-    
-    #kwargs_likelihood = init_kwrg_likelihood(setting,mask)
+     
     kwargs_likelihood = init_kwrg_custom_likelihood(setting,mask,custom="qphi")
      
 
@@ -225,9 +190,10 @@ if __name__=="__main__":
                          
     #  'joint_lens_with_light': list [[i_light, k_lens, ['param_name1', 'param_name2', ...]], [...], ...],
     #   joint parameter between lens model and lens light model
-
+    mcmc_file_name = save_json_name(setting,savemcmc_path,filename="mcmc_smpl")
+    mcmc_logL_file_name = save_json_name(setting,savemcmc_path,filename="mcmc_logL")
+        
     if append_MC :
-        mcmc_file_name = save_json_name(setting,savemcmc_path,filename="mcmc_smpl")
         try:
             try:
                 mc_init_sample = np.array(get_res.load_whatever(mcmc_file_name))
@@ -240,7 +206,6 @@ if __name__=="__main__":
             print(f"Both files {mcmc_file_name} and {backend_filename} not found or corrupted. Starting MCMC from scratch.")
             mc_init_sample = None
         
-        mcmc_logL_file_name = save_json_name(setting,savemcmc_path,filename="mcmc_logL")
         try:
             mc_init_logL = get_res.load_whatever(mcmc_logL_file_name)
         except:
