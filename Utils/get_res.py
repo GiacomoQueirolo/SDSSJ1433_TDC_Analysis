@@ -1,7 +1,10 @@
 ## little functions to easily get the results from previous calculations
 import json,pickle 
+from copy import deepcopy
 from corner import quantile
 from numpy import abs as npabs
+from numpy import array,transpose
+
 
 from Utils.tools import *
 
@@ -52,11 +55,29 @@ def get_mcmc_chain(setting_name,mcmc_name,backup_path="backup_results"):
     file_name      = setting_name.replace("settings","mcmc_"+mcmc_name).replace(".py","")+".json"
     mcmc_file_name = savemcmc_path+file_name
     mcmc = load_whatever(mcmc_file_name)
-    from numpy import array
+    
     return array(mcmc)
     
 def get_mcmc_fermat(setting_name,backup_path="backup_results"):
     return get_mcmc_chain(setting_name,"ordered_fermat",backup_path)
+
+def get_mcmc_Df(setting_name,backup_path="backup_results",noD=True):
+    # noD: ignore image D and return AB,AC and BC instead
+    # return : mcmc_Df, shape: len_mcmc, 3
+    mcmc_fermat = get_mcmc_fermat(setting_name,backup_path)
+    # first MUST be A
+    mcmc_DfT = transpose(mcmc_fermat)[1:]-transpose(mcmc_fermat)[0] 
+    #mcmc_Df = mcmc_DfT.T.tolist() 
+    if noD:
+        mcmc_cp    = array(deepcopy(mcmc_DfT))
+        # BC = C - B = (C-A)-(B-A) = AC - AB
+        mcmc_BC    = mcmc_cp[1] - mcmc_cp[0]  
+        mcmc_cp[2] = mcmc_BC
+        mcmc_Df    = mcmc_cp.T.tolist()
+    else:
+        mcmc_Df    = mcmc_DfT.T.tolist()
+    return mcmc_Df    
+
 
 def get_mcmc_mag(setting_name,backup_path="backup_results"):
     return get_mcmc_chain(setting_name,"mag_rt",backup_path)

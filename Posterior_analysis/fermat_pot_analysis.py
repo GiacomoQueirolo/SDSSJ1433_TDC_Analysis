@@ -13,10 +13,12 @@ import multiprocess
 from lenstronomy.LensModel.lens_model import LensModel
 #import multiprocessing  # doesn't work with non-pickable objects, as the lensmodel and other fnct
 
-from Utils.get_res import *
 from Utils.tools import *
-from Utils.order_images import get_new_image_order
+from Utils.get_res import *
 from Data.Param import get_Param
+from Data.input_data import init_lens_model
+from Utils.order_images import get_new_image_order
+
 #labels_Fermat = ["$\phi_{Fermat}A$", "$\phi_{Fermat}B$","$\phi_{Fermat}C$" ,"$\phi_{Fermat}D$"]
 #labels_Df     = ["$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} AD$"]
 labels_Fermat = ["$\phi_A$", "$\phi_B$","$\phi_C$" ,"$\phi_D$"]
@@ -33,17 +35,7 @@ def _get_fermat(mcmc_i,param_class,lensModel):
 def gen_mcmc_fermat(mcmc,setting):
     # mcmc_prior shape = param, n_points
     # setting   = setting module
-    
-    if not check_if_CP(setting):
-        lens_model_list = ['SIE']
-    else:     
-        print("WARNING: Considering the PEMD profile for the main lens")
-        lens_model_list = ['PEMD']
-    lens_model_list =[*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
-    lensModel = LensModel(lens_model_list=lens_model_list, 
-                          z_lens=setting.z_lens,
-                          z_source=setting.z_source)
-
+    lensModel = init_lens_model(setting)
     mcmc_fermat = []
     param_class = get_Param(setting)
     pool = multiprocess.Pool()
@@ -51,7 +43,7 @@ def gen_mcmc_fermat(mcmc,setting):
         return _get_fermat(mcmc_i,param_class,lensModel)
         
     mcmc_fermat = pool.map(getferm,mcmc) #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
-
+    pool.close()
     #I want to obtain the correct image order
     ########################################
     new_order = get_new_image_order(setting,mcmc)
