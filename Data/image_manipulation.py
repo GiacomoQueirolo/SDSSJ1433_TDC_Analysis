@@ -457,7 +457,6 @@ def extract_phi_ll(model_name,setting,min_ra=0.):
 
 def extract_q_ll(model_name,setting,min_ra=0.):
     data_path  = setting.data_path
-    trasnforM  = setting.transform_pix2angle
     
     model_path = data_path+"/"+model_name
     param_val  = load_fits(model_path,HDU=-1)
@@ -468,8 +467,14 @@ def extract_q_ll(model_name,setting,min_ra=0.):
     
     # ignore EPS close to the center:
     eps_cut = eps[np.where(np.array(ra14)>min_ra**(1./4))]
-    EPS     = np.mean(eps_cut)
-    return EPS
+
+    # 2nd feb. 2023: eps!= q
+    # eps = 1-b/a = 1-q -> q=1-eps
+    q_cut = 1 - eps_cut
+    Q     = np.mean(q_cut)
+    return Q
+
+
 
 
 def fits_with_copied_hdr(data,fits_parent_path,data_object="",data_history="",fits_res_namepath=None,overwrite=True,verbose=True):
