@@ -71,7 +71,7 @@ def plot_H0(H0,PH0,figname=False,title=r"$P(H_0)$",return_plot=False,add_mode=Tr
     yh0 = max(PH0)/2
     n = len(x)
     h0_res,err_min,err_max= quantiles(PH0,H0,return_quantiles=False)
-    fig,ax = plt.subplots(1,1,figsize=(12,12)) 
+    fig,ax = plt.subplots(1,1,figsize=(8,8)) 
     ax.plot(x,y,'b+:')
     ax.errorbar(h0_res,yh0,yerr=None,xerr=[[err_min],[err_max]],fmt="k",capsize=4)
     ax.scatter(h0_res ,yh0, c="k",marker="*",s=100)#,label="$H_0$"

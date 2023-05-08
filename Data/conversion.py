@@ -194,7 +194,7 @@ def conv_xy_from_setting1_to_setting2(x1,y1,setting1,setting2):
 
 ### from ellipticities_conversion.py -> heaviliy reworked from param_util.py from lenstronomy ###
 
-def e12_from_qphi(phi, q,deg=True):
+def e1e2_from_qphi(q,phi,deg=True):
     """
     transforms orientation angle and axis ratio into complex ellipticity moduli e1, e2
 

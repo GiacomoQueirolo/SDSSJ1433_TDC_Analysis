@@ -85,7 +85,19 @@ def get_boundaries(cnt,points):
             boundary.append(p)
     return boundary
 """
-    
+def create_img(setting,ax=None,vmax=None,vmin=None):
+    sets    = get_setting_module(setting).setting()
+    image_path = sets.data_path+sets.image_name 
+    fits_image = load_fits(image_path)
+    if ax is None:
+        _, ax = plt.subplots(figsize=(9,9))    
+    if vmax is None:
+        vmax = sets.v_max
+    if vmin is None:
+        vmin = sets.v_min
+    ax.imshow(fits_image, cmap = plt.cm.gist_heat,vmax=vmax,vmin=vmin)
+    return ax
+
 def create_pos_img(setting_name,RP,RM,also_fits=False,save=False):
     sets    = get_setting_module(setting_name).setting()
     numPix  = get_numPix(sets)
@@ -338,11 +350,8 @@ def create_pos_img(setting_name,RP,RM,also_fits=False,save=False):
 
         print("Reg file in ",reg_file)
     
-    image_path = sets.data_path+sets.image_name 
-    fits_image = load_fits(image_path)
-    fig, ax = plt.subplots(figsize=(9,9))    
-    ax.imshow(fits_image, cmap = plt.cm.gist_heat)
-    
+    ax = create_img(sets)
+
     rnd = False
     for i in range(len(to_plot)):
         x,y = to_plot[i]["x"],to_plot[i]["y"]#left bottom corner, no more needed to correct for DS9 starting from 1

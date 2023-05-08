@@ -6,20 +6,11 @@
 
 import numpy as np
 import json
-from scipy import stats
-import os
-from datetime import datetime
-import time 
-import matplotlib.pyplot as plt
-import pickle
-from corner import corner
+import os 
+import pickle 
 import sys
 import pathlib as pth
 import argparse
-from lenstronomy.Sampling.Pool.multiprocessing import MultiPool
-from lenstronomy.Util.sampling_util import sample_ball
-#from mag_remastered import mag
-from emcee import EnsembleSampler
 import copy
 
 #my libs

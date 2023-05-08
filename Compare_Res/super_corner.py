@@ -74,12 +74,12 @@ def plot_sup_corner_Df(setting_list,fermat_mcmc=None,col=base_colors,savefig_dir
     #plt.tight_layout()
     if savefig_dir:
         fg.savefig(str(savefig_dir)+"/"+name_pdf+".pdf")
-        print("Produced Df_sup.pdf in "+str(savefig_dir))
+        print("Produced "+name_pdf+".pdf in "+str(savefig_dir))
     else:
         return fg,ax
 
 def plt_sup_corner_lnsprm(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=None,stnd_lnsprm=False,ign_lnsprm_qphi=False,
-                    col=base_colors,savefig_dir=None,simple_legend=False,backup_path="backup_results/"):
+                    col=base_colors,savefig_dir=None,simple_legend=False,name_pdf="lnsprm_sup",backup_path="backup_results/"):
     print("Producing lens params superposed corner plot")
     setting_name = get_setting_name(setting_list) 
     samples_comp,kw_pair = get_sample_and_kwpair(setting_names=setting_names, smpl_mcmc=smpl_mcmc,prm_mcmc=prm_mcmc,cut_mcmc=cut_mcmc)
@@ -109,8 +109,8 @@ def plt_sup_corner_lnsprm(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=Non
     if not ign_lnsprm_qphi:
         qphi_app = "_qphi"
     if savefig_dir is not None:
-        fg.savefig(str(savefig_dir)+"/lnsprm_sup"+qphi_app+".pdf")
-        print("Produced lnsprm_sup"+qphi_app+".pdf in "+str(savefig_dir))
+        fg.savefig(str(savefig_dir)+"/"+name_pdf+qphi_app+".pdf")
+        print("Produced "+name_pdf+qphi_app+".pdf in "+str(savefig_dir))
     else:
         return fg,ax
 
@@ -157,7 +157,7 @@ def get_sample_and_kwpair(setting_names,smpl_mcmc=None,cut_mcmc=None,prm_mcmc=No
     return samples_comp,prm_comp
 
 def plt_SC_LandFP(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=None,fermat_mcmc=None,param_fermat=param_names,already_BC=False,stnd_lnsprm=False,
-                    col=base_colors,savefig_dir=None,simple_legend=False,backup_path="backup_results/"):
+                    col=base_colors,savefig_dir=None,simple_legend=False,name_pdf="lnDf_sup",backup_path="backup_results/"):
     print("Producing superposed corner plot for lens params and Df ")
     settings_names = get_setting_name(setting_list)
     if fermat_mcmc is None:
@@ -203,8 +203,8 @@ def plt_SC_LandFP(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=None,fermat
     axdel.axis("off")
  
     if savefig_dir is not None:
-        fg.savefig(str(savefig_dir)+"/lnDf_sup.pdf")
-        print("Produced lnDf_sup.pdf in "+str(savefig_dir))
+        fg.savefig(str(savefig_dir)+"/"+name_pdf+".pdf")
+        print("Produced "+name_pdf+".pdf in "+str(savefig_dir))
     else:
         return fg,ax
 
@@ -240,13 +240,8 @@ if __name__=="__main__":
     simple_legend   = args.simple_legend
     ign_source      = args.ignore_source        
 
-    setting_name = []
-    setting_position = []
-    for sn in setting_names:
-        setting_position.append(find_setting_path(sn))
-        setting_name.append(get_setting_name(sn))
-
-
+    setting_name    = get_setting_name(setting_names)
+    
     #############################
     present_program(sys.argv[0])
     #############################

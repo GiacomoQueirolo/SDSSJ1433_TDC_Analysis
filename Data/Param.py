@@ -1,4 +1,3 @@
-import pickle
 from lenstronomy.Sampling.parameters import Param
 
 from Utils.tools import * 
@@ -66,7 +65,7 @@ def get_sigma(setting):
     sigma_dic = {}
     for kw in keywords:
         not_present = []
-        if kw is "special":
+        if kw == "special":
             not_present = {}
         sigma_dic[f"kwargs_{kw}"] = getattr(setting,f"{kw}_params",[None,not_present])[1]
     return sigma_dic

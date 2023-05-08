@@ -6,7 +6,7 @@ import json,pickle
 from os import walk
 import pathlib as pth
 from datetime import datetime
-from numpy import round as npround
+import numpy as np
 
 def pycommand_info(date=True,toprint=False):
     # print the command and the time when the script was called 
@@ -104,7 +104,7 @@ def print_res_w_err(res,err,outstr=True):
     exp=int(str("{:.1e}".format(err)).split("e")[-1])
     if exp>-2 and exp<1:
         exp=-1
-    str_res = str(npround(res,abs(exp)))+" $\pm$ "+str(npround(err,abs(exp)))
+    str_res = str(np.round(res,abs(exp)))+" $\pm$ "+str(np.round(err,abs(exp)))
     # to implement in case of very large/small numbers to use the scientific notation -> not the case here
     if outstr:
         return str_res
@@ -160,42 +160,27 @@ def find_setting_path(setting_name):
     else:
         return setting_path[0]
 
-def check_if_CP(setting):
-    if type(setting) is str:
-        setting=get_setting_module(setting).setting()
-    try:
-        CP = setting.CP
-    except AttributeError:
-        if "gamma" in list(setting.lens_params[0][0].keys()):
-            CP=True
-        else:
-            CP=False
-    return CP
 
-def check_if_WS(setting):
-    if type(setting) is str:
-        setting=get_setting_module(setting).setting()
-    try:
-        WS = setting.WS
-    except AttributeError:
-        if hasattr(setting,"source_params"):
-                WS=False
-        else:
-                WS=True
-    return WS
-
-def check_if_SUB(setting):
-    setting = get_setting_module(setting).setting()
-    if setting.sub is True:
-        # no matter the lens_light_model_name: it could be None bc it was already subtracted
-        SUB = True
+def _get_setting_name(setting):
+    setting = verify_setting_name(setting)
+    if type(setting) is not str:
+        try:
+            setting_name = setting.__module__
+        except AttributeError:
+            setting_name = setting.setting().__module__
     else:
-        SUB = False
-    #else: 
-    #    raise RuntimeError("Something wrong:"+str(setting.lens_light_model_name)+" "+str(setting.sub))
-    return SUB
-
-
+        setting_name = setting
+    return str(setting_name)
+    
+def get_setting_name(setting):
+    if type(setting) is list:
+        st_nm = []
+        for sett_i in setting:
+            st_nm.append(_get_setting_name(sett_i))
+        return st_nm
+    else:
+        return _get_setting_name(setting) 
+        
 def _get_setting_module(setting_name,sett=False):
     setting_name = verify_setting_name(setting_name)
     try:
@@ -230,6 +215,49 @@ def get_setting_module(setting_name,sett=False):
     else:
         return _get_setting_module(setting_name,sett=sett)
     
+# try decorator
+def check_setting(funct):
+    def _check_sett(setting,*args,**kwargs):
+        # note: setting MUST BE the first argument
+        setting=get_setting_module(setting,1)
+        return funct(setting,*args,**kwargs)
+    return _check_sett
+
+@check_setting
+def check_if_CP(setting):
+    try:
+        CP = setting.CP
+    except AttributeError:
+        if "gamma" in list(setting.lens_params[0][0].keys()):
+            CP=True
+        else:
+            CP=False
+    return CP
+
+
+@check_setting
+def check_if_WS(setting):
+    try:
+        WS = setting.WS
+    except AttributeError:
+        if hasattr(setting,"source_params"):
+                WS=False
+        else:
+                WS=True
+    return WS
+
+@check_setting
+def check_if_SUB(setting):
+    if setting.sub is True:
+        # no matter the lens_light_model_name: it could be None bc it was already subtracted
+        SUB = True
+    else:
+        SUB = False
+    #else: 
+    #    raise RuntimeError("Something wrong:"+str(setting.lens_light_model_name)+" "+str(setting.sub))
+    return SUB
+
+
 def get_savefigpath(setting,backup_path="backup_results"):
     backup_path  = str(backup_path)    
     setting_name = get_setting_name(setting)
@@ -243,24 +271,14 @@ def get_savemcmcpath(setting,backup_path="backup_results"):
     setting_name  = setting_name.replace(".py","")  
     savemcmc_path = "./"+backup_path+"/"+setting_name.replace("settings_","mcmc_")+"/"
     return savemcmc_path
-
-def get_backend_filename(setting,backup_path="backup_results"):
-    setting_name  = get_setting_name(setting)
-    savemcmc_path = get_savemcmcpath(setting,backup_path=backup_path)
-    backend_name  = create_path_from_list([savemcmc_path,
-                    "backend_mcmc_"+strip_setting_name(setting_name)+".hp5"])
-    return backend_name
     
-
-    
-def get_kwargs_params(setting_name):
-    setting_mod = get_setting_module(setting_name)
-    sett = setting_mod.setting()
-    kwargs_params = {'lens_model': sett.lens_params,
-                'point_source_model': sett.ps_params,
-                'lens_light_model': sett.lens_light_params}
+@check_setting
+def get_kwargs_params(setting):
+    kwargs_params = {'lens_model': setting.lens_params,
+                'point_source_model': setting.ps_params,
+                'lens_light_model': setting.lens_light_params}
     try:
-        kwargs_params['source_model'] = sett.source_params
+        kwargs_params['source_model'] = setting.source_params
     except AttributeError:
         # it's a _ws setting file
         pass
@@ -283,25 +301,16 @@ def print_kwargs(setting_name):
             print("")
         print("")
 
-def _get_setting_name(setting):
-    setting = verify_setting_name(setting)
-    if type(setting) is not str:
-        try:
-            setting_name = setting.__module__
-        except AttributeError:
-            setting_name = setting.setting().__module__
-    else:
-        setting_name = setting
-    return str(setting_name)
-    
-def get_setting_name(setting):
-    if type(setting) is list:
-        st_nm = []
-        for sett_i in setting:
-            st_nm.append(_get_setting_name(sett_i))
-        return st_nm
-    else:
-        return _get_setting_name(setting) 
+
+        
+def get_backend_filename(setting,backup_path="backup_results"):
+    setting_name  = get_setting_name(setting)
+    savemcmc_path = get_savemcmcpath(setting,backup_path=backup_path)
+    backend_name  = create_path_from_list([savemcmc_path,
+                    "backend_mcmc_"+strip_setting_name(setting_name)+".hp5"])
+    return backend_name
+        
+
     
 def strip_setting_name(setting,filter=False):
     setting_name = get_setting_name(setting)
@@ -375,11 +384,10 @@ def create_dir_name(settings,save_dir=".",dir_name=None,backup_path="./backup_re
 
     return save_dir
 
-
-def get_param_input(settings,param_name,prm_type=None):
-    sett = get_setting_module(settings).setting()
+@check_setting
+def get_param_input(setting,param_name,prm_type=None):
     if "image" in param_name:
-        prms = sett.ps_params
+        prms = setting.ps_params
         try:
             int(param_name[-1])
         except ValueError:
@@ -387,14 +395,14 @@ def get_param_input(settings,param_name,prm_type=None):
             
     if "lens" in param_name:
         if "light" in param_name:
-            prms = sett.lens_light_params
+            prms = setting.lens_light_params
         else:
-            prms = sett.lens_params
+            prms = setting.lens_params
     if "source" in param_name:
-        if check_if_WS(sett):
+        if check_if_WS(setting):
             print("WARNING: This setting file doesn't have a source, hence no ",param_name)
             return -1
-        prms = sett.source_params
+        prms = setting.source_params
     
     prm_nm  = "_".join(param_name.split("_")[:-1]) # get rid of the type of param 
     prm_nmb = int(param_name[-1])
@@ -431,6 +439,7 @@ def str_date():
     now      = datetime.now()
     t_string = now.strftime("%d/%m/%Y %H:%M:%S")
     return t_string
+
 
 def pickle_results(res,name,savefig_path=""):
     # I save the kwargs result in a pickle, readable way
