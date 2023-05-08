@@ -9,10 +9,10 @@ from Data.interpolation import interpolate_2D
 from lenstronomy.LensModel.lens_model import LensModel
 #from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity
 
+@check_setting
 def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_mask=False):
     if saveplots:
-        savefig_path  = get_savefigpath(setting,backup_path) 
-    setting      = get_setting_module(setting,1)
+        savefig_path  = get_savefigpath(setting,backup_path)
     image_file   = setting.data_path+setting.image_name
     err_file     = setting.data_path+setting.err_name
 
@@ -48,9 +48,9 @@ def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_m
         return kwargs_data
     else:
         return kwargs_data,mask
-
+    
+@check_setting
 def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_results"):
-    setting      = get_setting_module(setting,1)
     psf_file     = setting.data_path+setting.psf_name 
     err_psf_file = setting.data_path+setting.err_psf
     psf_image = np.array(load_fits(psf_file))
@@ -85,13 +85,8 @@ def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_re
                   'psf_error_map':err_psf_image}
     return kwargs_psf
 
-
+@check_setting
 def init_kwrg_numerics(setting):
-    if isinstance(setting,str):
-        # else is already the function setting()
-        setting_module = get_setting_module(setting) 
-        setting = setting_module.setting()
-
     if setting.pssf==1:
         kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
     else:
@@ -100,8 +95,8 @@ def init_kwrg_numerics(setting):
                             'point_source_supersampling_factor':setting.pssf} #not sure this is needed -> it is
     return kwargs_numerics
 
+@check_setting
 def init_kwrg_likelihood(setting,mask=None):
-    setting = get_setting_module(setting,1)
     kwargs_likelihood = {}
     kwargs_likelihood["check_matched_source_position"]=True
     kwargs_likelihood["source_position_tolerance"]=0.01
@@ -120,7 +115,7 @@ def init_kwrg_likelihood(setting,mask=None):
     kwargs_likelihood["image_likelihood_mask_list"] =  [mask]
     return kwargs_likelihood
 
-
+@check_setting
 def init_multi_band_list(setting,saveplots=False,backup_path="backup_results",return_mask=False):
     # setting can be the string with the name of the setting or the instance of the relative setting function 
     kwargs_psf      = init_kwrg_psf(setting,saveplots,backup_path)
@@ -134,16 +129,16 @@ def init_multi_band_list(setting,saveplots=False,backup_path="backup_results",re
         multi_band_list = [[kwargs_data, kwargs_psf, kwargs_numerics]]
         return multi_band_list
 
+@check_setting
 def init_lens_model_list(setting):
-    setting = get_setting_module(setting).setting()
     lens_model_list = ['SIE']
     if setting.CP:
         lens_model_list = ['PEMD']
     lens_model_list = [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
     return lens_model_list
 
+@check_setting
 def init_lens_light_model_list(setting):
-    setting = get_setting_module(setting).setting()
     if setting.sub==False:
         light_model_list = ["SERSIC_ELLIPSE", "SERSIC","UNIFORM"]
     else:
@@ -153,8 +148,8 @@ def init_lens_light_model_list(setting):
             light_model_list=["UNIFORM"]
     return light_model_list
 
+@check_setting
 def init_source_model_list(setting):
-    setting = get_setting_module(setting).setting()
     if not setting.WS:
         if hasattr(setting,"ellipt"):
             if setting.ellipt:
@@ -168,8 +163,8 @@ def init_source_model_list(setting):
     return source_model_list
 
 
+@check_setting
 def get_kwargs_model(setting):
-    setting = get_setting_module(setting).setting()
     lens_model_list   = init_lens_model_list(setting)
     # Lens light profile with perturber
     light_model_list  =  init_lens_light_model_list(setting)
@@ -193,13 +188,19 @@ def get_kwargs_model(setting):
         kwargs_model['source_light_model_list'] = source_model_list
     return kwargs_model
 
-
-
+@check_setting
 def get_kwargs_constraints(setting):
     if setting.sub ==False:
-        joint_lens_with_light=[[0,0,["center_x","center_y"]],[1,1,["center_x","center_y"]]]
+        # MOD_XYLL and MOD_PLL
+        if getattr(setting,"xyll",False) or getattr(setting,"pll",False):
+            joint_lens_with_light=[[1,1,["center_x","center_y"]]]
+            #  'joint_lens_with_light': list [[i_light, k_lens, ['param_name1', 'param_name2', ...]], [...], ...],
+            #   joint parameter between lens model and lens light model
+        else:
+            joint_lens_with_light=[[0,0,["center_x","center_y"]],[1,1,["center_x","center_y"]]]
     else:
-        joint_lens_with_light=[[0,1,["center_x","center_y"]]]
+            joint_lens_with_light=[[0,1,["center_x","center_y"]]]
+            
     kwargs_constraints = {'num_point_source_list': [4], 
                           'solver_type': 'NONE',
                           'joint_lens_with_light':joint_lens_with_light}
@@ -208,9 +209,8 @@ def get_kwargs_constraints(setting):
         kwargs_constraints['joint_source_with_point_source'] = [[0, 0]]
     return kwargs_constraints
 
-
+@check_setting
 def init_lens_model(setting,lens_model_list=None):
-    setting = get_setting_module(setting,1)
     if lens_model_list is None:
         lens_model_list = init_lens_model_list(setting)
     lensModel = LensModel(lens_model_list=lens_model_list, z_lens=setting.z_lens, z_source=setting.z_source)
