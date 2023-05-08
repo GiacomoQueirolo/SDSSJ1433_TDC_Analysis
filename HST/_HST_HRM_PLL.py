@@ -2,7 +2,8 @@
 # coding: utf-8
 
 # # Modelling of the Quad SDSSJ144+6007 with HST image
-# Copy from HST_HR.ipynb, modelling both _ws and not _ws setting file with the same program
+# Copy from HST_HR_Main.ipynb, modelling both _ws and not _ws setting file with the same program
+# implement MOD_PLL (see April 3th '23)
 
 import os,sys 
 import pickle
@@ -33,7 +34,7 @@ if __name__=="__main__":
     ############################
     parser = argparse.ArgumentParser(prog=sys.argv[0],description="Lens modelling program",formatter_class=CustomFormatter)
     parser.add_argument('-rt','--run_type',type=int,dest="run_type",default=0,help= """Type of run: 
-        0 = standard, PSO_it = 800*rf   PSO_prt = 300*rf    MCMCb = 2000*rf  MCMCr = 8000*rf 
+        0 = standard, PSO_it = 1600*rf   PSO_prt = 800*rf    MCMCb = 1500*rf  MCMCr = 8000*rf 
         1 = append  MCMCb = 2000*rf (only used if no previous MCMC found )  MCMCr=8000*rf 
         2 = test run  PSO_it = 3   PSO_prt = 3   MCMCb = 1 MCMCr = 2 
         3 = append test   MCMCb = 2  MCMCr=2 

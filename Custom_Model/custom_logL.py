@@ -3,18 +3,50 @@
 
 import numpy as np
 
+from lenstronomy.LensModel.lens_model import LensModel
+
 from Data.conversion import qphi_from_e1e2
 from Data.input_data import init_kwrg_likelihood
+from Posterior_analysis.mag_remastered import get_mag_ratio
 
 
+def logL_ellipt_phi(phi,phi_ll,sigma_phi=4.5,bound=None):
+        # give the log_L of a clipped normal likel.
+        # all values are given in deg.
+        logL_ell = -(phi-phi_ll)**2/sigma_phi**2/2 
+        if bound:
+            if abs(phi-phi_ll)>=bound:
+                return  -10.**5 #return -np.inf
+            else:
+                return logL_ell
+        else:
+            return logL_ell
+
+def logL_ellipt_q(q,q_ll,sigma_q=.1):
+        # follow Note 27th June
+        diff = q-(q_ll-0.1)
+        if diff>=0:
+            return 0
+        else:
+            return -diff**2/sigma_q**2/2      
+
+
+def logL_center_lens(xll,yll,xm,ym,sigma_d=.4):
+        # note: distance in arcsec
+        dx2  = (xll-xm)**2
+        dy2  = (yll-ym)**2
+        diff = np.sqrt(dx2+dy2)
+        return -diff**2/sigma_d**2/2
+    
 class logL_ellipticity_aligned(object):
 
-    def __init__(self, SUB, phi_ll=None):
-        self.SUB    = SUB
-        self.phi_ll = phi_ll
+    def __init__(self,setting):
+        self.setting = setting
+        self.SUB     = setting.SUB
+        self.phi_ll  = setting.phi_ll
     
     def __call__(self, kwargs_lens=None, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
-        return self.logL_addition(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
+            return self.logL_addition(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
 
     def logL_ellipt(self,phi,phi_ll,sigma_phi=4.5,bound=None):
         # give the log_L of a clipped normal likel.
@@ -50,37 +82,17 @@ class logL_ellipticity_aligned(object):
         
         logL  = self.logL_ellipt(phi,phi_ll)
         return logL
+        
 
 class logL_ellipticity_qphi(object):
 
-    def __init__(self, SUB, phi_ll=None, q_ll=None):
-        self.SUB    = SUB
-        self.q_ll   = q_ll
-        self.phi_ll = phi_ll
-    
+    def __init__(self,setting):
+        self.SUB    = setting.sub
+        self.phi_ll = setting.phi_ll
+        self.q_ll   = settting.q_ll
+        
     def __call__(self, kwargs_lens, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
         return self.logL_addition(kwargs_lens,kwargs_lens_light)
-
-    def logL_ellipt_phi(self,phi,phi_ll,sigma_phi=4.5,bound=None):
-        # give the log_L of a clipped normal likel.
-        # all values are given in deg.
-        logL_ell = -(phi-phi_ll)**2/sigma_phi**2/2 
-        if bound:
-            if abs(phi-phi_ll)>=bound:
-                return  -10.**5 #return -np.inf
-            else:
-                return logL_ell
-        else:
-            return logL_ell
-
-    def logL_ellipt_q(self,q,q_ll,sigma_q=.1):
-        # follow Note 27th June
-        diff = q-(q_ll-0.1)
-        if diff>=0:
-            return 0
-        else:
-            return -diff**2/sigma_q**2/2
-        
 
     def logL_addition(self, kwargs_lens, kwargs_lens_light=None):
         """
@@ -102,15 +114,13 @@ class logL_ellipticity_qphi(object):
         e1,e2 = kwargs_lens[0]["e1"],kwargs_lens[0]["e2"]
         q,phi = qphi_from_e1e2(e1,e2,ret_deg=True)
         
-        logL_add  =  self.logL_ellipt_phi(phi,phi_ll)
-        logL_add  += self.logL_ellipt_q(q,q_ll)
+        logL_add  =  logL_ellipt_phi(phi,phi_ll)
+        logL_add  += logL_ellipt_q(q,q_ll)
         return logL_add
 
 
 #################### TEST #######################
-# MOD_LLFR
-from lenstronomy.LensModel.lens_model import LensModel
-from Posterior_analysis.mag_remastered import get_mag_ratio
+# MOD_LLFR 
 
 class logL_combined(object):
     def __init__(self, Rmag_ABC,sig_Rmag_ABC,lens_model,SUB, phi_ll=None, q_ll=None):
@@ -135,29 +145,10 @@ class logL_combined(object):
     def __call__(self, kwargs_lens=None, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
         return self.logL_addition(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
 
-    def logL_ellipt_phi(self,phi,phi_ll,sigma_phi=4.5,bound=None):
-        # give the log_L of a clipped normal likel.
-        # all values are given in deg.
-        logL_ell = -(phi-phi_ll)**2/sigma_phi**2/2 
-        if bound:
-            if abs(phi-phi_ll)>=bound:
-                return  -10.**5 #return -np.inf
-            else:
-                return logL_ell
-        else:
-            return logL_ell
-
-    def logL_ellipt_q(self,q,q_ll,sigma_q=.1):
-        # follow Note 27th June
-        diff = q-(q_ll-0.1)
-        if diff>=0:
-            return 0
-        else:
-            return -diff**2/sigma_q**2/2
     
-    def logL_Rmag(Rmag_model,Rmag_obs,sig_Rmag_obs):
+    def logL_Rmag(self,Rmag_model,Rmag_obs,sig_Rmag_obs):
         Diff = np.array(Rmag_model)-np.array(Rmag_obs)
-        sig2 = sig_Rmag_obs**2
+        sig2 = np.array(sig_Rmag_obs)**2
         log  = -Diff**2/(2*sig2)
         return log
     
@@ -171,10 +162,18 @@ class logL_combined(object):
         # Gaussian prior on the mag fraction obtained from the combined result 
         # of a specific lcs analysis            
         # abs: we ignore parity
-        Rmag_model     = np.abs(get_mag_ratio(lens_model,kwargs_lens,kwargs_ps) )
+        # to verify: image order
+        im_order = image_order(kwargs_ps[0]["ra_image"],kwargs_ps[0]["dec_image"],verbose=False)
+        if im_order[1:3].tolist()!=[1,2]:
+            kwargs_ps[0]["ra_image"] = np.array(kwargs_ps[0]["ra_image"])[im_order]
+            kwargs_ps[0]["dec_image"] = np.array(kwargs_ps[0]["dec_image"])[im_order]
+            
+        Rmag_model = np.abs(get_mag_ratio(self.lens_model,kwargs_lens,kwargs_ps) )
+
         # only consider B/A, C/A:
         Rmag_model_ABC = Rmag_model[:-1] 
-        logL  +=  self.logL_Rmag(Rmag_model_ABC,Rmag_obs=self.Rmag_ABC,sig_Rmag_obs=self.sig_Rmag_ABC)
+        logL_ABC = self.logL_Rmag(Rmag_model=Rmag_model_ABC,Rmag_obs=self.Rmag_ABC,sig_Rmag_obs=self.sig_Rmag_ABC)
+        logL += np.sum(logL_ABC)
         
         # Gaussian prior on the ellipticity of the lens mass profile given the corresponding 
         # light profile
@@ -190,23 +189,62 @@ class logL_combined(object):
         e1,e2 = kwargs_lens[0]["e1"],kwargs_lens[0]["e2"]
         q,phi = qphi_from_e1e2(e1,e2,ret_deg=True)
         
-        logL  +=  self.logL_ellipt_phi(phi,phi_ll)
-        logL  += self.logL_ellipt_q(q,q_ll)
+        logL  += logL_ellipt_phi(phi,phi_ll)
+        logL  += logL_ellipt_q(q,q_ll)
         return logL
+
+   
+    
+##### TEST2 -> reworked for PLL
+# considering the center of the lens light and lens mass as not fixed togheter but correlated
+
+        
+class logL_Prior_Lens_Light(object):
+
+    def __init__(self, setting):
+        self.pll    = setting.pll
+        
+    def __call__(self, kwargs_lens, kwargs_source=None, kwargs_lens_light=None, \
+                 kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
+        return self.logL_addition(kwargs_lens)
+
+    def logL_addition(self, kwargs_lens):
+        """
+        a definition taking as arguments kwargs_lens
+        and returns a logL (punishing) value.
+        """
+        # Gaussian prior on the ellipticity of the lens mass profile given the corresponding 
+        # light profile
+        #  if LL is subtracted, the phi_ll is given as a fixed value
+        #  else it is computed from the corresponding lens light model
+        # moreover we consider a free center of the lens light and mass, 
+        # but normally correlated
+        
+        e1,e2   = kwargs_lens[0]["e1"],kwargs_lens[0]["e2"]
+        q,phi   = qphi_from_e1e2(e1,e2,ret_deg=True)
+        xm,ym   = kwargs_lens[0]["center_x"],kwargs_lens[0]["center_y"]
+        xll,yll = self.pll["x"][0],self.pll["y"][0]
+        
+        logL_add  =  logL_ellipt_phi(phi=phi,phi_ll=self.pll["phi"][0])
+        logL_add  += logL_ellipt_q(q=q,q_ll=self.pll["q"][0],sigma_q=self.pll["q"]*3)
+        logL_add  += logL_center_lens(xll=xll,yll=yll,xm=xm,ym=ym)
+        return logL_add
 
 
 def init_kwrg_custom_likelihood(setting,mask=None,custom="qphi"):
     kwargs_likelihood = init_kwrg_likelihood(setting,mask)
-    phi_ll = setting.phi_ll if setting.sub else None
-    q_ll   = setting.q_ll   if setting.sub else None
+    
     if custom=="aligned":
-        kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_aligned(SUB=setting.sub,phi_ll=phi_ll)
+        kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_aligned(setting=setting)
     elif custom=="qphi":
-        kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_qphi(SUB=setting.sub,phi_ll=phi_ll,q_ll=q_ll)
+        kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_qphi(setting=setting)
+    elif custom=="PLL":
+        kwargs_likelihood["custom_logL_addition"] = logL_Prior_Lens_Light(setting=setting)
     elif custom=="combined":
         #pragma=no cover
         raise RuntimeError("the logL_ellipticiy_combined has to be implemented")
         #kwargs_likelihood["custom_logL_addition"] = logL_ellipticity_combined()
+    
     else:
         raise RuntimeError("The 'custom' string parameter must be :'aligned','qphi' or 'combined'(WIP). Not "+str(custom))
     return kwargs_likelihood
