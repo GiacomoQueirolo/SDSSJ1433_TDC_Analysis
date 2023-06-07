@@ -254,7 +254,7 @@ if __name__=="__main__":
         svfgp=get_savefigpath(sett_name)
         if svfgp[-1]=="/":
             svfgp = svfgp[:-1]
-        os.system("ln -s "+os.getcwd()+"/"+svfgp+" "+str(save_dir)+"/.")
+        os.symlink(os.getcwd()+"/"+svfgp,str(save_dir)+"/.")
     os.system("python check_comment.py "+str(setting_names).replace("[","").replace("]","").replace(",","") +" >> "+str(save_dir)+"/sett_comments.txt &")
     
     smpl_mcmc = [get_mcmc_smpl(st,backup_path=backup_path) for st in setting_names]

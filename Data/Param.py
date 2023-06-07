@@ -69,3 +69,33 @@ def get_sigma(setting):
             not_present = {}
         sigma_dic[f"kwargs_{kw}"] = getattr(setting,f"{kw}_params",[None,not_present])[1]
     return sigma_dic
+
+def count_images(params):
+    n_im_ra  = 0
+    n_im_dec = 0
+    for p in params:
+        if "ra_image" in p:
+            n_im_ra+=1
+        elif "dec_image" in p:
+            n_im_dec+=1
+    if n_im_dec!=n_im_ra:
+        raise RuntimeError("Number of coordinates for images in parameters not matching")
+    return n_im_ra
+
+def index_common_params(sett_list,param_list=None,no_light=True):
+    if param_list is None:
+        param_list=[get_prm_list(s) for s in sett_list]
+    common_params = set(param_list[0])
+    for prm in param_list[1:]:
+        common_params.intersection_update(prm)
+    common_params=list(common_params)
+    if no_light:
+        # ignore light params
+        common_params = [c for c in common_params if not "light" in c]
+    # note: ra_image and dec_image are only once there
+    indexes = [flatten([[ip for cp in common_params if pi==cp] for ip,pi in enumerate(p)]) for p in param_list]
+    return indexes
+
+    
+
+    

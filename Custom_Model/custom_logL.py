@@ -2,12 +2,8 @@
 # coding: utf-8
 
 import numpy as np
-
-from lenstronomy.LensModel.lens_model import LensModel
-
 from Data.conversion import qphi_from_e1e2
 from Data.input_data import init_kwrg_likelihood
-from Posterior_analysis.mag_remastered import get_mag_ratio
 
 
 def logL_ellipt_phi(phi,phi_ll,sigma_phi=4.5,bound=None):
@@ -89,7 +85,7 @@ class logL_ellipticity_qphi(object):
     def __init__(self,setting):
         self.SUB    = setting.sub
         self.phi_ll = setting.phi_ll
-        self.q_ll   = settting.q_ll
+        self.q_ll   = setting.q_ll
         
     def __call__(self, kwargs_lens, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
         return self.logL_addition(kwargs_lens,kwargs_lens_light)
@@ -121,6 +117,8 @@ class logL_ellipticity_qphi(object):
 
 #################### TEST #######################
 # MOD_LLFR 
+"""
+from Posterior_analysis.mag_remastered import get_mag_ratio
 
 class logL_combined(object):
     def __init__(self, Rmag_ABC,sig_Rmag_ABC,lens_model,SUB, phi_ll=None, q_ll=None):
@@ -153,11 +151,10 @@ class logL_combined(object):
         return log
     
     def logL_addition(self, kwargs_lens, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None, kwargs_special=None, kwargs_extinction=None):
-        """
-        a definition taking as arguments 
-        (kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
-        and returns a logL (punishing) value.
-        """
+        #a definition taking as arguments 
+        #(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special, kwargs_extinction)
+        #and returns a logL (punishing) value.
+        
         logL = 0
         # Gaussian prior on the mag fraction obtained from the combined result 
         # of a specific lcs analysis            
@@ -193,7 +190,7 @@ class logL_combined(object):
         logL  += logL_ellipt_q(q,q_ll)
         return logL
 
-   
+"""
     
 ##### TEST2 -> reworked for PLL
 # considering the center of the lens light and lens mass as not fixed togheter but correlated

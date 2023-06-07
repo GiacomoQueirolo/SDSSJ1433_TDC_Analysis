@@ -593,4 +593,3 @@ def get_PHOTFLAM(setting):
     else:
         data_path = data_path+"/"+setting.image_name
         return get_header(data_path,"PHOTFLAM")
-

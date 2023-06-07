@@ -5,7 +5,6 @@ from corner import quantile
 from numpy import abs as npabs
 from numpy import array,transpose
 
-
 from Utils.tools import *
 
 def load_whatever(name):
@@ -66,10 +65,10 @@ def get_mcmc_Df(setting_name,backup_path="backup_results",noD=True):
     # return : mcmc_Df, shape: len_mcmc, 3
     mcmc_fermat = get_mcmc_fermat(setting_name,backup_path)
     # first MUST be A
-    mcmc_DfT = transpose(mcmc_fermat)[1:]-transpose(mcmc_fermat)[0] 
+    mcmc_DfT = np.transpose(mcmc_fermat)[1:]-np.transpose(mcmc_fermat)[0] 
     #mcmc_Df = mcmc_DfT.T.tolist() 
     if noD:
-        mcmc_cp    = array(deepcopy(mcmc_DfT))
+        mcmc_cp    = np.array(deepcopy(mcmc_DfT))
         # BC = C - B = (C-A)-(B-A) = AC - AB
         mcmc_BC    = mcmc_cp[1] - mcmc_cp[0]  
         mcmc_cp[2] = mcmc_BC
@@ -179,4 +178,25 @@ def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True):
             pickle.dump(res,open(save_name,"wb"))
     else:
         return {"read_sigma_low":kwargs_sigma_lower,"read_sigma_up":kwargs_sigma_upper}
+    
+
+def get_combined_Df(combined_sett,main_dir="./"):
+    combined_setting = get_combined_setting_module(combined_sett,main_dir=main_dir)
+    dir_path         = combined_setting.get_respath()
+    KDE              = combined_setting.KDE
+
+    with open(f"{dir_path}/Combined_PDF{['_KDE' if KDE else ''][0]}.pkl","rb") as f:
+        Combined_PDF = pickle.load(f)
+        
+    if KDE:
+        with open(f"{dir_path}/Combined_PDF_KDE_positions.pkl","rb") as f:
+            Positions_KDE = pickle.load(f)
+    else:
+        with open(f"{dir_path}/Combined_PDF_bins.pkl","wb") as f:
+            Combined_bins = pickle.load(f)
+
+    if KDE:
+        return combined_setting, np.array(Combined_PDF),np.array(Positions_KDE)
+    else:
+        return combined_setting, np.array(Combined_PDF),np.array(Combined_bins)
     

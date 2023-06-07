@@ -1,8 +1,6 @@
 # Similar to get_res.py used in lenstronomy
 # should simplify the retrieval of data
 
-import importlib
-import sys
 import pickle
 from TD_analysis.stnd_handling_data import Error,Error_mag
 from Utils.tools import get_config,check_success_analysis,get_analdir
@@ -69,16 +67,16 @@ def get_error(_config):
                 all_errors.append(kw_sim)
     return all_errors
 
-def get_combined_res(_config,main_dir_path="."):
-    config = get_config(_config,config_path=main_dir_path+"/myconfig/")
-    marginalisation_dir = config.combined_directory + config.name_marg_spline + '/'
-    combined = pickle.load(open(main_dir_path+"/"+marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % config.sigmathresh + '_combined.pkl','rb'))
+def get_combined_res(_config,main_dir_path=".",config_path="/myconfig/"):
+    config = get_config(_config,main_dir=main_dir_path,config_path=config_path)
+    resdir = config.get_respath()
+    combined = pickle.load(open(f'{resdir}/{config.name_marg_spline}_sigma_{config.sigmathresh:2.2f}_combined.pkl','rb'))
     return combined
 
 
-def get_combined_mag(_config,main_dir_path="."):
-    config = get_config(_config,config_path=main_dir_path+"/myconfig/")
-    marginalisation_dir = config.combined_directory + config.name_marg_spline + '/'
-    combined_mag = pickle.load(open(main_dir_path+"/"+marginalisation_dir +"mag_"+ config.name_marg_spline + "_sigma_%2.2f" % config.sigmathresh + '_combined.pkl','rb'))
+def get_combined_mag(_config,main_dir_path=".",config_path="/myconfig/"):
+    config = get_config(_config,main_dir=main_dir_path,config_path=config_path)
+    resdir = config.get_respath()
+    combined_mag = pickle.load(open(f'{resdir}/mag_{config.name_marg_spline}_sigma_{config.sigmathresh:2.2f}_combined.pkl','rb'))
     return combined_mag
     

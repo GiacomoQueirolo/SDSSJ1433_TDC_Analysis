@@ -13,15 +13,14 @@ import argparse
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 from astropy import constants as const
 from astropy.cosmology import default_cosmology
    
-def get_cosmo_prm(setting):
+def get_cosmo_prm(setting,cosmo=None):
     z_source  = setting.z_source
     z_lens    = setting.z_lens
-
-    cosmo     = default_cosmology.get()
+    if not cosmo:
+        cosmo = default_cosmology.get()
     cosmo_dd  = cosmo.angular_diameter_distance(z_lens).to("kpc")   #kpc
     cosmo_ds  = cosmo.angular_diameter_distance(z_source).to("kpc") #kpc
     cosmo_dds = cosmo.angular_diameter_distance_z1z2(z1=z_lens,z2=z_source).to("kpc") #kpc

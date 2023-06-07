@@ -64,7 +64,7 @@ def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="back
         dec_ord.append(y_image)
     ra_ord  = np.mean(ra_ord,axis=0)
     dec_ord = np.mean(dec_ord,axis=0)
-    new_order = image_order(ra_ord,dec_ord)
+    new_order = image_order(ra_ord,dec_ord,verbose=verbose)
     if starting_from_A:
         new_order+= 1 #bc it gives the order assuming A in 0
         new_order = [0,*new_order]

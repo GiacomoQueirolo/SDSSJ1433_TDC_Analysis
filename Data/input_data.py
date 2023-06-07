@@ -156,8 +156,15 @@ def init_source_model_list(setting):
                 source_model_list = ['SERSIC_ELLIPSE']
             else:
                 source_model_list = ['SERSIC']
+        #test w. shapelts
+        elif hasattr(setting,"shapelets"):
+            if setting.shapelets:
+                source_model_list = ['SHAPELETS']
+            else:
+                source_model_list = ['SERSIC']
         else:
             source_model_list = ['SERSIC_ELLIPSE']
+            
     else:
         source_model_list = None
     return source_model_list
@@ -215,5 +222,3 @@ def init_lens_model(setting,lens_model_list=None):
         lens_model_list = init_lens_model_list(setting)
     lensModel = LensModel(lens_model_list=lens_model_list, z_lens=setting.z_lens, z_source=setting.z_source)
     return lensModel
-
-

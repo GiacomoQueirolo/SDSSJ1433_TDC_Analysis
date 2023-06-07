@@ -7,8 +7,8 @@ from argparse import ArgumentParser
 from Utils.tools import *
 from Utils.get_res import *
 from Utils.create_fits import *
-from Data.conversion import qphi_from_e1e2,e12_from_qphi
-
+from Data.conversion import e12_from_qphi
+from Data.image_manipulation import fits_with_copied_hdr
 
 #from input_data import init_multi_band_list
 from Utils.create_fits import lens_light,get_bandmodel

@@ -3,30 +3,25 @@
 
 # # From Dt to Df and viceversa
 
-# In[1]:
-
-
 import copy
-import pickle
 import numpy as np
 from astropy import units as u
-import scipy.integrate as integrate
 from astropy import constants as const
 from astropy.cosmology import default_cosmology
-   
-def get_cosmo_prm(setting):
+
+"""
+# now defined specifically in MtL_ratio
+def get_cosmo_prm(setting,cosmo=None):
     z_source  = setting.z_source
     z_lens    = setting.z_lens
-
-    
+    if not cosmo:
+        cosmo = default_cosmology.get()
     cosmo_dd  = cosmo.angular_diameter_distance(z_lens).to("kpc")   #kpc
     cosmo_ds  = cosmo.angular_diameter_distance(z_source).to("kpc") #kpc
     cosmo_dds = cosmo.angular_diameter_distance_z1z2(z1=z_lens,z2=z_source).to("kpc") #kpc
     
-
-
-# In[30]:
-
+    return cosmo,cosmo_dd,cosmo_ds,cosmo_dds
+"""
 
 def k_analytical(setting,cosmo=None):
     if not cosmo:
@@ -37,27 +32,26 @@ def k_analytical(setting,cosmo=None):
     Ds  = cosmo.angular_diameter_distance(z_s)
     Dds = cosmo.angular_diameter_distance_z1z2(z1=z_d,z2=z_s)
     H0  = cosmo.H0
+    # see Notes 10th May '23
     k_test = (1+z_d)*Dd*Ds*H0/(const.c*Dds)
-    return k_test.to("").value
+    return k_test.to("").value  
 
 def H_0(D_phi,D_t,k):
-    D_t   *=u.day.to("s")             # convert from day in sec
-    D_phi *=u.arcsec.to("degree")**2  # convert from arcsec^2 to degree^2
-    D_phi *=u.degree.to("rad")**2     # convert from degree^2 to rad^2 (non-dim)
-    h_0    = k*D_phi/D_t              # in unit of 1/sec (~frequency)
-    H_0    = h_0*Mpc/km               # convert to km/(s*Mpc)
+    D_t   *=u.day.to("s")         # convert from day in sec
+    D_phi *=u.arcsec.to("rad")**2 # convert from arcsec^2 to rad^2 (non-dim)
+    h_0    = k*D_phi/D_t          # in unit of 1/sec (~frequency)
+    H_0    = h_0*u.Mpc/u.km       # convert to km/(s*Mpc)
     return H_0
 
 def sig_H0(D_phi,D_t,k,sig_phi=0,sig_Dt=0):
-    D_t     *=u.day.to("s")             # convert from day in sec
-    sig_Dt  *=u.day.to("s")             # convert from day in sec
-    D_phi   *=u.arcsec.to("degree")**2  # convert from arcsec^2 to degree^2
-    D_phi   *=u.degree.to("rad")**2     # convert from degree^2 to rad^2 
-    sig_phi *=u.arcsec.to("degree")**2  # convert from arcsec^2 to degree^2
-    sig_phi *=u.degree.to("rad")**2     # convert from degree^2 to rad^2 
+    D_t     *=u.day.to("s")         # convert from day in sec
+    sig_Dt  *=u.day.to("s")         # convert from day in sec
+    D_phi   *=u.arcsec.to("rad")**2 # convert from arcsec^2 to rad^2 (non-dim)
+    sig_phi *=u.arcsec.to("rad")**2 # convert from arcsec^2 to rad^2 (non-dim)
     #sig_ho = k(z_l,z_s) * np.sqrt((sig_phi/D_t)**2 + (D_phi*sig_Dt/(D_t**2))**2) #unit of 1/sec
     sig_ho  = (k/(D_t**2)) * np.sqrt((D_t*sig_phi)**2 + (D_phi*sig_Dt)**2) #unit of 1/sec (simplification)
-    sig_ho  = sig_ho*Mpc/km             # unit of km/(s*Mpc)
+    # also equivalent to sig_h0 = H0*np.sqrt((sig_phi/D_phi)**2 + (sig_Dt/Dt)**2 )
+    sig_ho  = sig_ho*u.Mpc/u.km          # unit of km/(s*Mpc)
     return sig_ho
 
 
@@ -136,7 +130,7 @@ def test_DtDf_XY(n=1000):
                 Df_ = Df_XY(Dt_,h0,k)
                 Dt_ = Dt_XY(Df_,h0,k)
             if abs(Dt-Dt_)>.1:
-                err_message = "the inversion of Dt in Df is diverging for H0=",h0,"km/s/Mpc and Dt=",Dt,"d"
+                err_message = "Inversion of Dt in Df is diverging for H0=",h0,"km/s/Mpc and Dt=",Dt," d"
                 raise RuntimeError(err_message)
     return 0
 
@@ -166,15 +160,6 @@ def cov_Df(cov_Dt,H0,k):
     cov_Df   = cov_Dt_*((H0_/k)**2)
     cov_Df  *= u.rad.to("arcsec")**4    # convert from rad^2 to arcsec^2
     return cov_Df
-
-
-# In[33]:
-
-
-#test_DtDf_XY(100)=Success
-
-
-# In[ ]:
 
 
 #########################

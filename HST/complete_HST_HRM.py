@@ -7,21 +7,14 @@
 
 import os,sys
 import corner
-import importlib
 import numpy as np
-import json,copy,pickle
-from astropy.io import fits
+import json,pickle
+
 from datetime import datetime
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from lenstronomy.Data.psf import PSF
-from lenstronomy.Plots.model_plot import ModelPlot
-from lenstronomy.Data.imaging_data import ImageData
-from lenstronomy.ImSim.image_model import ImageModel
-from lenstronomy.LensModel.lens_model import LensModel
-from lenstronomy.LightModel.light_model import LightModel
-from lenstronomy.PointSource.point_source import PointSource
-
+from lenstronomy.Plots.model_plot import ModelPlot 
 
 # In[2]:
 
