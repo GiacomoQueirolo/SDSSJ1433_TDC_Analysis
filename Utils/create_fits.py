@@ -13,12 +13,16 @@ from Data.image_manipulation import multifits_with_copied_hdr,shift_astrometry
 
 import sys
 import numpy as np
-from astropy.io import fits
 from argparse import ArgumentParser
 from lenstronomy.ImSim.MultiBand.single_band_multi_model import SingleBandMultiModel
 
+
 def get_bandmodel(setting):
-    multi_band_list,mask = init_multi_band_list(setting=setting,return_mask=True,saveplots=False)
+    kwargs_model     = get_kwargs_model(setting)
+    kwargs_data,mask = init_kwrg_data(setting,return_mask=True)
+    kwargs_numerics  = init_kwrg_numerics(setting)
+    kwargs_psf       = init_kwrg_psf(setting,saveplots=False)
+    multi_band_list  = [[kwargs_data, kwargs_psf, kwargs_numerics]]
     image_likelihood_mask_list = [mask.tolist()]
     bandmodel = SingleBandMultiModel(multi_band_list, kwargs_model, likelihood_mask_list=image_likelihood_mask_list,band_index=0)
     return bandmodel
@@ -66,6 +70,19 @@ def complete_model(setting,unconvolved=True,kwres=None,bandmodel=None):
 def norm_residual(model,error_map,bandmodel):
     norm_res = bandmodel.reduced_residuals(model, error_map=error_map)
     return norm_res
+
+
+def get_chired(setting,model=None,error_map=None):
+    # output chi^2 reduced
+    # this should be in get_res, but it needs get_bandmodel, which fits better here
+    bandmodel = get_bandmodel(setting=setting)
+    if model is None:
+        model = complete_model(setting,unconvolved=False,bandmodel=bandmodel)
+    if error_map is None:
+        kwdata  = init_kwrg_data(setting)
+        error_map = kwdata["noise_map"]
+    chi2red = bandmodel.reduced_chi2(model, error_map=error_map)
+    return chi2red
 
 if __name__=="__main__":
     present_program(sys.argv[0])

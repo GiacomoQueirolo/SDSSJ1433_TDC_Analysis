@@ -27,6 +27,7 @@ from Data.input_data import init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_
 from Custom_Model.custom_logL import init_kwrg_custom_likelihood
 from Posterior_analysis.source_pos import get_source_pos_MCMC
 
+from mask_source import get_masksource
 
 if __name__=="__main__":
     ############################
@@ -129,8 +130,11 @@ if __name__=="__main__":
     print_res.write("Comments: "+setting.comments+"\n")
     print_res.write("append_MC: "+str(append_MC)+"\n")
 
-
-    kwargs_data,mask = init_kwrg_data(setting,saveplots=True,backup_path=backup_path,return_mask=True)
+    if getattr(setting,"mask_source",False):
+        kwargs_data = init_kwrg_data(setting,saveplots=True,backup_path=backup_path,return_mask=False)
+        mask        = get_masksource(setting.ref_mask_source,thr_source=setting.msk_src_thr_src,thr_ps=setting.msk_src_thr_ps,save_mask=False,stnd_masking=True)
+    else:
+        kwargs_data,mask = init_kwrg_data(setting,saveplots=True,backup_path=backup_path,return_mask=True)
 
     # ### PSF 
     kwargs_psf = init_kwrg_psf(setting,saveplots=True,backup_path=backup_path)

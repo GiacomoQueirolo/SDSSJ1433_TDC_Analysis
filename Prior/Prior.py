@@ -6,31 +6,117 @@
 # copy from Df_pot_prior, but more similar to prior_fermat_pot.ipynb
 # basically instead of creating it from the setting file, it is based on the mcmc results and then we create from that the uniform distribution for the prior of the lens parameters
 
-# In[2]:
 
 
 # import of standard python libraries
 import copy
 import json
-import corner
-import os,sys
-import argparse
-import numpy as np
-import matplotlib.pyplot as plt
-from lenstronomy.LensModel.lens_model import LensModel
+import numpy as np 
 
-#%matplotlib inline
+
 from Utils.tools import *
 from Posterior_analysis.mag_remastered import get_mag_mcmc
 from Posterior_analysis.fermat_pot_analysis import gen_mcmc_Df
 from Utils.order_images import get_new_image_order
-from Data.Param import get_prm_list
-# In[1]:
+from Data.Param import get_prm_list,get_Param,count_images
 
 
+
+class Prior():
+    # by construction, it's a uniform prior on the lens parameters
+    uniform = True 
+    def __init__(self,setting,Nsample=int(1e6)):
+        self.setting = get_setting_module(setting,1)
+        self.lens_prior = self.setting.lens_prior
+        self.Param   = get_Param(setting)
+        self.Nsample = Nsample
+    def is_within_Prior(self,point):
+        lim_min,lim_max = self.Param.param_limits()
+        return np.all([lim_min[i]<p<lim_max[i] for i,p in enumerate(point)])
+    def get_sample(self):
+        if hasattr(self,"sample"):
+            return self.sample
+        else:
+            # shape: N,dim
+            self.sample = np.random.uniform(*self.Param.param_limits(),(self.Nsample,self.Param.num_param()[0]))
+            return self.sample
+    def get_Df_sample(self):
+        if hasattr(self,"Df_sample"):
+            return self.Df_sample
+        else:
+            sample = self.get_sample() 
+            self.Df_sample = gen_mcmc_Df(sample,self.setting,param_class=self.Param)
+            return self.Df_sample
+    def get_kw(self):
+        # to reproduce it
+        kw = {"setting",get_setting_name(self.setting),
+              "Nsample",self.Nsample}
+        return kw
+"""
 # This parts give the mcmc of the fermat potential given the samples_mcmc prior
+import emcee
+from Utils.get_res import get_mcmc_smpl
+from Data.input_data import init_lens_model
 
-
+# Compute the likelihood of the parameters given the data.
+def lnLike(params,prior,Df_boundaries, lensModel=None):
+    # Check if point inside Prior 
+    if not prior.is_within_Prior(params):
+        return -np.inf
+    # Convert point in Df param space
+    if lensModel is None:
+        lensModel = init_lens_model(prior.setting)
+    point_Fer = np.array(_get_fermat(params,prior.Param,lensModel))
+    point_Df  = point_Fer[1:]-point_Fer[0]
+    point_c   = np.array(copy.deepcopy(point_Df))
+    point_BC  = point_c[1] - point_c[0]  # AC-AB = (C-A)-(B-A) = C - A - B + A = C - B = BC
+    point_c[2]= point_BC 
+    point_Df  = point_c #AB,AC,BC
+    # This checks if the point is within  boundaries
+    if is_in_boundaries(point_Df, Df_boundaries):
+        # If the point is within the boundaries, return 0
+        return 0
+    else:
+        return -np.inf
+    
+def get_emcee_Df_prior(setting,Df_boundaries,Nwalkers=None,Nsteps=40000,Nburn=0,progress=True,perfect_cut=True):
+    prior = Prior(setting)
+    mcmc_res = get_mcmc_smpl(setting)
+    res = np.mean(mcmc_res,axis=0)
+    sig = np.std(mcmc_res,axis=0)
+    Ndim = len(res)
+    # Generates an initial position for each walker by adding Gaussian noise to the result values 
+    if Nwalkers is None:
+        Nwalkers = 2*Ndim
+    elif Nwalkers<=2*Ndim: #TEST
+        print("Warning: number or walkers is less than twice the number of dimensions")
+        Nwalkers = 2*Ndim +1
+    # Initial position of the walkers
+    p0 =  [res + sig*2*np.random.randn(Ndim) for i in range(Nwalkers)] 
+    # Initializes the lens model 
+    lensModel = init_lens_model(setting)
+    # Creates an MCMC sampler
+    def _lnLike(params):
+        return lnLike(params,prior,Df_boundaries,lensModel)
+    sampler = emcee.EnsembleSampler(Nwalkers,Ndim,_lnLike)#, args=(prior,Df_boundaries,lensModel))
+    # Runs the MCMC simulation for Nsteps, starting at the initial positions defined by "p0"
+    # Returns the final positions, probabilities, and state of the sampler.
+    sampler.run_mcmc(p0, Nsteps,progress=progress)
+    flat_samples = sampler.get_chain(discard=Nburn, thin=1, flat=True)
+    dist = sampler.get_log_prob(flat=True, discard=Nburn, thin=1)
+    if not perfect_cut:
+        return flat_samples,dist
+    else:
+        #cut the few points which are still outside the prior
+        new_samples,new_dist= [],[]
+        for point,distance in zip(flat_samples,dist):
+                point_Fer = np.array(_get_fermat(point,prior.Param,lensModel))
+                point_Df  = point_Fer[1:]-point_Fer[0]
+                if prior.is_within_Prior(point) and is_in_boundaries(point_Df,Df_boundaries=Df_boundaries):
+                    new_samples.append(point)
+                    new_dist.append(distance)
+        return new_samples,new_dist
+"""
 def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
     # mcmc_prior shape = param, n_points
     # setting = setting module
@@ -186,20 +272,6 @@ def get_prior(setting,npoints):
     return mcmc_prior
     
 
-def count_images(params):
-    n_im_ra  = params.count("ra_image")
-    n_im_dec = params.count("dec_image")
-    """
-    for p in params:
-        if "ra_image" in p:
-            n_im_ra+=1
-        elif "dec_image" in p:
-            n_im_dec+=1
-    """
-    if n_im_dec!=n_im_ra:
-        raise RuntimeError("Number of coordinates for images in parameters not matching")
-    return n_im_ra
-
 def get_kwargs_to_model(setting):
     setting = get_setting_module(setting).setting()
     kw_to_model= {}
@@ -334,7 +406,7 @@ def mag_prior(setting,npoints=10000,mag_boundaries=None,save_mcmc=False,backup_p
             npoints += 70000
     print("Mag prior Done")
     if save_mcmc:
-        mcmc_path       = backup_path+"/"+setting_name.replace("settings","mcmc").replace(".py","")
+        mcmc_path       = get_savemcmcpath(setting,backup_path=backup_path)
         mcmc_prior_path = mcmc_path+"/"+output_name+".json"
         with open(mcmc_prior_path,"w") as f:
             json.dump(np.array(mcmc_mag_prior).tolist(),f)

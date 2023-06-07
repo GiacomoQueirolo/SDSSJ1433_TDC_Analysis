@@ -85,5 +85,5 @@ if __name__=="__main__":
 
     mcmc_file_name=get_savemcmcpath(sett)+sett_nm.replace(".py","").replace("settings","mcmc_corr_fermat")+".json"
     with open(mcmc_file_name, 'w+') as mcmc_file:
-        json.dump(mcmc_fermat, mcmc_file)
+        json.dump(mcmc_ferm_corr, mcmc_file)
     success(sys.argv[0])

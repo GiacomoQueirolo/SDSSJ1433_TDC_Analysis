@@ -4,7 +4,7 @@
 #  I want to correct the images position, which now is fixed, to be set to the one of the corresponding
 #  mcmc step
 
-import sys
+import sys,copy
 import json
 import corner
 import argparse
@@ -23,8 +23,8 @@ from Utils.order_images import get_new_image_order
 #labels_Df     = ["$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} AD$"]
 labels_Fermat = ["$\phi_A$", "$\phi_B$","$\phi_C$" ,"$\phi_D$"]
 labels_Df     = ["$\Delta\phi_{AB}$", "$\Delta\phi_{AC}$","$\Delta\phi_{AD}$"]
-
-
+  
+ 
 def _get_fermat(mcmc_i,param_class,lensModel):
     kwargs_result_i = param_class.args2kwargs(mcmc_i, bijective=True)
     x_image = kwargs_result_i["kwargs_ps"][0]["ra_image"]
@@ -32,30 +32,40 @@ def _get_fermat(mcmc_i,param_class,lensModel):
     fermat_potential_i = lensModel.fermat_potential(x_image,y_image,kwargs_result_i["kwargs_lens"])
     return fermat_potential_i.tolist()
 
-def gen_mcmc_fermat(mcmc,setting):
+def gen_mcmc_fermat(mcmc,setting,lensModel=None,param_class=None,verbose=False):
     # mcmc_prior shape = param, n_points
     # setting   = setting module
-    lensModel = init_lens_model(setting)
+    if lensModel is None:
+        lensModel = init_lens_model(setting)
     mcmc_fermat = []
-    param_class = get_Param(setting)
-    pool = multiprocess.Pool()
+    if param_class is None:
+        param_class = get_Param(setting)
     def getferm(mcmc_i):
         return _get_fermat(mcmc_i,param_class,lensModel)
         
-    mcmc_fermat = pool.map(getferm,mcmc) #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
-    pool.close()
+    with multiprocess.Pool() as pool:
+        mcmc_fermat = pool.map(getferm,mcmc) #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
     #I want to obtain the correct image order
     ########################################
-    new_order = get_new_image_order(setting,mcmc)
-    tmp_mcmc  = np.array(mcmc_fermat).transpose()
+    new_order = get_new_image_order(setting,mcmc,verbose=verbose)
+
+    tmp_mcmc    = np.array(mcmc_fermat).transpose()
     mcmc_fermat = np.transpose([tmp_mcmc[i] for i in new_order])
     return mcmc_fermat.tolist() # shape: (steps, f(i) )
 
-def gen_mcmc_Df(mcmc,setting):
-    mcmc_fermat = gen_mcmc_fermat(mcmc,setting)
-    mcmc_Df = np.transpose(mcmc_fermat)[1:]-np.transpose(mcmc_fermat)[0] 
-    mcmc_Df = mcmc_Df.T.tolist()  #shape: steps, D_AB, D_AC, D_AD, meaning Df_i - Df_A
+def gen_mcmc_Df(mcmc,setting,mcmc_fermat=None,lensModel=None,param_class=None,BC=True,verbose=False):
+    if mcmc_fermat is None:
+        mcmc_fermat = gen_mcmc_fermat(mcmc,setting,lensModel=lensModel,param_class=param_class,verbose=verbose)
+    mcmc_DfT    = get_Df_from_frm(np.transpose(mcmc_fermat),BC=BC)
+    mcmc_Df     = mcmc_DfT.T.tolist()  #shape: steps, D_AB, D_AC, D_AD [or D_BC depending on BC], meaning Df_i - Df_A
     return mcmc_Df
+
+def get_mcmc_Df(setting_name,backup_path="backup_results",noD=True):
+    # noD: ignore image D and return AB,AC and BC instead
+    # return : mcmc_Df, shape: len_mcmc, 3
+    mcmc_fermat = get_mcmc_fermat(setting_name,backup_path)
+    mcmc_Df     = get_Df_from_frm(np.transpose(mcmc_fermat),BC=noD).T.tolist()
+    return mcmc_Df 
 
 """
 from corner import quantile
@@ -159,10 +169,8 @@ def save_Df(setting,no_plot=False):
 
     #MCMC sample
     samples_mcmc = get_mcmc_smpl(setting,backup_path)
-
-    mcmc_fermat = gen_mcmc_fermat(samples_mcmc,setting)
-    mcmc_DfT    = np.transpose(mcmc_fermat)[1:]-np.transpose(mcmc_fermat)[0]
-    mcmc_Df     = mcmc_DfT.T
+    mcmc_fermat  = gen_mcmc_fermat(samples_mcmc,setting)
+    mcmc_Df      = gen_mcmc_Df(samples_mcmc,setting,mcmc_fermat=mcmc_fermat)
 
     #Save the mcmc in a file, NOTE: they are ordered A,B,C,D
     mcmc_file_name = savemcmc_path + setting_name.replace(".py","").replace("settings","mcmc_ordered_fermat")+".json"
@@ -171,7 +179,7 @@ def save_Df(setting,no_plot=False):
         json.dump(mcmc_fermat, mcmc_file)
     if not no_plot:
         mcmc_fermat = np.array(mcmc_fermat[cut_mcmc:])
-        mcmc_Df     = mcmc_Df[cut_mcmc:]
+        mcmc_Df     = np.array(mcmc_Df[cut_mcmc:])
 
         plot = corner.corner(mcmc_fermat, labels=labels_Fermat, show_titles=True)
         plot.savefig(savefig_path+"Single_fermat_potential.png")
@@ -180,6 +188,19 @@ def save_Df(setting,no_plot=False):
         plot = corner.corner(mcmc_Df, labels=labels_Df, show_titles=True)
         plot.savefig(savefig_path+"Single_Df.png")
 
+def get_Df_from_frm(fermat_distr,BC=True):
+    # obtain Df from the fermat distribution
+    # if BC=True, returning AB,AC,BC instead of AB,AC,AD
+    if np.shape(fermat_distr)[0]!=4:
+        raise RuntimeError(f"The shape of the insterted fermat distribution must be (4,N_steps), not {np.shape(fermat_distr)}")
+    fermat_distr = np.array(fermat_distr)
+    Df    = fermat_distr[1:]-fermat_distr[0] # B,C,D-A: AB,AC,AD
+    if BC:        
+        Df_c    = np.array(copy.deepcopy(Df))
+        Df_BC   = Df_c[1] - Df_c[0]  # AC-AB = (C-A)-(B-A) = C - A - B + A = C - B = BC
+        Df_c[2] = Df_BC 
+        Df      = Df_c #AB,AC,BC
+    return Df
 
 
 if __name__=="__main__":
@@ -189,7 +210,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Produces the stacked MCMC results for the fermat potential at the position of the images")
     parser.add_argument("-c", "--cut_mcmc", type=int, dest="cut_mcmc", default=0,
                         help="cut the first <c> steps of the mcmc to ignore them")
-    parser.add_argument("-NP", "--no_plot", type=int, dest="no_plot", default=False,action="store_true",
+    parser.add_argument("-NP", "--no_plot",dest="no_plot", default=False,action="store_true",
                         help="Ignore the corner plots")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
     
@@ -202,4 +223,3 @@ if __name__=="__main__":
     for sett in setting_names:
         save_Df(get_setting_module(sett,1),no_plot)
     success(sys.argv[0])
-
