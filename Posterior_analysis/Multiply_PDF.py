@@ -1,103 +1,66 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
 
 
-import sys
+import pickle
 import numpy as np
+import scipy.stats as st
 from multiprocessing import Pool
-from Utils.statistical_tools import get_bins_volume
-# General function to multiply PDF  (can be applied to priors as well - and will be)
-"""def Multiply_PDF(samples,nbins=None,KDE=False,Priors=None,savedir="."):
-    # samples.shape= (n_datasets,n_mcmc_points,n_dims)
-    # same for Priors
-    
-    if KDE is False and nbins is None:
-        raise RuntimeError("Nbins are required for the histogram sampling")
+from sklearn.neighbors import KernelDensity
+from sklearn.model_selection import GridSearchCV
 
-    if KDE:
-        Combined_PDF,Positions = Multiply_PDF_KDE(samples,Priors,savedir)
-        return Combined_PDF,Positions
-    else:
-        Combined_PDF, Combined_bins = Multiply_PDF_HIST(samples,nbins,Priors,savedir)
-        return Combined_PDF, Combined_bins """
+
+from Utils.statistical_tools import get_bins_volume
+from Plots.plotting_tools import plot_probability3D,plot_probability3D_KDE
+        
     
 def get_minmax(samples,dim=None):
     # We get the min and maximum for each dimension relatively to all the datasets togheter
-    if dim is not None:
-        return np.min([min(par_i) for par_i in np.array(samples,dtype=object)[:,dim]]),\
-            np.max([max(par_i) for par_i in np.array(samples,dtype=object)[:,dim]])
+    if dim is None:
+        return np.min([np.min(s,axis=1) for s in samples],axis=0), np.max([np.max(s,axis=1) for s in samples],axis=0)
     else:
-        dim = len(samples[0])
-        min_i,max_i = [],[]
-        for d in range(dim):
-            min_i.append(np.min([min(par_i) for par_i in np.array(samples,dtype=object)[:,d]]))
-            max_i.append(np.max([max(par_i) for par_i in np.array(samples,dtype=object)[:,d]]))
-        return min_i,max_i
-    
-def Multiply_PDF_HIST(samples,nbins,Prior=None,NtotPrior=None,savedir="."):
-    # Using histograms to obtain the 3D binned density for each datasets
-    PDFs,PDFs_bins = [],[]
+        return np.min([np.min(s,axis=1) for s in samples],axis=0)[dim], np.max([np.max(s,axis=1) for s in samples],axis=0)[dim]
+
+def Multiply_PDF_HIST_fitPrior(samples,nbins,Prior,savedir=".",verbose=True):
+    # Using histograms to obtain the binned density for each datasets
     N = len(samples)
-    param_dim = len(samples[0]) # the parametric dimension must be the same for all datasets 
+    Dim = len(samples[0])
     #First find the same bins for each dataset in all parametric dimensions
-    #DfABmin,DfABmax = get_minmax(samples,0)
-    #DfACmin,DfACmax = get_minmax(samples,1)
-    #DfBCmin,DfBCmax = get_minmax(samples,2)
     mins,maxs  = get_minmax(samples)#[DfABmax,DfACmax,DfBCmax],[DfABmin,DfACmin,DfBCmin]
-    d_bins = []
-    for par_dim_i in range(param_dim): # for each parametric dim
-        # Find for each dataset the corresponding max and min
-        max_dimi = maxs[par_dim_i]
-        min_dimi = mins[par_dim_i]
-        diff_dimi = max_dimi-min_dimi
-        len_bin_dimi = diff_dimi/nbins
-        d_bins_dimi = [min_dimi]
-        for nbin_i in range(nbins):
-            d_bins_dimi.append(d_bins_dimi[-1]+len_bin_dimi)
-        d_bins.append(d_bins_dimi)
+    len_bins = (maxs-mins)/nbins
+    d_bins = np.transpose([mins +i*len_bins for i in range(nbins+1)])
     
-    # Then we make the 3D histogram    
+    # Then we make the histogram 
     PDFs,Combined_bins = hists_given_bins(samples,d_bins)
     
-    if Prior is not None: # and Prior_LR is not None
-        #Prior,Positions_KDE_Prior = KDE_prior_corr(Prior_HR=Prior_HR,Prior_LR=Prior_LR,d_bins=d_bins)
-        Prior,Positions_KDE_Prior = KDE_prior_corr(Prior=Prior,NtotPrior=NtotPrior,d_bins=d_bins)
-        #Priors,Prior_bins = hists_given_bins(Priors,d_bins)
-        #if np.all(Combined_bins!=Prior_bins):
-        #    raise RuntimeError("Something went wrong with the binning")
-    
+
+    Prior,_ = KDE_fit_prior(Prior=Prior,d_bins=d_bins,verbose=verbose)
+            
     Combined_PDF = PDFs[0]
     for i in range(1,N):
         Combined_PDF *= PDFs[i]
-        
+    
     # Check that the Combined PDF is not 0
-    check_combined(Combined_PDF,PDFs,PDFs_bins,HIST="True")
+    check_combined(Combined_PDF,PDFs,Combined_bins,HIST="True")
     
     if Prior is not None:
-        """Combined_Prior = Prior[0]
-        for i in range(1,N):
-            Combined_Prior *= Priors[i]
-        #Check that the Combined Prior is not 0
-        check_combined(Combined_Prior,KDE=True)
-        Combined_Prior /= np.sum(Combined_Prior*get_bins_volume(d_bins)) # normalised 
-        """
         check_combined(Prior,KDE=True)
         Norm_Prior = Prior/np.sum(Prior*get_bins_volume(d_bins))
-        from plotting_tools import plot_probability3D
-        plot = plot_probability3D(Norm_Prior,Combined_bins,labels=["AB","AC","AD"],udm="\"",alpha=0.3)
-        plot.savefig(str(savedir)+"/Normalised_prior.png")
+        if Dim==3:
+            plot = plot_probability3D(Norm_Prior,Combined_bins,labels=["AB","AC","AD"],udm="\"",alpha=0.3)
+            plot.savefig(str(savedir)+"/Normalised_prior.png")
         for i in range(N-1):
             Combined_PDF/=Norm_Prior                
     return Combined_PDF, Combined_bins
 
-def check_combined(Combined_PDF,PDFs=None,PDFs_bins=None,HIST=False,KDE=False):
+
+def check_combined(Combined_PDF,PDFs=None,PDF_bins=None,HIST=False,KDE=False):
     #Check superposition
     if HIST:
         if np.sum(Combined_PDF)==0.0:
             for i in range(len(PDFs)):
-                print(i," Max :",PDFs_bins[i][np.where(PDFs[i]==np.max(PDFs[i]))[0]])
+                print(i," Max :",PDF_bins[np.where(PDFs[i]==np.max(PDFs[i]))[0]])
             raise RuntimeError("No superposition between posteriors. \
             Try adjusting the bin nummer or correcting the modelling procedure for one or more dataset")
     elif KDE:
@@ -128,10 +91,108 @@ def hists_given_bins(samples,bins):
     return PDFs,PDF_bins
 
 
-# In[ ]:
+def KDE_position_from_bin(d_bins):
+    # obtain center of 3D bins and return as
+    # positions for KDE -> shape: ((nbins-1)**Dim,Dim)
+    if len(d_bins)!=3:
+        raise ValueError("Implemented explicitely for 3 dimensions")
+
+    # get the center of the bins instead of the edges
+    centers = []
+    for bi in d_bins:
+        cnt_di = [] # for each dim_i indep
+        for i in range(len(bi)-1):
+            cnt_di.append(.5*(bi[i]+bi[i+1]))
+        centers.append(cnt_di)
+    # From here on considering 3Dims
+    #
+    # Creating a grid of points from the matrix of centers
+    Dim1, Dim2, Dim3 = np.meshgrid(*centers)
+    # reorganising the shape of it
+    positions = np.vstack([Dim1.ravel(), Dim2.ravel(), Dim3.ravel()]).T    
+    return positions
 
 
-def Multiply_PDF_KDE(samples,npoints,ratio=2,Priors=None,savedir="." ):
+def KDE_fit_prior(Prior,d_bins,verbose=True):
+    # Prior is given as class 
+    # not uniform! as it's actually the prior in the fermat space
+    # BUT sampled all over it, not only the region of interest
+     # return Priors evaluated with KDE at center of the bins
+    
+    # find the best bandwidth for each filter
+    prior_bndws = 10 ** np.linspace(-1, 1, 100)
+    grid = GridSearchCV(KernelDensity(kernel='gaussian'),{'bandwidth': prior_bndws})
+    # initial shape of samples: filter,dimension,step
+    prior_Df_sample = Prior.get_Df_sample()
+    bandwidth = grid.fit(prior_Df_sample)
+    # define the KDE
+    if verbose:
+        print("Defining KDE")
+    kde = KernelDensity(**bandwidth.best_params_, kernel='gaussian') 
+    
+    # Fit the KDE to the samples
+    if verbose:
+        print("Fitting KDE to the prior sample")
+    KDE = kde.fit(prior_Df_sample)
+    
+    # we then have to sample the space
+    positions = KDE_position_from_bin(d_bins) #position.shape = ((n_bins-1)**Dim,Dim) 
+    shape     = [len(b)-1 for b in d_bins]
+    if verbose:
+        print("Getting the value at the desired positions")
+    Prior     = KDE.score_samples(positions).reshape(*shape)
+    return Prior, positions
+
+
+############################################################
+####################### OLD and WIP: ####################### 
+############################################################
+    
+def Multiply_PDF_HIST(samples,nbins,Prior=None,NtotPrior=None,savedir="."):
+    # Using histograms to obtain the 3D binned density for each datasets
+    N = len(samples)
+    Dim = len(samples[0])
+    #First find the same bins for each dataset in all parametric dimensions
+    mins,maxs  = get_minmax(samples)#[DfABmax,DfACmax,DfBCmax],[DfABmin,DfACmin,DfBCmin]
+    len_bins = (maxs-mins)/nbins
+    d_bins = np.transpose([mins +i*len_bins for i in range(nbins+1)])
+    
+    # Then we make the 3D histogram    
+    PDFs,Combined_bins = hists_given_bins(samples,d_bins)
+    
+    if Prior is not None: # and Prior_LR is not None
+        #Prior,Positions_KDE_Prior = KDE_prior_corr(Prior_HR=Prior_HR,Prior_LR=Prior_LR,d_bins=d_bins)
+        Prior,Positions_KDE_Prior = KDE_prior_corr(Prior=Prior,NtotPrior=NtotPrior,d_bins=d_bins)
+        #Priors,Prior_bins = hists_given_bins(Priors,d_bins)
+        #if np.all(Combined_bins!=Prior_bins):
+        #    raise RuntimeError("Something went wrong with the binning")
+    
+    Combined_PDF = PDFs[0]
+    for i in range(1,N):
+        Combined_PDF *= PDFs[i]
+        
+    # Check that the Combined PDF is not 0
+    check_combined(Combined_PDF,PDFs,Combined_bins,HIST="True")
+    
+    if Prior is not None:
+        """Combined_Prior = Prior[0]
+        for i in range(1,N):
+            Combined_Prior *= Priors[i]
+        #Check that the Combined Prior is not 0
+        check_combined(Combined_Prior,KDE=True)
+        Combined_Prior /= np.sum(Combined_Prior*get_bins_volume(d_bins)) # normalised 
+        """
+        check_combined(Prior,KDE=True)
+        Norm_Prior = Prior/np.sum(Prior*get_bins_volume(d_bins))
+        if Dim==3:
+            plot = plot_probability3D(Norm_Prior,Combined_bins,labels=["AB","AC","AD"],udm="\"",alpha=0.3)
+            plot.savefig(str(savedir)+"/Normalised_prior.png")
+        for i in range(N-1):
+            Combined_PDF/=Norm_Prior                
+    return Combined_PDF, Combined_bins
+
+
+def Multiply_PDF_KDE(samples,npoints,ratio=2,savedir="."):
     """
     Main idea for the moment:
         - get KDEs bandwiths
@@ -143,8 +204,7 @@ def Multiply_PDF_KDE(samples,npoints,ratio=2,Priors=None,savedir="." ):
     """
     #from sklearn.neighbors import KernelDensity
     #from sklearn.model_selection import GridSearchCV
-    import scipy.stats as st
-
+    
     maxs,mins = get_minmax(samples)
     N         = len(samples)
     
@@ -174,7 +234,7 @@ def Multiply_PDF_KDE(samples,npoints,ratio=2,Priors=None,savedir="." ):
     #KDEs      = [np.reshape(krnl(np.transpose(positions)).T, xx.shape) for krnll in kernels]
     KDEs      = [np.reshape(krnl(positions).T, xx.shape) for krnl in kernels]
 
-    with open(save_dir/str("PDF_KDEs.pkl"),"wb") as f:
+    with open(savedir/str("PDF_KDEs.pkl"),"wb") as f:
         pickle.dump(KDEs,f)
     # we then have to sample the space
 
@@ -182,7 +242,7 @@ def Multiply_PDF_KDE(samples,npoints,ratio=2,Priors=None,savedir="." ):
     Combined_PDF = KDEs[0]
     for i in range(1,N):
         Combined_PDF *= KDEs[i]
-    check_combined_PDF(Combined_PDF,KDE=True)
+    check_combined(Combined_PDF,KDE=True)
     # normalise point-wise: Sum over all points =1
     Combined_PDF /= np.sum(Combined_PDF)
 
@@ -198,7 +258,6 @@ def Multiply_PDF_KDE(samples,npoints,ratio=2,Priors=None,savedir="." ):
         check_combined(Combined_Prior,HIST="False")
         #Combined_Prior /= np.sum(Combined_Prior*get_bins_volume(d_bins)) # normalised 
         Combined_Prior /= np.sum(Combined_Prior) # normalised 
-        from plotting_tools import plot_probability3D
         plot = plot_probability3D_KDE(Combined_Prior,Positions_KDE_Prior,labels=["AB","AC","AD"],udm="\"",alpha=0.3)
         plot.savefig(str(savedir)+"/Combined_prior.pdf")
         for i in range(N-1):
@@ -207,15 +266,11 @@ def Multiply_PDF_KDE(samples,npoints,ratio=2,Priors=None,savedir="." ):
 
 
 
-# In[ ]:
-
 
 def KDE_prior_corr(Prior, NtotPrior,d_bins,shape=None):
     # Priors shape must be (point_i, dimensions), eg: (1000,3)
     # Prior corrected for the Lower resolution
     # return Priors evaluated with KDE at center of the bins
-    from sklearn.neighbors import KernelDensity
-    from sklearn.model_selection import GridSearchCV
     
     # find the best bandwidth for each filter
     prior_bndws = 10 ** np.linspace(-1, 1, 100)
@@ -293,33 +348,98 @@ def KDE_prior(Priors,d_bins,shape=None):
     return Priors, positions
 
 
-# In[1]:
 
+"""
+def wip_Multiply_PDF_HIST(samples,nbins,Prior=None,savedir="."):
+    # Using histograms to obtain the binned density for each datasets
+    N = len(samples)
+    Dim = len(samples[0])
+    #First find the same bins for each dataset in all parametric dimensions
+    mins,maxs  = get_minmax(samples)#[DfABmax,DfACmax,DfBCmax],[DfABmin,DfACmin,DfBCmin]
+    len_bins = (maxs-mins)/nbins
+    d_bins = np.transpose([mins +i*len_bins for i in range(nbins+1)])
+    
+    # Then we make the histogram    
+    PDFs,Combined_bins = hists_given_bins(samples,d_bins)
+    
+    if Prior is not None: # and Prior_LR is not None
+        if Prior.uniform:
+            # then it can be computed numerically (and it's a constant, so it doesn't really matter):
+            Prior = np.ones_like(d_bins)/(nbins*Dim)
+        else:
+            Prior,_ = wip_KDE_prior_corr(Prior=Prior,d_bins=d_bins)
+            
+    Combined_PDF = PDFs[0]
+    for i in range(1,N):
+        Combined_PDF *= PDFs[i]
+    
+    # Check that the Combined PDF is not 0
+    check_combined(Combined_PDF,PDFs,Combined_bins,HIST="True")
+    
+    if Prior is not None:
+        check_combined(Prior,KDE=True)
+        Norm_Prior = Prior/np.sum(Prior*get_bins_volume(d_bins))
+        if Dim==3:
+            plot = plot_probability3D(Norm_Prior,Combined_bins,labels=["AB","AC","AD"],udm="\"",alpha=0.3)
+            plot.savefig(str(savedir)+"/Normalised_prior.png")
+        for i in range(N-1):
+            Combined_PDF/=Norm_Prior                
+    return Combined_PDF, Combined_bins
 
-def KDE_position_from_bin(d_bins):
-    # obtain center of 3D bins and return as
-    # positions for KDE -> shape: ((nbins-1)**Dim,Dim)
-    if len(d_bins)!=3:
-        raise ValueError("Implemented explicitely for 3 dimensions")
+def wip_KDE_prior_corr(Prior,d_bins,shape=None):
+    # Prior is given as class and is considered Uniform
+    # return Priors evaluated with KDE at center of the bins
+    
+    # find the best bandwidth for each filter
+    prior_bndws = 10 ** np.linspace(-1, 1, 100)
+    grid = GridSearchCV(KernelDensity(kernel='gaussian'),{'bandwidth': prior_bndws})
+    # initial shape of samples: filter,dimension,step
+    prior_sample = Prior.get_sample()
+    bandwidth = grid.fit(prior_sample)
+    # define the KDE
+    kde = KernelDensity(**bandwidth.best_params_, kernel='gaussian') 
+    
+    # Fit the KDE to the samples
+    KDE = kde.fit(prior_sample)
+    
+    # we then have to sample the space
+    if shape is None:
+        positions = KDE_position_from_bin(d_bins) #position.shape = ((n_bins-1)**Dim,Dim) 
+        shape     = [len(b)-1 for b in d_bins]
+    else:
+        positions = d_bins
 
-    # get the center of the bins instead of the edges
-    centers = []
-    for bi in d_bins:
-        cnt_di = [] # for each dim_i indep
-        for i in range(len(bi)-1):
-            cnt_di.append(.5*(bi[i]+bi[i+1]))
-        centers.append(cnt_di)
-    # From here on considering 3Dims
-    #
-    # Creating a grid of points from the matrix of centers
-    Dim1, Dim2, Dim3 = np.meshgrid(*centers)
-    # reorganising the shape of it
-    positions = np.vstack([Dim1.ravel(), Dim2.ravel(), Dim3.ravel()]).T    
-    return positions
+    Prior_val = KDE.score_samples(positions).reshape(*shape)
+    Prior     = Prior_val* len(prior_sample)/Prior.NtotPrior
+    return Prior, positions
+"""
 
+# General function to multiply PDF  (can be applied to priors as well - and will be)
+"""def Multiply_PDF(samples,nbins=None,KDE=False,Priors=None,savedir="."):
+    # samples.shape= (n_datasets,n_mcmc_points,n_dims)
+    # same for Priors
+    
+    if KDE is False and nbins is None:
+        raise RuntimeError("Nbins are required for the histogram sampling")
 
-# In[ ]:
-
-
-
+    if KDE:
+        Combined_PDF,Positions = Multiply_PDF_KDE(samples,Priors,savedir)
+        return Combined_PDF,Positions
+    else:
+        Combined_PDF, Combined_bins = Multiply_PDF_HIST(samples,nbins,Priors,savedir)
+        return Combined_PDF, Combined_bins 
+    
+def get_minmax(samples,dim=None):
+    # We get the min and maximum for each dimension relatively to all the datasets togheter
+    if dim is not None:
+        return np.min([min(par_i) for par_i in np.array(samples,dtype=object)[:,dim]]),\
+            np.max([max(par_i) for par_i in np.array(samples,dtype=object)[:,dim]])
+    else:
+        dim = len(samples[0])
+        min_i,max_i = [],[]
+        for d in range(dim):
+            min_i.append(np.min([min(par_i) for par_i in np.array(samples,dtype=object)[:,d]]))
+            max_i.append(np.max([max(par_i) for par_i in np.array(samples,dtype=object)[:,d]]))
+        return np.array(min_i),np.array(max_i)
+"""
 

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
 
 """
 Inverse of Dft_combo :
@@ -20,18 +18,12 @@ and see how well it agrees with the 3D df distribution
 # 
 # $$ \large P (H_0)\ =\ \int\int\int d\Delta \phi_{AB}d\Delta \phi_{AC}d\Delta \phi_{BC} P_{\Delta \phi\  meas.}(\Delta \phi_{AB},\Delta \phi_{AC},\Delta \phi_{BC})* \frac{P_{\Delta t\ transf.}(\Delta \phi_{AB},\Delta \phi_{AC},\Delta \phi_{BC}|H_0)*Prior(H_0)}{\int dH_0 ' P_{\Delta t \  transf.}(\Delta \phi_{AB},\Delta \phi_{AC},\Delta \phi_{BC} | H_0') } $$
 
-# In[16]:
-
-
 import os,sys
-import matplotlib
 import numpy as np
-import corner,pickle
-import json,copy,time
+import pickle
+import copy,time
 import argparse as ap
-from astropy import units as u
-import matplotlib.pyplot as plt
-from astropy import constants as const
+from datetime import datetime
 from scipy.stats import multivariate_normal
 
 from Utils.tools import *
@@ -40,15 +32,6 @@ from H0.tools_H0 import H0_Res
 from Utils.Dt_from_Df_reworked import *
 from Utils.statistical_tools import quantiles
 from Utils.combinedsetting_class import combined_setting
-
-
-# In[33]:
-
-
-
-
-
-# In[1]:
 
 
 def get_kwdt(Dt_res):
@@ -67,8 +50,7 @@ def get_bin_center(bins):
         for j in range(len(bins[i])-1):
             bins_centers_i.append((bins[i][j]+bins[i][j+1])/2.)
         bins_centers.append(bins_centers_i)
-    bins_centers = np.array(bins_centers)
-    return bins_centers
+    return  np.array(bins_centers)
 
 def get_analytic_density(mean,cov,bins,norm=1):
     # assuming gaussian probability density function
@@ -78,15 +60,15 @@ def get_analytic_density(mean,cov,bins,norm=1):
     return density
 
 def get_PH0(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1)):
-    PH0 = []
-    k   = k_analytical(setting) 
+    PH0     = []
+    k       = k_analytical(setting) 
     for h0 in H0:
-        # copy the fix elements in order to be sure not to modify them during the
-        # computation
+        # copy the fix elements in order to be sure 
+        # not to modify them during the computation
         Df_dens_lens = copy.deepcopy(Df_dens)
         bins_Df      = copy.deepcopy(Df_dens_bins)
-        dt_mean      = copy.deepcopy(kwargs_dt["mean"])
-        dt_cov       = copy.deepcopy(kwargs_dt["cov"])
+        dt_mean      = copy.deepcopy(Dt_kw["mean"])
+        dt_cov       = copy.deepcopy(Dt_kw["cov"])
         kw_df_trnsf  = {"mean":Df_XY(Dt_XY=dt_mean,H0=h0,k=k),
                         "cov":cov_Df(cov_Dt=dt_cov,H0=h0,k=k)}
         Df_dens_trsf = get_analytic_density(bins=bins_Df,**kw_df_trnsf)
@@ -122,9 +104,10 @@ if __name__ == '__main__':
     parser = ap.ArgumentParser(prog="python {}".format(os.path.basename(__file__)),
                                description="Combine the posterior for time delay and Fermat potential differences at the images position to constrain the Hubble parameter H0",
                                formatter_class=ap.RawTextHelpFormatter)
-    help_timedelay = "Name of the directory containing the posterior of the difference of time delay"
-    help_fermatpot = "Name of the directory containing the posterior of the difference of Fermat potential"
+    help_timedelay = "Name of the directory containing the posterior of the difference of Time Delay"
+    help_fermatpot = "Name of the directory containing the posterior of the difference of Fermat Potential"
     help_postdir   = "Name of the directory which will be containing the H0 combined posterior"
+    help_overwrite = "Overwrite previous result. If False and I find the same result directory, I will create a new one with today's date."
     parser.add_argument("-dPH0","--dir_PostH0",dest='dir_ph0', type=str,default="PH0",
                         metavar='dir_ph0', action='store',
                         help=help_postdir)
@@ -140,6 +123,9 @@ if __name__ == '__main__':
                     help="Maximum value for H0 sampling")
     parser.add_argument("-h0step",type=float, dest="h0step", default=.1,
                     help="Step for H0 sampling")
+    parser.add_argument('-ovw','--overwrite',help=help_overwrite,
+                        dest="overwrite", 
+                        default=False,action="store_true")
     parser.add_argument('-v','--verbose',help="Verbosity",
                         dest="verbose", 
                         default=False,action="store_true")
@@ -151,16 +137,32 @@ if __name__ == '__main__':
     h0min   = args.h0min
     h0step  = args.h0step
     verbose = args.verbose
-
+    overwrite = args.overwrite
+    
     res_dir = "./results/"
     mkdir(res_dir)
     PH0_resdir = res_dir+"/"+dir_ph0
+    if os.path.isfile(PH0_resdir):
+        if os.listdir(PH0_resdir):
+            if verbose:
+                print(f"Previous results found in {PH0_resdir}")
+            if overwrite:
+                if verbose:
+                    print(f"Overwriting them (actually moving them to old_{PH0_resdir})")
+                os.rename(PH0_resdir, "old_"+PH0_resdir)
+            else:
+                td = datetime.today().strftime("%y%m%d")
+                if verbose:
+                    print(f"Changing result directory name: {PH0_resdir}->{PH0_resdir}_{td}")
+                PH0_resdir = PH0_resdir+"_"+td
     mkdir(PH0_resdir)
-    dt_resdir  = res_dir+"/Dt_post/"+dir_dt
-    df_resdir  = res_dir+"/Df_post/"+dir_df
     print("Saving results in: ",PH0_resdir)
-    print("For time delay using posterior : ",dt_resdir)
-    print("For fermat pot. using posterior: ",df_resdir)
+    dt_resdir  = PH0_resdir+"/Dt_post"
+    os.symlink(os.getcwd()+"/"+str(dir_dt),dt_resdir)
+    print("For time delay using posterior : ",str(dir_dt))
+    df_resdir  = PH0_resdir+"/Df_post"
+    os.symlink(os.getcwd()+"/"+str(dir_df),df_resdir)
+    print("For fermat pot. using posterior: ",str(dir_df))
 
     with open(df_resdir+"/Combined_PDF.pkl","rb") as f:
         PDF_Df = np.array(pickle.load(f))
@@ -175,12 +177,15 @@ if __name__ == '__main__':
     print("All data collected")
 
     ### the combined setting is only in the fermat pot dir
-    combined_setting = pickle.load(open(df_resdir+"/combined_setting.pkl","rb"))
+    with open(df_resdir+"/combined_setting.pkl","rb") as f:
+        combined_setting = pickle.load(f)
     
     H0_sampled = np.arange(h0min,h0max,h0step)
-    begin = time.time()
+    if verbose:
+        begin = time.time()
     PH0,H0 = get_PH0(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting)
-    print("Time passed: ",time.time()-begin)
+    if verbose:
+        print("Time passed: ",time.time()-begin)
     
     with open(PH0_resdir+"/ph0_results.data","wb") as f:
         pickle.dump([PH0,H0],f)
@@ -191,9 +196,6 @@ if __name__ == '__main__':
     plot_H0(H0,PH0,figname=PH0_resdir+"/PH0_dtf.pdf",add_mode=False)
     write_readme(PH0_resdir,dt_resdir,df_resdir)
     success(sys.argv[0])
-
-
-# In[ ]:
 
 
 """

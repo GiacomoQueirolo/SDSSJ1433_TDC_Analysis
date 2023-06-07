@@ -2,7 +2,7 @@
 
 import sys,os
 import importlib
-import json,pickle
+import json,pickle,dill
 from os import walk
 import pathlib as pth
 from datetime import datetime
@@ -118,7 +118,7 @@ def print_res_w_err(res,err,outstr=True):
 def _verify_setting_name(setting_name):
     # this way it works also with only the "f140w_SP_I" for example
     if type(setting_name) is str:
-        setting_name = "settings_"+setting_name.replace("settings_","").replace(".py","")+".py"
+        setting_name = f'settings_{setting_name.replace("settings_","").replace(".py","")}.py'
         return setting_name
     else: 
         try:
@@ -127,7 +127,7 @@ def _verify_setting_name(setting_name):
             except AttributeError: # if setting
                 setting_name.image_name
         except: # pragma: no cover
-            raise RuntimeError(str(setting_name)+" must be either str, module or setting, not "+str(type(setting_name)))
+            raise RuntimeError(f"{setting_name} must be either str, module or setting, not {type(setting_name)}")
         return setting_name
         
 def verify_setting_name(setting_name):
@@ -215,6 +215,71 @@ def get_setting_module(setting_name,sett=False):
     else:
         return _get_setting_module(setting_name,sett=sett)
     
+#############################################################################################
+# Same "setting file functions", but for the combined setting produced after multiplying
+# the fermat posteriors. Note that this is saved as a pickle object, not a module to load
+#############################################################################################
+def verify_combined_setting_name(combined_setting_name):
+    # combined setting is assumed that it can't be a list
+    if type(combined_setting_name) is str:
+        combined_setting_name = f'cmb_setting_{combined_setting_name.replace("cmb_setting_","").replace(".dll","")}.dll'
+        return combined_setting_name
+    else: 
+        try:
+            combined_setting_name.z_lens
+        except: # pragma: no cover
+            raise RuntimeError(f"{combined_setting_name} must be either str or combined_setting, not {type(combined_setting_name)}")
+        return combined_setting_name
+
+def find_combined_setting_path(combined_setting_name,main_dir="./"):
+    combined_setting_name =  verify_combined_setting_name(combined_setting_name)
+    directories = next(walk(main_dir), (None, None, []))[1]
+    cmb_setting_dir = [i for i in directories if "combined" in i]
+    cmb_setting_path = []
+    for cstd in cmb_setting_dir:
+        if combined_setting_name in next(walk(main_dir+"/"+cstd), (None, None, []))[2]:
+            cmb_setting_path.append(cstd)
+    if combined_setting_name in next(walk(main_dir), (None, None, []))[2]:
+            cmb_setting_path.append(main_dir)
+    if cmb_setting_path==[]:
+        raise FileNotFoundError(f"Combined Setting file not found:{combined_setting_name}")
+    elif len(cmb_setting_path)>1:
+        string= "More then one setting found with same name in:"
+        for cst in cmb_setting_path:
+            string+=cst+"\n"
+        raise RuntimeError(string)
+    else:
+        return cmb_setting_path[0]
+
+def get_combined_setting_name(combined_setting):
+    combined_setting = verify_combined_setting_name(combined_setting)
+    if type(combined_setting) is not str:
+        combined_setting_name = combined_setting.__module__
+    else:
+        combined_setting_name = combined_setting
+    return str(combined_setting_name)
+
+def get_combined_setting_module(combined_setting_name,main_dir="./"):
+    combined_setting_name = verify_combined_setting_name(combined_setting_name)
+    try:
+        combined_setting_name.comment
+        return combined_setting_name
+    except AttributeError:     
+        combined_setting_name      = get_combined_setting_name(combined_setting_name)
+        combined_setting_position  = find_combined_setting_path(combined_setting_name,main_dir=main_dir)
+        with open(f"{main_dir}/{combined_setting_position}/{combined_setting_name}","rb") as f:
+            combined_setting_module = dill.load(f)
+        return combined_setting_module
+    
+def get_combined_setting_respath(combined_setting_name,main_dir="./"):
+    # get absolute path to the result directory the combined setting module refers to
+    combined_setting = get_combined_setting_module(combined_setting_name,main_dir)
+    return combined_setting.get_respath()
+
+#############################################################################################
+
+
+
 # try decorator
 def check_setting(funct):
     def _check_sett(setting,*args,**kwargs):
@@ -337,9 +402,12 @@ def create_path_from_list(ordered_list):
     for p in ordered_list:
         if type(p) is not str:
             raise RuntimeError(f"Input must be a list of str, not {type(p)}")
+        if "." not in p and p==ordered_list[-1]:
+            p+="/"
         if p[0]!="/" and p[0]!=".":
             p=f"/{p}"
         path+=p
+    #return pth.Path(*ordered_list)
     return path
         
 def save_json(data,filename):
@@ -448,6 +516,21 @@ def pickle_results(res,name,savefig_path=""):
     with open(savefig_path+name,"wb") as f:
         pickle.dump(res, f)
 
+def flatten(l):
+    return [item for sublist in l for item in sublist]
+
+def general__eq__(obj_self,other_obj):
+    # generic equality function to implement in classes 
+    for attr in dir(obj_self):
+        if not attr.startswith('__'):
+            try:
+                if getattr(obj_self,attr)!=getattr(other_obj,attr):
+                    return False
+            except AttributeError:
+                return False
+    return True
+
+
 ###
 # for nice formatting:
 import argparse
@@ -457,17 +540,21 @@ class CustomFormatter(argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHe
 
 # for pycs3
 ##########################################
-def get_config(lensname,dataname=None,config_path="./myconfig/"):
+def get_config(lensname,dataname=None,config_path="./myconfig/",main_dir="./"):
     try:
         lensname.timeshifts
         return lensname # it is already the config file
     except AttributeError:
         if dataname is None:
             lensname,dataname=lensname.replace("myconfig_","").replace(".py","").split("_")
-        sys.path.append(config_path+"/")
+        sys.path.append(f"{main_dir}/{config_path}/")
         config_file = "myconfig_" + lensname + "_" + dataname
         config = importlib.import_module(config_file)
         return config
+    
+def get_config_respath(lensname,dataname=None,config_path="./myconfig/",main_dir="./"):
+    config = get_config(lensname,dataname=dataname,config_path=config_path,main_dir=main_dir)
+    return config.get_respath()
 
 def get_simdir(path):
     return str(path).replace("Analysis","Simulation").replace("analysis","simulation")
@@ -482,3 +569,5 @@ def check_success_analysis(path):
     success = pickle.load(open(path+"/success.data","rb"))
     return success["success"]
 ##########################################
+
+
