@@ -1,5 +1,4 @@
 import numpy as np
-from Data.conversion import e12_from_qphi as e12
 # copy for same_prior_redone.py but with better structure
 # get_** must be independent of the values, which must be given as input
 
@@ -135,21 +134,26 @@ def get_lens_params(center_x, center_y, x_pert, y_pert, pix_scale, CP):
     
     return lens_params
     
-def get_ps_params(x_image,y_image,pix_scale):
+def get_ps_params(x_image,y_image,pix_scale,fixed_pos=False):
     #Ps light parameters
 
     lum_ps   = np.array([0,0,0,0])
     bound_pix_ps   = 2.# 1.8 #.6
     bound_ps       = bound_pix_ps*pix_scale
     sigma_im       = 1.
-
-    fixed_ps = [{}]    
-    kwargs_ps_init  = [{'ra_image' : x_image, 'dec_image':y_image,"point_amp": lum_ps}]
-    kwargs_ps_sigma = [{'ra_image' : sigma_im*pix_scale*np.ones_like(x_image), 
-                        'dec_image': sigma_im*pix_scale*np.ones_like(x_image),"point_amp": lum_ps}]
-    kwargs_lower_ps = [{'ra_image' : x_image-bound_ps, 'dec_image': y_image-bound_ps,"point_amp": lum_ps}]
-    kwargs_upper_ps = [{'ra_image' : x_image+bound_ps, 'dec_image': y_image+bound_ps,"point_amp": lum_ps}]
-        
+    if not fixed_pos:
+        fixed_ps = [{}]    
+        kwargs_ps_init  = [{'ra_image' : x_image, 'dec_image':y_image,"point_amp": lum_ps}]
+        kwargs_ps_sigma = [{'ra_image' : sigma_im*pix_scale*np.ones_like(x_image), 
+                            'dec_image': sigma_im*pix_scale*np.ones_like(x_image),"point_amp": lum_ps}]
+        kwargs_lower_ps = [{'ra_image' : x_image-bound_ps, 'dec_image': y_image-bound_ps,"point_amp": lum_ps}]
+        kwargs_upper_ps = [{'ra_image' : x_image+bound_ps, 'dec_image': y_image+bound_ps,"point_amp": lum_ps}]
+    else:
+        fixed_ps = [{'ra_image' : x_image, 'dec_image':y_image}]    
+        kwargs_ps_init  = [{"point_amp": lum_ps}]
+        kwargs_ps_sigma = [{"point_amp": lum_ps}]
+        kwargs_lower_ps = [{"point_amp": lum_ps}]
+        kwargs_upper_ps = [{"point_amp": lum_ps}]
     ps_params = [kwargs_ps_init, kwargs_ps_sigma, fixed_ps, kwargs_lower_ps, kwargs_upper_ps]
     return ps_params
     
