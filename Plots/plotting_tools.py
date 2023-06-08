@@ -154,67 +154,81 @@ def plot_probability3D_KDE(KDE,Positions,labels=None,udm=None,figsize=(12,12),co
 # In[ ]:
 
 
-def plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max):
-    
+def plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,""),verbose=True):
+    band_index,filter = band
+    if filter!="":
+        filter="_"+filter
     f, axes = plt.subplots(1, 3, figsize=(16, 8), sharex=False, sharey=False)
-
-    modelPlot.data_plot(ax=axes[0], v_min=v_min, v_max=v_max)
-    modelPlot.model_plot(ax=axes[1], v_min=v_min, v_max=v_max)
-    modelPlot.normalized_residual_plot(ax=axes[2],v_min=res_min, v_max=res_max)
+    modelPlot.data_plot(ax=axes[0], band_index=band_index,v_min=v_min, v_max=v_max)
+    modelPlot.model_plot(ax=axes[1], band_index=band_index, v_min=v_min, v_max=v_max)
+    modelPlot.normalized_residual_plot(ax=axes[2], band_index=band_index,v_min=res_min, v_max=res_max)
     plt.savefig(savefig_path+"/results_Model.png")
     f, axes = plt.subplots(1, 2, figsize=(10, 8), sharex=False, sharey=False)
-    modelPlot.convergence_plot(ax=axes[0], v_max=1)
-    modelPlot.magnification_plot(ax=axes[ 1])
+    modelPlot.convergence_plot(ax=axes[0], band_index=band_index, v_max=1)
+    modelPlot.magnification_plot(ax=axes[ 1], band_index=band_index)
     f.tight_layout()
     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=0.05)
-    plt.savefig(savefig_path+"/results_MassModel.png")
+    savename= f"{savefig_path}/results_Model{filter}.png"
+    if verbose:
+        print(f"Saved model plot {savename}") 
+    plt.savefig(savename)
+    plt.close()
 
     f, axes = plt.subplots(2, 2, figsize=(16, 8), sharex=False, sharey=False)
 
-    modelPlot.decomposition_plot(ax=axes[0,0], text='Lens light', lens_light_add=True, unconvolved=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[1,0], text='Lens light convolved', lens_light_add=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[0,1], text='All components', source_add=True, lens_light_add=True,
+    modelPlot.decomposition_plot(ax=axes[0,0], band_index=band_index, text='Lens light', lens_light_add=True, unconvolved=True, v_min=v_min, v_max=v_max)
+    modelPlot.decomposition_plot(ax=axes[1,0], band_index=band_index, text='Lens light convolved', lens_light_add=True, v_min=v_min, v_max=v_max)
+    modelPlot.decomposition_plot(ax=axes[0,1], band_index=band_index, text='All components', source_add=True, lens_light_add=True,
                                  unconvolved=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[1,1], text='All components convolved', source_add=True, \
+    modelPlot.decomposition_plot(ax=axes[1,1], band_index=band_index, text='All components convolved', source_add=True, \
                                  lens_light_add=True, point_source_add=True, v_min=v_min, v_max=v_max)
     f.tight_layout()
     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-    plt.savefig(savefig_path+"/results_LightComponents.png")
+
+    savename = f"{savefig_path}/results_MassModel{filter}.png"
+    if verbose:
+        print(f"Saved mass model plot {savename}") 
+    plt.savefig(savename)
     plt.close()
 
     
-def plot_model(modelPlot,savefig_path,v_min,v_max,res_min,res_max):
-    
+def plot_model(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,""),verbose=True):
+    band_index,filter = band
+    if filter!="":
+        filter="_"+filter
     f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
 
-    modelPlot.data_plot(ax=axes[0,0], v_min=v_min, v_max=v_max)
-    modelPlot.model_plot(ax=axes[0,1], v_min=v_min, v_max=v_max)
-    modelPlot.normalized_residual_plot(ax=axes[0,2],v_min=res_min, v_max=res_max)
-    modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=1000)
-    modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
-    modelPlot.magnification_plot(ax=axes[1, 2])
+    modelPlot.data_plot(ax=axes[0,0],band_index=band_index, v_min=v_min, v_max=v_max)
+    modelPlot.model_plot(ax=axes[0,1],band_index=band_index, v_min=v_min, v_max=v_max)
+    modelPlot.normalized_residual_plot(ax=axes[0,2],band_index=band_index,v_min=res_min, v_max=res_max)
+    modelPlot.source_plot(ax=axes[1, 0],band_index=band_index, deltaPix_source=0.01, numPix=1000)
+    modelPlot.convergence_plot(ax=axes[1, 1],band_index=band_index, v_max=1)
+    modelPlot.magnification_plot(ax=axes[1, 2],band_index=band_index)
     f.tight_layout()
     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-    plt.savefig(savefig_path+"/results_Model.png")
+    savename = f"{savefig_path}/results_MassModel{filter}.png"
+    if verbose:
+        print(f"Saved mass model plot {savename}") 
+    plt.savefig(savename)
     plt.close()
 
     f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
 
-    modelPlot.decomposition_plot(ax=axes[0,0], text='Lens light', lens_light_add=True, unconvolved=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[1,0], text='Lens light convolved', lens_light_add=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[0,1], text='Source light', source_add=True, unconvolved=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[1,1], text='Source light convolved', source_add=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[0,2], text='All components', source_add=True, lens_light_add=True,
+    modelPlot.decomposition_plot(ax=axes[0,0],band_index=band_index, text='Lens light', lens_light_add=True, unconvolved=True, v_min=v_min, v_max=v_max)
+    modelPlot.decomposition_plot(ax=axes[1,0],band_index=band_index, text='Lens light convolved', lens_light_add=True, v_min=v_min, v_max=v_max)
+    modelPlot.decomposition_plot(ax=axes[0,1],band_index=band_index, text='Source light', source_add=True, unconvolved=True, v_min=v_min, v_max=v_max)
+    modelPlot.decomposition_plot(ax=axes[1,1],band_index=band_index, text='Source light convolved', source_add=True, v_min=v_min, v_max=v_max)
+    modelPlot.decomposition_plot(ax=axes[0,2],band_index=band_index, text='All components', source_add=True, lens_light_add=True,
                                  unconvolved=True, v_min=v_min, v_max=v_max)
-    modelPlot.decomposition_plot(ax=axes[1,2], text='All components convolved', source_add=True, \
+    modelPlot.decomposition_plot(ax=axes[1,2],band_index=band_index, text='All components convolved', source_add=True, \
                                  lens_light_add=True, point_source_add=True, v_min=v_min, v_max=v_max)
     f.tight_layout()
     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-    plt.savefig(savefig_path+"/results_LightComponents.png")
+    savename = f"{savefig_path}/results_LightComponents{filter}.png"
+    if verbose:
+        print(f"Saved light model plot {savename}") 
+    plt.savefig(savename)
     plt.close()
-
-
-# In[ ]:
 
 
 
@@ -335,9 +349,20 @@ def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),co
 
 
 def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=None,contour_levels=4,
-                      colors=base_colors,alpha=.3,vaxes=None):
+                      colors=base_colors,alpha=.3,vaxes=None,fnt=30):
     # vaxes: list of list of dict. lenght0=N* params, ordered as samples_name, lenght1=N* of values
-    #   keys: "value", "label" (optional) , "color" (optional) 
+    #   keys: "value", "label" (optional) , "color" (optional)
+    plt.rcParams['xtick.labelsize'] = fnt
+    plt.rcParams['ytick.labelsize'] = fnt 
+    plt.rcParams['font.size'] = fnt
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('font', size=fnt)          # controls default text sizes
+    plt.rc('axes', titlesize=fnt)     # fontsize of the axes title
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=fnt)    # legend fontsize
+     
     if figsize is None:
         figsize= (3*len(samples[0]),3*len(samples[0]))
     if samples_names is None or len(samples_names)<len(samples):
@@ -566,3 +591,32 @@ def averaged_plot(ax,prm_steps,col="b", num_average=100,plot_scatter=False,param
     ax.legend()
     return ax
 
+
+from Data.input_data import *
+from Utils.get_res import get_kwres 
+from lenstronomy.Plots.model_plot import ModelPlot
+
+def get_ModelPlot(setting,kwargs_data=None, kwargs_psf=None, kwargs_numerics=None,kwargs_model=None,\
+                  kwargs_results=None,image_likelihood_mask_list=None,arrow_size=0.02, cmap_string="gist_heat",withmask=True):
+    if kwargs_data is None:
+        kwargs_data,mask = init_kwrg_data(setting,saveplots=False,return_mask=True)
+    if kwargs_psf is None:
+        kwargs_psf = init_kwrg_psf(setting,saveplots=False)
+    if kwargs_numerics is None:
+        kwargs_numerics = init_kwrg_numerics(setting)
+    if kwargs_model is None:
+        kwargs_model = get_kwargs_model(setting)
+    if kwargs_results is None:
+        kwargs_results = get_kwres(setting)["kwargs_results"]
+    if image_likelihood_mask_list is None and withmask:
+        try:
+            image_likelihood_mask_list = [np.array(mask).tolist()]
+        except:
+            _,mask  = init_kwrg_data(setting,saveplots=False,return_mask=True)
+            image_likelihood_mask_list = [np.array(mask).tolist()]
+    else:
+        image_likelihood_mask_list = []
+    multi_band = [[kwargs_data,kwargs_psf,kwargs_numerics]]
+    modelplot = ModelPlot(multi_band,kwargs_model,kwargs_results,\
+                image_likelihood_mask_list=image_likelihood_mask_list,arrow_size=arrow_size,cmap_string=cmap_string)
+    return modelplot
