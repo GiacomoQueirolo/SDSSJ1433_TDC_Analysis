@@ -80,3 +80,37 @@ def get_combined_mag(_config,main_dir_path=".",config_path="/myconfig/"):
     combined_mag = pickle.load(open(f'{resdir}/mag_{config.name_marg_spline}_sigma_{config.sigmathresh:2.2f}_combined.pkl','rb'))
     return combined_mag
     
+
+
+
+
+def print_table_dt(_config,main_dir_path=".",config_path="/myconfig/"):
+    import numpy as np
+    # print latex table for time delays
+    combined = get_combined_res(_config,main_dir_path,config_path)
+    newline = "\n"
+    str_tbl  = r"\begin{table}"
+    str_tbl += newline
+    str_tbl += r"\resizebox{\columnwidth}{!}{"
+    str_tbl += newline
+    str_tbl +=r"\begin{tabular}{|c c|}"
+    str_tbl += newline
+    str_tbl += r"\hline"
+    str_tbl += newline
+    if len(combined.results)!=3:
+        raise RuntimeError("Only implemented for set of 3 images (A,B and C)")
+    dt_names = ["AB","AC","BC"]
+    #for i,(res,up,down) in enumerate(zip(combined.results,combined.err_up,combined.err_down)):
+    for i,(res,err_tot) in enumerate(zip(combined.results,combined.error.tot)):
+        str_tbl +=r"\Delta t_{"+dt_names[i]+"} & "+ str(np.round(res,1))+r"\pm"+str(np.round(err_tot,1))+r" \text{d} \\"
+        str_tbl +=newline
+    str_tbl += r"\hline"
+    str_tbl +=newline
+    str_tbl +=r"\end{tabular} }"
+    str_tbl +=newline
+    str_tbl +=r"\caption{ }"
+    str_tbl +=newline
+    str_tbl +=r"\end{table}"
+    print(str_tbl)
+    
+

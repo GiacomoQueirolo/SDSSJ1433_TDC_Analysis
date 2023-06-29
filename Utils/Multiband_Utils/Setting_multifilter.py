@@ -161,7 +161,7 @@ class Setting_Multifilter():
             mcmc_kw = "mcmc_"+kw
             name_mcmc = self.get_savejson_name(mcmc_kw)
             if kw=="prm":
-                name_mcmc.replace("json","dat")
+                name_mcmc = name_mcmc.replace("json","dat")
             kw_mcmc[mcmc_kw] = self.get_data(name_mcmc)
         return kw_mcmc
 

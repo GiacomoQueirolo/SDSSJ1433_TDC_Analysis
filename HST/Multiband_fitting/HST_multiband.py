@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 from lenstronomy.Data.psf import PSF
 from lenstronomy.Plots.model_plot import ModelPlot
+from lenstronomy.Workflow.fitting_sequence import FittingSequence 
 
 from Utils import get_res
 from Utils.tools import *
@@ -87,7 +88,7 @@ if __name__=="__main__":
     save_log_command(save_dir=savefig_path)
     backend_filename = multifilter_sett.backend_filename
     for sett in settings:
-        setting_name = get_setting_name(sett)
+        setting_name = get_setting_name(sett)    
         setting_path = find_setting_path(setting_name)
         os.system(f"cp {setting_path}/{setting_name} {savefig_path}/.") #we copy the setting file to that directory
     CP    = multifilter_sett.CP
@@ -181,9 +182,8 @@ if __name__=="__main__":
 
     # Try to solve the "OSError: [Errno 24] Too many open files" by deleting the 
     # n_run_cut implementation
-    from Custom_Model.my_lenstronomy.my_fitting_sequence import MyFittingSequence # ONLY IMPORT IT HERE OR IT BREAKS THE CODE
-
-    fitting_seq = MyFittingSequence(kwargs_data_joint, kwargs_model, kwargs_constraints,\
+    #from my_lenstronomy.my_fitting_sequence import MyFittingSequence # ONLY IMPORT IT HERE OR IT BREAKS THE CODE
+    fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model, kwargs_constraints,\
                                   kwargs_likelihood, kwargs_params)
     
     # in the first fitting we only use f475w as it's optical: high res, high S/N, low number of object to fit
@@ -199,8 +199,7 @@ if __name__=="__main__":
     update_settings_initial_step['source_add_fixed'] = fixed_sources
 
     initial_fitting_kwlist = [['update_settings',update_settings_initial_step],
-    ['MY_PSO', {'sigma_scale': 1., 'n_particles': 200, 'n_iterations': 100,"path":savemcmc_path,"threadCount":threadCount,
-                "name":"pso_alignimages.json"}],  # run PSO first band
+    ['PSO', {'sigma_scale': 1., 'n_particles': 200, 'n_iterations': 100,"threadCount":threadCount}],  # run PSO first band
     ['align_images', {'n_particles': 10*len(settings), 'n_iterations': 100*len(settings), 
                       'align_offset': True, 'align_rotation': True, 
                       'delta_shift': 0.2, 'delta_rot': 0.1,
@@ -210,8 +209,8 @@ if __name__=="__main__":
                         }]]
 
     if not append_MC:
-        fitting_kwargs_list = [*initial_fitting_kwlist,['MY_PSO', {'sigma_scale': 1., 'n_particles': n_particles, 
-                                           'n_iterations': n_iterations,"path":savemcmc_path,"threadCount":threadCount}]]
+        fitting_kwargs_list = [*initial_fitting_kwlist,['PSO', {'sigma_scale': 1., 'n_particles': n_particles, \
+                            'n_iterations': n_iterations,"threadCount":threadCount}]]
     else:
         ####################################################################
         # if append True but no mcmc found, then we try to find the PSO and
@@ -220,7 +219,7 @@ if __name__=="__main__":
         ####################################################################
         fitting_kwargs_list = []
         if mc_init_sample is None:
-            from Custom_Model.Multiband_Model.init_mcmc_from_pso_mltf import create_mcmc_init_mltf
+            from Multiband_Model.init_mcmc_from_pso_mltf import create_mcmc_init_mltf
             mc_init_sample = create_mcmc_init_mltf(multifilter_sett,backup_path=backup_path)
             if mc_init_sample is None:
                 n_iterations = int(700*run_fact) #number of iteration of the PSO run PSO_it  = 700*rf
@@ -228,8 +227,8 @@ if __name__=="__main__":
                 print("append is True, but no mcmc or PSO files were possible to be found/open. ")
                 print(f"Starting standard run with PSO_it={n_iterations}, PSO_prt={n_particles}")
 
-                fitting_kwargs_list = [*initial_fitting_kwlist,['MY_PSO', {'sigma_scale': 1., 'n_particles': n_particles, 
-                                    'n_iterations': n_iterations,"path":savemcmc_path,"threadCount":threadCount}]]
+                fitting_kwargs_list = [*initial_fitting_kwlist,['PSO', {'sigma_scale': 1., 'n_particles': n_particles, 
+                                    'n_iterations': n_iterations,"threadCount":threadCount}]]
         
     if RND == False:
         np.random.seed(3) 
@@ -239,7 +238,7 @@ if __name__=="__main__":
     chain_list = fitting_seq.fit_sequence(fitting_kwargs_list) 
     sampler_type, mc_sample, param_mcmc, mc_logL  = chain_list[-1]
     # test mcmc convergence:
-    test_convergence(mc_logL)
+    test_convergence(setting=None,mcmc_logL=mc_logL)
     #append the previous results
     if append_MC:
         mc_sample = np.array([*mc_init_sample,*mc_sample])
@@ -250,8 +249,6 @@ if __name__=="__main__":
     #save_mcmc_json(setting=setting,data=mc_sample, filename="mcmc_smpl",backup_path=backup_path)
     save_json(data=mc_logL,filename=mcmc_logL_file_name)
     #save_mcmc_json(setting=setting,data=mc_logL,   filename="mcmc_logL",backup_path=backup_path)
-    
-    #save the PSO chain:
     if "PSO" in chain_list[0][0]:
         multifilter_sett.savejson_data(data=chain_list[0],filename="pso")
         
@@ -301,7 +298,7 @@ if __name__=="__main__":
     modelPlot = ModelPlot(multi_band_list_out, kwargs_model, kwargs_result,image_likelihood_mask_list=masks,\
                           arrow_size=0.02, cmap_string="gist_heat")
     
-    for band_index,sett in enumerate(len(settings)):
+    for band_index,sett in enumerate(settings):
         v_min,v_max     = sett.v_min,sett.v_max
         res_min,res_max = sett.res_min,sett.res_max
         if sett.WS:
@@ -311,7 +308,7 @@ if __name__=="__main__":
         #Normalised plot
         f, axes = plt.subplots(figsize=(10,7))
         modelPlot.normalized_residual_plot(ax=axes,band_index=band_index,v_min=res_min, v_max=res_max)
-        plt.savefig(savefig_path+"normalised_residuals_"+sett.filter+".png")
+        plt.savefig(f"{savefig_path}/normalised_residuals_{sett.filter}.png")
         plt.close()
 
     
@@ -340,7 +337,6 @@ if __name__=="__main__":
 ######################################################################################################################
 ######################################################################################################################
 ######################################################################################################################
-
 
 
     # ignored for now

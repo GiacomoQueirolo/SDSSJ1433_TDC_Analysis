@@ -8,13 +8,13 @@ from Utils.tools import *
 import sys
 import argparse
 
-def test_convergence(setting=None,logL=None,crit=5,crit_strict=2):
-    if logL is None:
-        logL     = get_mcmc_logL(setting)
-    #cut_logL = logL[int(len(logL)/2.):]
-    cut_index=int((2000/100000)*len(logL))
-    med1 = np.median(logL[:cut_index])
-    med2 = np.median(logL[-cut_index:])
+def test_convergence(setting,mcmc_logL=None,crit=5,crit_strict=2):
+    if mcmc_logL is None:
+        mcmc_logL     = get_mcmc_logL(setting)
+    #cut_logL = mcmc_logL[int(len(logL)/2.):]
+    cut_index=int((2000/100000)*len(mcmc_logL))
+    med1 = np.median(mcmc_logL[:cut_index])
+    med2 = np.median(mcmc_logL[-cut_index:])
     DlogL = abs(med2-med1)
     print(f"DlogL = {DlogL}")
     if DlogL<=crit:

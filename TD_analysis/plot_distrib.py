@@ -8,9 +8,10 @@ import importlib
 import argparse as ap
 import copy
 
-from tools import *    
+from Utils.tools import *    
 from stnd_handling_data import Error,Error_mag
 from stnd_plot import print_res_w_err
+
 plt.rcParams['xtick.labelsize'] = 18
 plt.rcParams['ytick.labelsize'] = 18
 plt.rcParams['font.size']= 16
@@ -114,7 +115,7 @@ def overplot_result_single(distr,name,save_path,ax,alpha=.5,mag=False,color=None
 
 
 
-def plot_result_single(distr,name,save_path,mag=False):
+def plot_result_single(distr,name,save_path,wD=False,mag=False):
     # Plot the resulting time delay distribution
     fg,ax= plt.subplots(2,2,figsize=(12,12))
     if not mag:
@@ -133,7 +134,9 @@ def plot_result_single(distr,name,save_path,mag=False):
             let = "AC" 
         if i==2: 
             ax_i=ax[1][1]             
-            let = "BC"            
+            let = "BC"       
+            if wD:
+                let="AD"     
         ddt = distr[i]
         vl,vc,vr = quantile(ddt,q=[0.16,0.5,0.84])
         err_min = vc-vl
@@ -158,6 +161,7 @@ def plot_result_single(distr,name,save_path,mag=False):
         name = "Mag_"+name
     plt.savefig(str(save_path)+"/ResDist_"+name+".png")
     plt.close()
+
 
 def plot_err(config,verbose=False):    
     output_dir = config.lens_directory 
@@ -309,3 +313,4 @@ if __name__ == '__main__':
     if err:
         plot_err(config,verbose=verbose)        
     success(name_prog)
+

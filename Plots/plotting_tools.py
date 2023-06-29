@@ -232,11 +232,17 @@ def plot_model(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,""),ve
 
 
 
-def get_median_with_error(prob,bins):
+def get_median_with_error(prob,bins,ret_str=True):
     median = estimate_median([prob],[bins])[0]
     sigmas = estimate_sigma([prob],[bins],median=[median],averaged=False)[0]
     rounding = int(1-np.log10(max(sigmas)))
-    return str(np.round(median,rounding))+"$_{"+str(np.round(sigmas[0],rounding))+"}^{"+str(np.round(sigmas[1],rounding))+"}$"
+    if ret_str:
+        sig_up_rnd,sig_down_rnd = str(np.round(sigmas[0],rounding)),str(np.round(sigmas[1],rounding))
+        if sig_up_rnd==sig_down_rnd:
+            return str(np.round(median,rounding))+"$\pm$"+sig_up_rnd
+        return str(np.round(median,rounding))+"$_{"+sig_down_rnd+"}^{"+sig_up_rnd+"}$"
+    else:
+        return median,sigmas
 
 
 # In[ ]:
