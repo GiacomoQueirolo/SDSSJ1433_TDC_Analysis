@@ -62,7 +62,8 @@ def get_mass_grid(setting,radius,lens_model,kwlens,Sigma_crit,cosmo_dd,rmask,dr=
     kappa_discreet, grid = get_kappa_discreet(setting,radius,lens_model,kwlens,rmask,dr=dr,input_type=input_type,grid=grid) 
     density_grid         = kappa_discreet*Sigma_crit # M_Sun/kpc^2
     area_pix             = grid.get_area_square()*np.ones_like(grid.get_circ_grid())
-    area_pix_kpc2        = cosmo_dd*cosmo_dd*area_pix*u.arcsec.to("rad")*u.arcsec.to("rad") #
+    #area_pix_kpc2        = area_pix*(u.arcsec.to("rad")*cosmo.arcsec_per_kpc_proper(z_lens)**2)#cosmo_dd*cosmo_dd*area_pix*u.arcsec.to("rad")*u.arcsec.to("rad") #
+    area_pix_kpc2        = cosmo_dd*cosmo_dd*area_pix*u.arcsec.to("rad")*u.arcsec.to("rad") 
     mass_grid            = density_grid*area_pix_kpc2  # M_Sun
     #Mass = np.sum(mass_grid)
     #Mass = Mass.to("Msun")
@@ -218,8 +219,14 @@ if __name__=="__main__":
             #ZP_mag    = 8.9 # from https://www.stsci.edu/documents/dhb/web/c20_nicdataanal.fm2.html
             photonu   = get_header(path_data,"PHOTFNU")*u.second/1 # Jy * sec/count
             """
-        flux  = flux_in_grid(lens_light_pix,grid)*flux_fact
+        #flux  = flux_in_grid(lens_light_pix,grid)*flux_fact
+        flux  = flux_in_grid(lens_light_pix,grid)
         mag   = -2.5*np.log10(flux.value) + ZP_mag 
+        print("TESTING: Mag whithin radius ", format(radius,".2f"),"\": ",format(mag,".2f")," mag (AB) calc w ZP")
+        flux  = flux_in_grid(lens_light_pix,grid)*flux_fact
+        mag   = -2.5*np.log10(flux.value) 
+        print("TESTING: Mag whithin radius ", format(radius,".2f"),"\": ",format(mag,".2f")," mag (AB) calc w conversion in energy/sec")
+        
         print("Mag whithin radius ", format(radius,".2f"),"\": ",format(mag,".2f")," mag (AB)")
         
         luminosity = 4*np.pi*(cosmoLd**2)*flux # luminosity distance

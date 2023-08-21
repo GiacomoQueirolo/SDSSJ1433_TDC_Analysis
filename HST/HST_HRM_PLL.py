@@ -27,7 +27,7 @@ from Data.input_data import init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_
 from Custom_Model.custom_logL import init_kwrg_custom_likelihood
 from Posterior_analysis.source_pos import get_source_pos_MCMC
 
-from mask_source import get_masksource
+from Test.mask_source import get_masksource
 
 if __name__=="__main__":
     ############################
@@ -159,11 +159,13 @@ if __name__=="__main__":
 
     ######
     kwargs_model            = get_kwargs_model(setting)
+    """
     lens_model_list         = kwargs_model['lens_model_list']
     lens_light_model_list   = kwargs_model['lens_light_model_list']
     point_source_model_list = kwargs_model['point_source_model_list']
     if not WS:
         source_model_list = kwargs_model['source_light_model_list']
+    """
     ######
         
     kwargs_numerics = init_kwrg_numerics(setting)
