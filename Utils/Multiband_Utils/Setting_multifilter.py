@@ -7,7 +7,7 @@ from Utils.get_res import load_whatever
 # util program to define the setting class
 
 # standard multiflter directory
-stnd_mutlifilter_setting_dir = "multifilter_setting"
+stnd_mutlifilter_setting_dir = "multifilter_settings"
 class Setting_Multifilter():
     def __init__(self,settings,backup_path,multifilter_setting_dir=stnd_mutlifilter_setting_dir,name=None,main_dir="./"):
         self.backup_path = backup_path
@@ -58,14 +58,14 @@ class Setting_Multifilter():
         for sett in self.settings:
             if check_if_CP(sett) !=self.CP:
                 raise RuntimeError("The given settings have different model (CP)")
-        return 0
+        return self.CP
     def _check_if_fixedmag(self):
         self.fixed_mag = self.settings[0].fixed_mag
         for sett in self.settings:
             if sett.fixed_mag !=self.fixed_mag:
-                raise RuntimeError("The given settings have choice overt the fixed magnification")
-        return 0
-
+                raise RuntimeError("The given settings have different choices of fixed magnification")
+        return self.fixed_mag
+    
     def arrange_params_lens(self):
         # the lens parameters should all be the same apart from the coordinates
         # we assume the frame of reference is correct enough
@@ -94,15 +94,6 @@ class Setting_Multifilter():
         kwargs_upper_lens_light = []
         
         for sett in self.settings:
-            """
-            # this should be the lenght of the modelled profiles
-            if check_if_SUB(sett):                
-                _append(kwargs_lens_light_init, [])
-                _append(kwargs_lens_light_sigma, [])
-                _append(fixed_lens_light, [])
-                _append(kwargs_lower_lens_light, [])
-                _append(kwargs_upper_lens_light, [])
-            """
 
             _append(kwargs_lens_light_init, sett.lens_light_params[0])
             _append(kwargs_lens_light_sigma, sett.lens_light_params[1])
@@ -123,13 +114,6 @@ class Setting_Multifilter():
             # this should be the lenght of the modelled profiles
             if check_if_WS(sett):
                 continue
-                """
-                _append(kwargs_source_init, [])
-                _append(kwargs_source_sigma, [])
-                _append(fixed_source,[])
-                _append(kwargs_lower_source,[])
-                _append(kwargs_upper_source, [])
-                """
             _append(kwargs_source_init, sett.source_params[0])
             _append(kwargs_source_sigma, sett.source_params[1])
             _append(fixed_source, sett.source_params[2])
@@ -140,10 +124,12 @@ class Setting_Multifilter():
         self.source_params = [kwargs_source_init, kwargs_source_sigma, fixed_source, kwargs_lower_source, kwargs_upper_source]
     
     def get_savejson_name(self,filename):
-        savejson_name = self.savename.replace("mltf_setting",filename).replace(".dll",".json")
+        savejson_name =  filename.replace(".dll","")+".json"
         return savejson_name
+
     def get_savejson_path(self,filename): 
-        savejson_path = self.savemcmc_path+"/"+ self.get_savejson_name(filename=filename)
+        filename = self.get_savejson_name(filename)
+        savejson_path = create_path_from_list([self.savemcmc_path,filename])
         return savejson_path
     
     def savejson_data(self,data,filename):
@@ -152,9 +138,9 @@ class Setting_Multifilter():
 
     def get_data(self,filename):
         # note: to be general, the file has already to be defined with the correct end
-        filepath= self.savemcmc_path+"/"+filename
+        filepath = create_path_from_list([self.savemcmc_path,filename]) 
         return load_whatever(filepath)
-
+    """
     def get_mcmc(self):
         kw_mcmc = {}
         for kw in ["smpl","prm","logL"]:
@@ -164,7 +150,7 @@ class Setting_Multifilter():
                 name_mcmc = name_mcmc.replace("json","dat")
             kw_mcmc[mcmc_kw] = self.get_data(name_mcmc)
         return kw_mcmc
-
+    """
     def _savemyself(self):
         with open(f"{self.setting_dir}/{self.savename}","wb") as f:
             dill.dump(self,f)

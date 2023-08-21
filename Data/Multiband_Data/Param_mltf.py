@@ -58,9 +58,10 @@ def get_prm_list_mltf(multifilter_sett):
     # for now ignored
     return list_prm
 
-def conv_mcmc_i_to_kwargs_mltf(multifilter_sett,mcmc_i):
-    param_class   = get_Param_mltf(multifilter_sett)
-    kwargs_result = param_class.args2kwargs(mcmc_i, bijective=True)
+def conv_mcmc_i_to_kwargs_mltf(multifilter_sett,mcmc_i,Param_class=None):
+    if Param_class is None:
+        Param_class   = get_Param_mltf(multifilter_sett)
+    kwargs_result = Param_class.args2kwargs(mcmc_i, bijective=True)
     return kwargs_result
 
 @check_mltf_setting

@@ -6,7 +6,7 @@
 
 
 import numpy as np
-from Utils.tools import get_setting_module
+from Utils.tools import get_setting_module,check_setting
 from Utils.get_res import get_mcmc_smpl
 from Data.Param import get_prm_list
 
@@ -45,9 +45,8 @@ def image_order(ra,dec,ret_order=True,verbose=True):
 # In[ ]:
 
 
-
-def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results"):
-    setting = get_setting_module(setting,1)
+@check_setting
+def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results",verbose=True):
     param_mcmc   = get_prm_list(setting,backup_path)
     if mcmc is None:
         mcmc = get_mcmc_smpl(setting,backup_path)
@@ -87,3 +86,18 @@ order= [0,*order]
 ra_names[order]
 """
 
+from Utils.Multiband_Utils.tools_multifilter import get_multifilter_setting_module
+
+def image_order_mltf(multifilter_setting,mcmc,verbose=False):
+    multifilter_setting = get_multifilter_setting_module(multifilter_setting)
+    vrb = False
+    for i_s,sett in enumerate(multifilter_setting.settings):
+        if i_s==len(multifilter_setting.settings)-1:
+            vrb = verbose
+        new_order_ = get_new_image_order(sett,mcmc,verbose=vrb,backup_path=multifilter_setting.backup_path)
+        if i_s!=0:
+            if new_order_!=new_order:
+                raise RuntimeError("Order of images different from the different setting files")
+            else:
+                new_order = new_order
+    return new_order

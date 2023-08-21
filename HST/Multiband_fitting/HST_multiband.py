@@ -21,15 +21,21 @@ from Utils import get_res
 from Utils.tools import *
 from Utils.Multiband_Utils.Setting_multifilter import *
 from Utils.Multiband_Utils.tools_multifilter import *
+from Utils.Multiband_Utils.get_res_multifilter import get_mcmc_chain_mltf
 #from Custom_Model.custom_logL import init_kwrg_custom_likelihood
 from Custom_Model.Multiband_Model.custom_logL_mltf import init_kwrg_custom_likelihood_mltf
 from Data.input_data import init_kwrg_data,init_kwrg_psf,init_kwrg_numerics 
 from Data.Multiband_Data.input_data_mltf import get_kwargs_model_mltf,get_kwargs_constraints_mltf,get_fixed_sources_list_mltf
 from Posterior_analysis.convergence_mcmc import test_convergence
-
 from Plots.plotting_tools import plot_model 
 from Plots.plotting_tools import plot_model_WS
-        
+import Posterior_analysis.Multiband_Posterior_Analysis.mag_mltf as mag_multifilter
+from Posterior_analysis.Multiband_Posterior_Analysis.source_pos_mltf import get_source_pos_MCMC_mltf
+from Utils.Multiband_Utils.rewrite_read_results_mltf import rewrite_read_results_mltf
+"""
+from Utils import last_commands 
+from Utils.check_success import check_success
+"""
 if __name__=="__main__":
     ############################
     present_program(sys.argv[0])
@@ -80,7 +86,7 @@ if __name__=="__main__":
     np.seterr(all="ignore");
 
 
-    backup_path      = "./backup_results_multifit"
+    backup_path      = "./backup_results_mltf"
     multifilter_sett = create_multifilter_setting(settings,backup_path=backup_path)
     mltf_sett_name   = get_multifilter_setting_name(multifilter_sett)
     savemcmc_path    = multifilter_sett.savemcmc_path
@@ -103,7 +109,7 @@ if __name__=="__main__":
 
     print("Running: ",sys.argv[0])
     print("Machine: ",os.uname()[1]) 
-    print("Setting file:", )
+    print("Multifilter_Setting file:",multifilter_sett.name )
     print("Started the :", dt_string)
 
     ##Printout of the results
@@ -159,8 +165,8 @@ if __name__=="__main__":
             
 
     # "Hyper"Parameters for the PSO/MCMC runs
-    mcmc_file_name      = multifilter_sett.get_savejson_path(filename="mcmc_smpl")
-    mcmc_logL_file_name = multifilter_sett.get_savejson_path(filename="mcmc_logL") 
+    mcmc_file_name      = multifilter_sett.get_savejson_path("mcmc_smpl")
+    mcmc_logL_file_name = multifilter_sett.get_savejson_path("mcmc_logL")
     if append_MC :
         try:
             try:
@@ -187,8 +193,8 @@ if __name__=="__main__":
                                   kwargs_likelihood, kwargs_params)
     
     # in the first fitting we only use f475w as it's optical: high res, high S/N, low number of object to fit
-    bands_compute_initial_step = [True if "475" in sett.filter_name else False for sett in settings]
-    other_bands = [True if "475" not in sett.filter_name else False for sett in settings]
+    bands_compute_initial_step = [True if "475" in get_filter(sett) else False for sett in settings]
+    other_bands = [True if "475" not in get_filter(sett) else False for sett in settings]
     all_bands = [True for _ in settings]
     update_settings_initial_step = {}
     update_settings_initial_step['kwargs_likelihood'] = {'bands_compute':bands_compute_initial_step}
@@ -219,7 +225,7 @@ if __name__=="__main__":
         ####################################################################
         fitting_kwargs_list = []
         if mc_init_sample is None:
-            from Multiband_Model.init_mcmc_from_pso_mltf import create_mcmc_init_mltf
+            from Custom_Model.Multiband_Model.init_mcmc_from_pso_mltf import create_mcmc_init_mltf
             mc_init_sample = create_mcmc_init_mltf(multifilter_sett,backup_path=backup_path)
             if mc_init_sample is None:
                 n_iterations = int(700*run_fact) #number of iteration of the PSO run PSO_it  = 700*rf
@@ -253,15 +259,14 @@ if __name__=="__main__":
         multifilter_sett.savejson_data(data=chain_list[0],filename="pso")
         
     kwargs_result   = fitting_seq.best_fit()
-    param_file_name = savemcmc_path+multifilter_sett.savename.replace("mltf_setting","mcmc_prm").replace(".dll",".dat")
+    param_file_name = savemcmc_path+multifilter_sett.get_savejson_name("prm").replace("json","dat")#multifilter_sett.savename.replace("mltf_setting","mcmc_prm").replace(".dll",".dat")
     with open(param_file_name, 'w+') as param_file:
         for i in range(len(param_mcmc)):
             param_file.writelines(param_mcmc[i]+",\n")
 
     # Reconstruct mcmc chain
-    kw_mcmc        = multifilter_sett.get_mcmc()
-    chain_list[-1] = ['MCMC',kw_mcmc["mcmc_smpl"],kw_mcmc["mcmc_prm"],kw_mcmc["mcmc_logL"]]
-    samples_mcmc   = kw_mcmc["mcmc_smpl"]
+    samples_mcmc,prm_mcmc,logL_mcmc =  [get_mcmc_chain_mltf(multifilter_sett,kw) for kw in ["smpl","prm","logL"]] #         = get_mcmc #multifilter_sett.get_mcmc()
+    chain_list[-1] = ['MCMC',samples_mcmc,prm_mcmc,logL_mcmc]
 
     print_res.write("kwargs_model:"+str(kwargs_model)+"\n")
     print_res.write("kwargs_numerics:"+str(kwargs_numerics)+"\n")
@@ -282,10 +287,6 @@ if __name__=="__main__":
     print_res.write("#################################\n")
 
 
-
-
-
-
     #Printout of all results after obtaining the amplitude
     with open(savefig_path+"/read_results.data","wb") as f:
             pickle.dump(kwargs_result, f)
@@ -302,13 +303,13 @@ if __name__=="__main__":
         v_min,v_max     = sett.v_min,sett.v_max
         res_min,res_max = sett.res_min,sett.res_max
         if sett.WS:
-            plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(band_index,sett.filter))
+            plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(band_index,get_filter(sett)))
         else:
-            plot_model(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(band_index,sett.filter))
+            plot_model(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(band_index,get_filter(sett)))
         #Normalised plot
         f, axes = plt.subplots(figsize=(10,7))
         modelPlot.normalized_residual_plot(ax=axes,band_index=band_index,v_min=res_min, v_max=res_max)
-        plt.savefig(f"{savefig_path}/normalised_residuals_{sett.filter}.png")
+        plt.savefig(f"{savefig_path}/normalised_residuals_{get_filter(sett)}.png")
         plt.close()
 
     
@@ -327,39 +328,19 @@ if __name__=="__main__":
     n_data = modelPlot._imageModel.num_data_evaluate
     print_res.write(str(-logL * 2 / n_data)+' reduced X^2 of all evaluated imaging data combined\n')
     print_res.write("################################\n")
-    success(sys.argv[0])
-    print("Still a lot to implement")
-######################################################################################################################
-######################################################################################################################
-######################################################################################################################
-    # Until here the program have been corrected
-
-######################################################################################################################
-######################################################################################################################
-######################################################################################################################
-
-
-    # ignored for now
-    """
-from Utils import last_commands
-from Posterior_analysis import mag_remastered 
-from Utils import rewrite_read_results
-from Utils.check_success import check_success
-from Posterior_analysis.source_pos import get_source_pos_MCMC
-
 
     #Caustics
     f, axes = plt.subplots(figsize=(10,7))
     modelPlot.source_plot(ax=axes, deltaPix_source=0.01, numPix=1000, with_caustics=True)
     f.tight_layout()
     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-    plt.savefig(savefig_path+"caustics.png")
+    plt.savefig(f"{savefig_path}/caustics.png")
     plt.close()
 
     f, axes = plt.subplots(figsize=(10,7))
     modelPlot.decomposition_plot(ax=axes, text='Point source position', source_add=False, \
-                    lens_light_add=False, point_source_add=True, v_min=v_min, v_max=v_max)
-    plt.savefig(savefig_path+"point_source_position.png")
+                    lens_light_add=False, point_source_add=True)
+    plt.savefig(f"{savefig_path}/point_source_position.png")
     plt.close()
 
     #CHECK_FR
@@ -367,8 +348,8 @@ from Posterior_analysis.source_pos import get_source_pos_MCMC
     #Since the time is the same for all images (considering no time delay, or negligible), we can consider the 
     # flux ratio to be amp_i/amp_max
 
-    FR,ratio_name = mag_remastered.flux_ratio(setting,kwargs_result,outnames=True)
-    print_res.write("Flux ratio for "+setting.filter_name+"\n")
+    FR,ratio_name = mag_multifilter.flux_ratio(multifilter_sett,kwargs_result,outnames=True)
+    #print_res.write("Flux ratio for "+setting.filter_name+"\n")
 
     for i,FR_i in enumerate(FR):
         print_res.write("Flux ratio:"+str(FR_i)+" "+str(ratio_name[i])+"\n")    
@@ -377,30 +358,25 @@ from Posterior_analysis.source_pos import get_source_pos_MCMC
 
     # the results of the MCMC chain
     #MOD_SOURCE 
-    kwargs_source,str_src = get_source_pos_MCMC(setting,svfg=True)
+    kwargs_source,str_src = get_source_pos_MCMC_mltf(multifilter_sett,svfg=True)
     print_res.write(str_src)
 
     #Closing result.txt
     print_res.close()
 
     last_kw = {"read_results":kwargs_result,
-    #           "read_sigma_up":kwargs_sigma_upper,
-    #           "read_sigma_low":kwargs_sigma_lower,
-    #           "read_fermat":kwargs_fermat,
                "read_source":kwargs_source,
                "FR":FR}
     for nm in last_kw:
         pickle_results(last_kw[nm],nm,savefig_path=savefig_path)
 
+    rewrite_read_results_mltf(multifilter_sett,cut_mcmc=0,save=True)
 
 
-    # add some final commands
-        
-    rewrite_read_results.rewrite_read_results(setting,cut_mcmc=0,backup_path=backup_path,save=True)
+    ## add some final commands
+    #for i in last_commands.progs:
+    #    last_commands.last_command(setting_name, i,log=True,run=True) 
+    #check_success(setting_name,verbose=1)
 
-    for i in last_commands.progs:
-        last_commands.last_command(setting_name, i,log=True,run=True) 
 
-    check_success(setting_name,verbose=1)
-    """
-    
+    success(sys.argv[0])

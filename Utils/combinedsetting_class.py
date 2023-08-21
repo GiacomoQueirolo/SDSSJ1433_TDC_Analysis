@@ -3,7 +3,7 @@
 # 17th Nov 2022
 
 from os import getcwd 
-from tools import get_filter,find_combined_setting_path
+from tools import get_filter,get_combined_setting_module
 
 def test_zlist(zlist):
     if any([z!=zlist[0] for z in zlist]):
@@ -46,7 +46,7 @@ class combined_setting():
 
     def gen_cmb_sett_name(self,cmb_sett_name=None):
         if hasattr(self,"cmb_sett_name"):
-            self.cmb_sett_name = self.verify_cmb_sett_name(self.cmb_sett_name)
+            self.cmb_sett_name = self.check_cmb_sett_name(self.cmb_sett_name)
             if cmb_sett_name is not None:
                 if cmb_sett_name!=self.cmb_sett_name:
                     raise RuntimeError(f"This combined setting already have a name: {self.cmb_sett_name}, I can't change it to {cmb_sett_name}")
@@ -54,17 +54,32 @@ class combined_setting():
         if cmb_sett_name is None:
             dir_name      = self.savedir.split("/")[-2]
             cmb_sett_name = "cmb_setting_"+[get_filter(s)+"_" for s in self.setting_names]+dir_name
-        cmb_sett_name = self.verify_cmb_sett_name(cmb_sett_name)
+        cmb_sett_name = self.check_cmb_sett_name(cmb_sett_name)
         print("Combined_setting_name: ",cmb_sett_name)
         self.cmb_sett_name = cmb_sett_name
         return self.cmb_sett_name
 
-    def verify_cmb_sett_name(self,cmb_sett_name):
+    def check_cmb_sett_name(self,cmb_sett_name):
         if not "cmb_setting" in cmb_sett_name:
             cmb_sett_name = "cmb_setting_"+cmb_sett_name 
         try:
-            find_combined_setting_path(cmb_sett_name)
-            raise FileExistsError(f"This name for combined_setting_name \"{cmb_sett_name}\" already exists. Try another")
+            #_ = find_combined_setting_path(cmb_sett_name)
+            #raise FileExistsError(f"This name for combined_setting_name \"{cmb_sett_name}\" already exists. Try another")
+            # this is not necessarily a problem
+            # it is if it doen't have the same settings
+            old_cmb_sett = get_combined_setting_module(cmb_sett_name)
+            if self!=old_cmb_sett:
+                raise FileExistsError(f"This name for combined_setting_name \"{cmb_sett_name}\" already exists but have different settings. Find another name")
+            else:
+                print(f"This name for combined_setting_name \"{cmb_sett_name}\" already exists but it's the same. Overwriting it")
+                return cmb_sett_name
         except FileNotFoundError:
             pass
         return cmb_sett_name
+    
+    def __eq__(self,other_cmb_sett):
+        if set(self.setting_names)==set(other_cmb_sett.setting_names) and set(self.filters)==set(other_cmb_sett.filters):
+            if self.z_lens==other_cmb_sett.z_lens and self.z_source==other_cmb_sett.z_source:
+                if self.KDE==other_cmb_sett.KDE:
+                    return True
+        return False

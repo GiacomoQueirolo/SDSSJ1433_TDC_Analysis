@@ -10,19 +10,24 @@ from Utils.Multiband_Utils.tools_multifilter import _append
 from Utils.Multiband_Utils.Setting_multifilter import *
 
 from Data.image_manipulation import *
-from Data.input_data import init_kwrg_data,init_kwrg_psf,init_kwrg_numerics
+from Data.input_data import init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,init_lens_model_list
 
 from lenstronomy.LensModel.lens_model import LensModel
 
 @check_mltf_setting
 def init_lens_model_list_mltf(multifilter_sett):
     # these stay the same no matter how many filters we consider
-    # check index_models.py initial comment
-    lens_model_list = ['SIE']
+    # check index_models.py initial comment 
+    # Test that the single setting files are compatible
+    lens_model_list = init_lens_model_list(multifilter_sett.settings[0])
+    for sett_i in multifilter_sett.settings[1:]:
+        if lens_model_list!= init_lens_model_list(sett_i):
+            raise RuntimeError(f"{get_setting_name(sett_i)} has different lens model list than the others")
+    """lens_model_list = ['SIE']
     if multifilter_sett.CP:
         #lens_model_list = ['PEMD']
         lens_model_list = ['EPL_NUMBA'] #test
-    lens_model_list = [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
+    lens_model_list = [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']"""
     return lens_model_list
 
 @check_mltf_setting
@@ -83,7 +88,7 @@ def get_kwargs_model_mltf(multifilter_sett):
     if not multifilter_sett.allWS:
         kwargs_model['source_light_model_list'] = source_model_list
     
-    kwargs_model["index_lens_model_list"]         = get_index_lens_model_list(multifilter_sett.settings)
+    #kwargs_model["index_lens_model_list"]         = get_index_lens_model_list(multifilter_sett.settings)
     kwargs_model["index_lens_light_model_list"]   = get_index_lens_light_model_list(multifilter_sett.settings)
     kwargs_model["index_source_light_model_list"] = get_index_source_light_model_list(multifilter_sett.settings)
     kwargs_model["index_point_source_model_list"] = get_index_point_source_model_list(multifilter_sett.settings)
@@ -133,6 +138,8 @@ def get_kwargs_constraints_mltf(multifilter_sett,kwargs_model):
         if not check_if_SUB(setting):
             # MOD_XYLL and MOD_PLL
             if getattr(setting,"xyll",False) or getattr(setting,"pll",False):
+                joint_lens_with_light=[indexes_mainL_light[mll_ind],1,["center_x","center_y"]]
+                mll_ind +=1
                 joint_lens_with_light=[indexes_pert_light[pl_ind],1,["center_x","center_y"]]
                 pl_ind+=1
                 #  'joint_lens_with_light': list [[i_light, k_lens, ['param_name1', 'param_name2', ...]], [...], ...],
@@ -141,8 +148,9 @@ def get_kwargs_constraints_mltf(multifilter_sett,kwargs_model):
                 raise RuntimeWarning("Pragma no cover: not yet implemented for not pll settings")
                 #joint_lens_with_light=[[0,0,["center_x","center_y"]],[1,1,["center_x","center_y"]]]
         else:
-                joint_lens_with_light=[indexes_mainL_light[mll_ind],1,["center_x","center_y"]]
-                mll_ind +=1
+            joint_lens_with_light=[indexes_pert_light[pl_ind],1,["center_x","center_y"]]
+            pl_ind+=1
+
         if not check_if_WS(setting) and not setting.FS:
             #joint_source_with_point_source : list [[i_point_source, k_source], [...],
             kwargs_constraints['joint_source_with_point_source'].append([0, ind_sources])
@@ -185,19 +193,19 @@ def get_fixed_sources_list_mltf(multifilter_sett):
     return fixed_sources_list
 
 @check_mltf_setting
-def init_multi_band_list_mltf(multifilter_sett,saveplots=False,backup_path="./backup_results_mltf",return_masks=False):
+def init_multi_band_list_mltf(multifilter_sett,saveplots=False, return_masks=False):
     # setting can be the string with the name of the setting or the instance of the relative setting function 
     multi_band_list = []
     masks = []
     for sett in multifilter_sett.settings:
-        kwargs_psf      = init_kwrg_psf(sett,saveplots,backup_path)
+        kwargs_psf      = init_kwrg_psf(sett,saveplots,multifilter_sett.backup_path)
         kwargs_numerics = init_kwrg_numerics(sett)
         if return_masks:
-            kwargs_data,mask = init_kwrg_data(sett,saveplots,backup_path,return_mask=return_masks)
+            kwargs_data,mask = init_kwrg_data(sett,saveplots,multifilter_sett.backup_path,return_mask=return_masks)
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
             masks.append(mask)
         else:
-            kwargs_data     = init_kwrg_data(sett,saveplots,backup_path,return_mask=False)
+            kwargs_data     = init_kwrg_data(sett,saveplots,multifilter_sett.backup_path,return_mask=False)
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
     if return_masks:
         return multi_band_list,masks
