@@ -11,25 +11,26 @@
 # import of standard python libraries
 import copy
 import json
+import emcee
 import numpy as np 
 
-
 from Utils.tools import *
-from Posterior_analysis.mag_remastered import get_mag_mcmc
-from Posterior_analysis.fermat_pot_analysis import gen_mcmc_Df
+from Utils.get_res import get_mcmc_smpl
+from Data.input_data import init_lens_model
 from Utils.order_images import get_new_image_order
 from Data.Param import get_prm_list,get_Param,count_images
-
-
-
+from Posterior_analysis.mag_remastered import get_mag_mcmc
+from Posterior_analysis.fermat_pot_analysis import gen_mcmc_Df,_get_fermat,get_Df_from_frm
+ 
 class Prior():
     # by construction, it's a uniform prior on the lens parameters
     uniform = True 
-    def __init__(self,setting,Nsample=int(1e6)):
+    def __init__(self,setting,Nsample=int(1e6),BC=True):
         self.setting = get_setting_module(setting,1)
         self.lens_prior = self.setting.lens_prior
         self.Param   = get_Param(setting)
         self.Nsample = Nsample
+        self.BC      = BC
     def is_within_Prior(self,point):
         lim_min,lim_max = self.Param.param_limits()
         return np.all([lim_min[i]<p<lim_max[i] for i,p in enumerate(point)])
@@ -40,23 +41,35 @@ class Prior():
             # shape: N,dim
             self.sample = np.random.uniform(*self.Param.param_limits(),(self.Nsample,self.Param.num_param()[0]))
             return self.sample
-    def get_Df_sample(self):
+    def get_Df_sample(self,BC=None):
+        if BC is None:
+            BC = self.BC
         if hasattr(self,"Df_sample"):
+            if BC!=self.BC:
+                print("Warning: The Df you want (AB,AC,BC) is not the one we already have (AB,AC,AD). Recalculating...")
+                return self._get_Df_sample(BC)
             return self.Df_sample
         else:
-            sample = self.get_sample() 
-            self.Df_sample = gen_mcmc_Df(sample,self.setting,param_class=self.Param)
-            return self.Df_sample
+            return self._get_Df_sample(BC)
+    def _get_Df_sample(self,BC):
+        sample  = self.get_sample()
+        self.BC = BC
+        self.Df_sample = gen_mcmc_Df(sample,self.setting,param_class=self.Param,BC=BC)
+        return self.Df_sample
+            
     def get_kw(self):
         # to reproduce it
         kw = {"setting",get_setting_name(self.setting),
               "Nsample",self.Nsample}
         return kw
-"""
+    def __eq__(self,other_prior):
+        if self.lens_prior==other_prior.lens_prior:
+            if self.Nsample==other_prior.Nsample:
+                return True
+        return False
+        
 # This parts give the mcmc of the fermat potential given the samples_mcmc prior
-import emcee
-from Utils.get_res import get_mcmc_smpl
-from Data.input_data import init_lens_model
+
 
 # Compute the likelihood of the parameters given the data.
 def lnLike(params,prior,Df_boundaries, lensModel=None):
@@ -79,7 +92,7 @@ def lnLike(params,prior,Df_boundaries, lensModel=None):
     else:
         return -np.inf
     
-def get_emcee_Df_prior(setting,Df_boundaries,Nwalkers=None,Nsteps=40000,Nburn=0,progress=True,perfect_cut=True):
+def get_emcee_Df_prior(setting,Df_boundaries,Nwalkers=None,Nsteps=40000,Nburn=0,progress=True,perfect_cut=True,BC=True):
     prior = Prior(setting)
     mcmc_res = get_mcmc_smpl(setting)
     res = np.mean(mcmc_res,axis=0)
@@ -111,19 +124,21 @@ def get_emcee_Df_prior(setting,Df_boundaries,Nwalkers=None,Nsteps=40000,Nburn=0,
         new_samples,new_dist= [],[]
         for point,distance in zip(flat_samples,dist):
                 point_Fer = np.array(_get_fermat(point,prior.Param,lensModel))
+                point_Df  = get_Df_from_frm(point_Fer,BC)
                 point_Df  = point_Fer[1:]-point_Fer[0]
                 if prior.is_within_Prior(point) and is_in_boundaries(point_Df,Df_boundaries=Df_boundaries):
                     new_samples.append(point)
                     new_dist.append(distance)
         return new_samples,new_dist
-"""
-def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
+
+
+def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0,BC=True): 
     # mcmc_prior shape = param, n_points
     # setting = setting module
     # Df_boundaries = [[min_AB,max_AB],[min_A..],..]
     # threshold_mcmc_points = int, minimum number of points in the boundaries
     # previous_mcmc = previous points to append to the sampling
-    mcmc_prior_Df = gen_mcmc_Df(mcmc_prior,setting)  #D_AB, D_AC, D_AD, meaning Df_i - Df_A
+    mcmc_prior_Df = gen_mcmc_Df(mcmc_prior,setting,BC=BC)  #D_AB, D_AC, D_AD, meaning Df_i - Df_A
     if previous_mcmc is not None:
         mcmc_prior_Df=np.vstack((mcmc_prior_Df,previous_mcmc))    
     # cut points out of boundaries
@@ -154,9 +169,6 @@ def get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries=None,threshold_mcmc_point
     #plot = corner.corner(mcmc_Df, labels=labels_Df, show_titles=True)
     #plot.savefig(savefig_path+"test_uniform_df.png")
     #print("test result in "+savefig_path+"test_uniform_df.png")
-
-
-
 
 
 def get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries=None,threshold_mcmc_points=1000,previous_mcmc=None,Ntot_previous=0): 
@@ -199,9 +211,6 @@ def get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries=None,threshold_mcmc_poi
         return mcmc_prior_mag_cut,success,Ntot
     
     return mcmc_prior_mag,success,Ntot # shape: mag_ai, mcmc_steps
-
-
-# In[1]:
 
 
 """# This parts give the mcmc of the mag ratio the samples_mcmc prior
@@ -339,52 +348,26 @@ def index_image(param,ip,nparam,n_images=4):
 
 
 
-def Df_prior(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_path = "./backup_results/",output_name="mcmc_Df_prior"):
+@check_setting
+def Df_prior(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_path = "./backup_results/",output_name="mcmc_Df_prior",BC=True):
     setting_name = get_setting_name(setting)
-    setting = get_setting_module(setting_name).setting()
-    mcmc_Df_prior_ = None 
-    while True:
-        mcmc_prior  = get_prior(setting,npoints)
-        mcmc_Df_prior,success,Ntot  = get_mcmc_Df_prior(mcmc_prior,setting,Df_boundaries,previous_mcmc=mcmc_Df_prior_)
-        if success[0]:
-            break
-        else:
-            if np.shape(mcmc_Df_prior)!=np.shape([]):
-                mcmc_Df_prior_     = copy.copy(mcmc_Df_prior)
-            print(success[1])
-            print("Increasing n_points of 70000")
-            npoints += 70000
+    mcmc_Df_prior = get_emcee_Df_prior(setting,Df_boundaries=Df_boundaries,mcmc_res=None,Nwalkers=50,Nsteps=npoints,Nburn=0,progress=True,perfect_cut=True,BC=BC)
+
     print("Df prior Done")
     if save_mcmc:
         mcmc_path = backup_path+"/"+setting_name.replace("settings","mcmc").replace(".py","")
         mcmc_prior_path = mcmc_path+"/"+output_name+".json"
         with open(mcmc_prior_path,"w") as f:
             json.dump(np.array(mcmc_Df_prior).tolist(),f)
+    return mcmc_Df_prior
+
+
+@check_setting
+def Df_prior_ABC(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_path = "./backup_results/",output_name="mcmc_Df_prior_ABC"):
+    # Consider ABC but not D
+    mcmc_Df_prior,Ntot = Df_prior(setting,npoints,Df_boundaries=Df_boundaries,output_name=output_name,save_mcmc=True,BC=True)
     return mcmc_Df_prior,Ntot
 
-
-
-
-
-def Df_prior_ABC(setting,npoints=10000,Df_boundaries=None,save_mcmc=False,backup_path = "./backup_results/",output_name="mcmc_Df_prior_ABC"):
-    setting_name = get_setting_name(setting)
-    # Consider ABC but not D
-    mcmc_Df_prior,Ntot = Df_prior(setting_name,npoints,Df_boundaries=Df_boundaries,save_mcmc=False)
-    
-    print("WARNING: Only considering ABC")    
-    mcmc_c    = np.array(copy.deepcopy(mcmc_Df_prior))
-    # BC = C - B = (C-A)-(B-A) = AC - AB
-    mcmc_BC   = mcmc_c[1]- mcmc_c[0]
-    mcmc_c[2] = mcmc_BC
-    mcmc_Df_prior_ABC = mcmc_c
-    
-    if save_mcmc:
-        mcmc_path = backup_path+"/"+setting_name.replace("settings","mcmc").replace(".py","")
-        mcmc_prior_path = mcmc_path+"/"+output_name+".json"
-        with open(mcmc_prior_path,"w") as f:
-            json.dump(mcmc_Df_prior_ABC.tolist(),f)
-            
-    return mcmc_Df_prior_ABC,Ntot
 
 
 

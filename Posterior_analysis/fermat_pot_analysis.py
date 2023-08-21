@@ -10,7 +10,6 @@ import corner
 import argparse
 import numpy as np
 import multiprocess
-from lenstronomy.LensModel.lens_model import LensModel
 #import multiprocessing  # doesn't work with non-pickable objects, as the lensmodel and other fnct
 
 from Utils.tools import *
@@ -22,7 +21,8 @@ from Utils.order_images import get_new_image_order
 #labels_Fermat = ["$\phi_{Fermat}A$", "$\phi_{Fermat}B$","$\phi_{Fermat}C$" ,"$\phi_{Fermat}D$"]
 #labels_Df     = ["$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} AD$"]
 labels_Fermat = ["$\phi_A$", "$\phi_B$","$\phi_C$" ,"$\phi_D$"]
-labels_Df     = ["$\Delta\phi_{AB}$", "$\Delta\phi_{AC}$","$\Delta\phi_{AD}$"]
+labels_Df_BC  = ["$\Delta\phi_{AB}$", "$\Delta\phi_{AC}$","$\Delta\phi_{BC}$"]
+labels_Df_AD  = ["$\Delta\phi_{AB}$", "$\Delta\phi_{AC}$","$\Delta\phi_{AD}$"]
   
  
 def _get_fermat(mcmc_i,param_class,lensModel):
@@ -44,10 +44,12 @@ def gen_mcmc_fermat(mcmc,setting,lensModel=None,param_class=None,verbose=False):
         return _get_fermat(mcmc_i,param_class,lensModel)
         
     with multiprocess.Pool() as pool:
-        mcmc_fermat = pool.map(getferm,mcmc) #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
-    #I want to obtain the correct image order
+        mcmc_fermat = pool.map(getferm,mcmc) 
+        #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
+    
+    # I want to obtain the correct image order
     ########################################
-    new_order = get_new_image_order(setting,mcmc,verbose=verbose)
+    new_order  = get_new_image_order(setting,mcmc,verbose=verbose)
 
     tmp_mcmc    = np.array(mcmc_fermat).transpose()
     mcmc_fermat = np.transpose([tmp_mcmc[i] for i in new_order])
@@ -148,18 +150,8 @@ print_res.write("\n#################################\n")
 print_res.close()
 """
 
-
-def save_Df(setting,no_plot=False):
-    print_setting(setting)
-    ############################################################
-    #This should be the same for all settings
-    if not check_if_CP(setting):
-        lens_model_list = ['SIE']
-    else:
-        print("WARNING: Considering the PEMD profile for the main lens")
-        lens_model_list = ['PEMD']
-    lens_model_list= [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
-    ############################################################
+def save_Df(setting,no_plot=False,BC=True):
+    print_setting(setting) 
 
     savemcmc_path = get_savemcmcpath(setting )
     savefig_path  = get_savefigpath(setting )
@@ -170,7 +162,7 @@ def save_Df(setting,no_plot=False):
     #MCMC sample
     samples_mcmc = get_mcmc_smpl(setting,backup_path)
     mcmc_fermat  = gen_mcmc_fermat(samples_mcmc,setting)
-    mcmc_Df      = gen_mcmc_Df(samples_mcmc,setting,mcmc_fermat=mcmc_fermat)
+    mcmc_Df      = gen_mcmc_Df(samples_mcmc,setting,mcmc_fermat=mcmc_fermat,BC=BC)
 
     #Save the mcmc in a file, NOTE: they are ordered A,B,C,D
     mcmc_file_name = savemcmc_path + setting_name.replace(".py","").replace("settings","mcmc_ordered_fermat")+".json"
@@ -184,7 +176,10 @@ def save_Df(setting,no_plot=False):
         plot = corner.corner(mcmc_fermat, labels=labels_Fermat, show_titles=True)
         plot.savefig(savefig_path+"Single_fermat_potential.png")
 
-
+        if BC:
+            labels_Df = labels_Df_BC
+        else: 
+            labels_Df = labels_Df_AD
         plot = corner.corner(mcmc_Df, labels=labels_Df, show_titles=True)
         plot.savefig(savefig_path+"Single_Df.png")
 
@@ -212,14 +207,18 @@ if __name__=="__main__":
                         help="cut the first <c> steps of the mcmc to ignore them")
     parser.add_argument("-NP", "--no_plot",dest="no_plot", default=False,action="store_true",
                         help="Ignore the corner plots")
+    parser.add_argument("-AD", dest="AD", default=False,action="store_true",
+                        help="Consider AD couple instead of BC")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
     
     args = parser.parse_args()
     setting_names =  args.SETTING_FILES
     cut_mcmc = int(args.cut_mcmc)
     no_plot  = args.no_plot 
+    BC       = not args.AD
     backup_path="backup_results"
 
+
     for sett in setting_names:
-        save_Df(get_setting_module(sett,1),no_plot)
+        save_Df(get_setting_module(sett,1),no_plot,BC=BC)
     success(sys.argv[0])

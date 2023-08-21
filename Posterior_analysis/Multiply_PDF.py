@@ -13,8 +13,10 @@ from sklearn.model_selection import GridSearchCV
 
 from Utils.statistical_tools import get_bins_volume
 from Plots.plotting_tools import plot_probability3D,plot_probability3D_KDE
-        
-    
+
+labels_BC,labels_AD = ["AB","AC","BC"],["AB","AC","AD"]
+
+
 def get_minmax(samples,dim=None):
     # We get the min and maximum for each dimension relatively to all the datasets togheter
     if dim is None:
@@ -22,7 +24,8 @@ def get_minmax(samples,dim=None):
     else:
         return np.min([np.min(s,axis=1) for s in samples],axis=0)[dim], np.max([np.max(s,axis=1) for s in samples],axis=0)[dim]
 
-def Multiply_PDF_HIST_fitPrior(samples,nbins,Prior,savedir=".",verbose=True):
+
+def Multiply_PDF_HIST_fitPrior(samples,nbins,Prior,savedir=".",labels=labels_AD,verbose=True):
     # Using histograms to obtain the binned density for each datasets
     N = len(samples)
     Dim = len(samples[0])
@@ -43,12 +46,12 @@ def Multiply_PDF_HIST_fitPrior(samples,nbins,Prior,savedir=".",verbose=True):
     
     # Check that the Combined PDF is not 0
     check_combined(Combined_PDF,PDFs,Combined_bins,HIST="True")
-    
+
     if Prior is not None:
         check_combined(Prior,KDE=True)
         Norm_Prior = Prior/np.sum(Prior*get_bins_volume(d_bins))
         if Dim==3:
-            plot = plot_probability3D(Norm_Prior,Combined_bins,labels=["AB","AC","AD"],udm="\"",alpha=0.3)
+            plot = plot_probability3D(Norm_Prior,Combined_bins,labels=labels,udm="\"",alpha=0.3)
             plot.savefig(str(savedir)+"/Normalised_prior.png")
         for i in range(N-1):
             Combined_PDF/=Norm_Prior                

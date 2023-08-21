@@ -1,15 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
-
-# Mod from Notes 19th october: we consider a spline ml and see the difference with the only polynomial case 
-#-> Expected: larger error distribution, smaller systematic
-
-
-# In[2]:
-
+ 
+# 28th Jun '23: Add image D 
 
 """
 This script will find the generative noise model parameters that create mock lightcurves matching the data properties in term of gaussian and correlated noise
@@ -42,17 +34,14 @@ import pycs3.pipe.pipe_utils as ut
 
 ####################
 from Utils.tools import *
-from Plots.stnd_plot import delayplot,dmagplot
-from TD_analysis.stnd_handling_data import combine_series_methodB
-from Plots.plot_distrib import plot_err
-from TD_analysis.stnd_red_chi import get_chi_red
-from TD_analysis.pycs3_mod.sim.run import multirun
-from TD_analysis.pycs3_mod.sim.draw import multidraw
-from TD_analysis.inspect_results import plt_intr_err
+from stnd_plot import delayplot,dmagplot
+from stnd_handling_data import * #Error,getresults,combine_series, combine_series_methodB
+from plot_distrib import plot_err
+from stnd_red_chi import get_chi_red
+from pycs3_mod.sim.run import multirun
+from pycs3_mod.sim.draw import multidraw
+from inspect_results import plt_err, plt_err_tot, plt_intr_err
 ####################
-
-
-# In[4]:
 
 
 #################################
@@ -82,16 +71,6 @@ def setup_directories(config):
     if not os.path.exists(config.report_directory):
         print("I will create the report directory for you ! ")
         mkdir(config.report_directory)
-    
-
-
-
-
-
-
-
-
-
 
 
 #################################
@@ -115,13 +94,8 @@ def init_fit(config):
                 kwargs_ml = {"mltype":mltype_i,"mllist_name":mllist_name}
                 
                 if mltype_i=="polyml":
-                    mlfp_str="_mlfp_"+str(mlfp)
                     kwargs_ml["mlfp"] = mlfp
                 elif mltype_i=="splml":
-                    if config.forcen:
-                        mlfp_str="_nmlspl_"+str(mlfp)
-                    else:
-                        mlfp_str="_knstml_"+str(mlfp)
                     kwargs_ml["forcen"] = config.forcen
                     kwargs_ml["nmlspl"] = mlfp
                 saveml_path = saveknt_path/config.get_savemlpath(mltype_i,ml_config)# saveknt_path/str("ml"+mltype_i[:-2]+mllist_name+mlfp_str) 
@@ -165,27 +139,11 @@ def init_fit(config):
                     f.write('chi_red: '+str(np.round(chi_red,4)))
 
 
-
-
-
-################################
-################################
-################################
-##### actually my analysis #####
-################################
-################################
-################################
-
-# > actually best to keep it separated
-
-# Standard_analysis.ipynb
-
-
 #################################
 ########### Script 3a ###########
 #################################
 
-from TD_analysis.test_optimiser import MyDicOptimiser
+from test_optimiser import MyDicOptimiser
 def run_DIC(lcs,spline, fit_vector, kn, mlparams, optim_directory, config, stream, tolerance=0.75):
     pycs3.sim.draw.saveresiduals(lcs, spline)
     print("I'll try to recover these parameters :", fit_vector)
@@ -259,7 +217,7 @@ def set_param_intrinsic(config):
                 
                 #MOD_ROB
                 if not check_success_analysis(get_analdir(combdir)):
-                    print("Analysis from "+get_analdir(saveml_path)+" was not sufficiently precise. Ignored.")
+                    print("Analysis from "+get_analdir(combdir)+" was not sufficiently precise. Ignored.")
                     continue
                     
                 mkdir(combdir)
@@ -426,7 +384,7 @@ def my_draw_mocks(config):
                     for f in file:
                         os.remove(f)
                 job_args.append((config,combdir))
-    if processes > 1:
+    if processes > 1 and False: # TEST
         p.map(draw_mock_para_aux, job_args)
     else:
         for args in job_args:
@@ -570,6 +528,7 @@ def optimise_sim(config):
                     if mltype_i=="polyml":
                         if mlfp==0 or mlfp==1:
                             no_parall= True
+                    no_parall = True
                     if no_parall:       
                         job_args = (0, config, lcs,  kwargs, opts, combdir)
                         success_list_simu = exec_worker_mocks_aux(job_args)  
@@ -699,7 +658,7 @@ def combine_models(config,sigmathresh):
     savefig = indiv_marg_dir + config.name_marg_spline + "_sigma_%2.2f_myplot.pdf" % sigmathresh
     
     #create plot
-    delayplot(group_list,savefig,colors=colors,refgroup=combined,selected_groups_indexes=combined_indexes)
+    delayplot(group_list,savefig,colors=colors,refgroup=combined)
     
     print("Saved group_list as ",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_groups.pkl'),\
         "and combined result as ",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_combined.pkl') )
@@ -743,9 +702,10 @@ def combine_models(config,sigmathresh):
         """
         lst_str  = name_to_comb.split(" ")[1:]
         knt      = int(lst_str[0].replace("ks",""))
-        mltype   = lst_str[1]
-        mlconfig = lst_str[2:]
-
+        mltype   = lst_str[1].split("ml")[0]+"ml"
+        print(mltype)
+        mlconfig = lst_str[-2:]
+        print(mlconfig,lst_str)
         ml_dir      = config.get_savemlpath(mltype,mlconfig)
 
         anl_path    = pth.Path(config.analysis_directory)
@@ -790,7 +750,7 @@ def combine_models(config,sigmathresh):
 
 
 
-def standard_pipeline(config,verbose=False):    
+def standard_pipeline(config,verbose=False):  
     #Creating missing directories
     if verbose:
         print("Setting up directories\n")
@@ -821,7 +781,9 @@ def standard_pipeline(config,verbose=False):
     if verbose:
         print("Combining models\n")
     combine_models(config,sigmathresh=config.sigmathresh)
-    
+
+
+
 
 
 if __name__ == '__main__':

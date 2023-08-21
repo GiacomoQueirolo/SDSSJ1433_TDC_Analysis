@@ -20,7 +20,7 @@ from Utils.statistical_tools import get_bins_volume
 
 
 from Utils.combinedsetting_class import combined_setting
-from Posterior_analysis.fermat_pot_analysis import labels_Df as  param_names
+from Posterior_analysis.fermat_pot_analysis import get_mcmc_Df,labels_Df_AD,labels_Df_BC 
 
 
 if __name__=="__main__":
@@ -49,6 +49,8 @@ if __name__=="__main__":
                         help="Scaling factor for (N_prior), N_prior=Number of sampled prior points used for the fitting")
     parser.add_argument("-owP","--overwrite_Prior", action="store_true", dest="overwrite_Prior", default=False,
                         help="If same prior is present (same N_prior), recalculate it overwrite it ")
+    parser.add_argument("-AD", action="store_true", dest="AD", default=False,
+                        help="Consider AD couple instead of BC")
     parser.add_argument("-v","--verbose", action="store_true", dest="verbose", default=False,
                         help="Verbose")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
@@ -67,13 +69,15 @@ if __name__=="__main__":
     settings      = get_setting_module(setting_names,True)
     cmb_sett_name = str(args.cmb_sett_name)
     overwrite_Prior = bool(args.overwrite_Prior)
+    BC              = not bool(args.AD)
     ########################################
     present_program(sys.argv[0])
     ########################################
 
     backup_path  = "backup_results"
     main_savedir = "PDF_multiplication_ABC"
-
+    if not BC:
+        main_savedir+="D"
     filters       = [get_filter(st) for st in settings]
     savemcmc_path = [get_savemcmcpath(st) for st in  settings]
     save_dir      = create_dir_name(setting_names,save_dir=main_savedir,dir_name=dir_name,backup_path=backup_path,copy_settings=True)
@@ -81,13 +85,17 @@ if __name__=="__main__":
     save_log_command(save_dir)
     # for fermat potentials    
     samples = []
-    print("WARNING: Given the low S/N of image D, I will discard here and instead consider Delta BC") 
+    param_names = labels_Df_AD
+    if BC:
+        param_names = labels_Df_BC
+        print("WARNING: Given the low S/N of image D, I will discard here and instead consider Delta BC")
+        
     for st in settings:
-        Dfi = get_mcmc_Df(st,backup_path=backup_path,noD=True)
+        Dfi = get_mcmc_Df(st,backup_path=backup_path,noD=BC)
         cut_mcmc_scaled = int(len(Dfi)*cut_mcmc/1000)
         DfiT = np.transpose(Dfi[cut_mcmc_scaled:])
         samples.append(DfiT) #shape: 3, len(mcmc)
-    param_names[-1] = r"$\Delta\phi BC$"
+    
     
     ##################################################################################
     # Prior #
@@ -95,7 +103,7 @@ if __name__=="__main__":
     path_prior = backup_path+"/"+main_savedir+"/"+name_prior
     Nsample_prior = int(factNprior*1e4)
     prior_name = f"{save_dir}/prior_obj.dll"
-    prior = Prior(settings[0],Nsample=Nsample_prior)
+    prior = Prior(settings[0],Nsample=Nsample_prior,BC=BC)
     if not overwrite_Prior and os.path.isfile(prior_name):
         with open(prior_name,"rb") as f:
             loaded_prior = dill.load(f)
@@ -133,7 +141,7 @@ if __name__=="__main__":
         from Multiply_PDF import Multiply_PDF_HIST_fitPrior
         #Combined_PDF,Combined_bins = Multiply_PDF_HIST(samples,nbins,Priors=Priors_Df,savedir=save_dir)
         #Combined_PDF,Combined_bins = Multiply_PDF_HIST(samples,nbins,Prior_LR=Prior_Df_LRes,Prior_HR=Prior_Df_HRes,savedir=save_dir)
-        Combined_PDF,Combined_bins = Multiply_PDF_HIST_fitPrior(samples,nbins,Prior=prior,savedir=save_dir,verbose=verbose)
+        Combined_PDF,Combined_bins = Multiply_PDF_HIST_fitPrior(samples,nbins,Prior=prior,savedir=save_dir,labels=param_names,verbose=verbose)
 
     # The Combined_PDF must be re-normalised
     if KDE:
@@ -167,7 +175,13 @@ if __name__=="__main__":
     cmb_sett_name = CombSett.gen_cmb_sett_name(cmb_sett_name = cmb_sett_name)
     with open(f"combined_settings/{cmb_sett_name}.dll","wb") as f:
         dill.dump(CombSett,f)
-    os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
+    try:
+        os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
+    except FileExistsError:
+        if verbose:
+            print(f"{cmb_sett_name} existed in {save_dir}, overwriting link")
+        os.remove(f"{save_dir}/{cmb_sett_name}.dll")
+        os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
     #####################################################################################
 
     # We need to sample it for the plot 
@@ -197,14 +211,14 @@ if __name__=="__main__":
         plot = corner(mcmc_chain,bins=nbins,labels=[ p+" [\"]" for p in param_names], show_titles=True)
         plot.savefig(str(save_dir)+"/MCMC_multiplication_Df.png")
 
-    if not KDE:
+    if  KDE:
+        from Plots.plotting_tools import plot_probability3D_KDE
+        plot = plot_probability3D_KDE(Combined_PDF,Positions_KDE,labels=param_names,udm="\"")
+        plot.savefig(str(save_dir)+"/CombinedProbability_KDE.pdf") 
+    else:
         from Plots.plotting_tools import plot_probability3D
         plot = plot_probability3D(Combined_PDF,Combined_bins,labels=param_names,udm="\"")
         plot.savefig(str(save_dir)+"/CombinedProbability.pdf")
-    else:
-        from Plots.plotting_tools import plot_probability3D_KDE
-        plot = plot_probability3D_KDE(Combined_PDF,Positions_KDE,labels=param_names,udm="\"")
-        plot.savefig(str(save_dir)+"/CombinedProbability_KDE.pdf")
 
     print("Result directory:", str(save_dir))
     success(sys.argv[0])

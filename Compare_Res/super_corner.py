@@ -1,9 +1,7 @@
-import copy
 import os, sys
 import argparse
 import warnings
 import numpy as np
-import pathlib as pth
 from corner import corner
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
@@ -16,8 +14,9 @@ from Utils.get_param_title import newProfile
 from Data.Param import get_prm_list
 from Data.conversion import qphi_from_e1e2
 
-from Plots.plotting_tools import my_corner_general,base_colors
-from Posterior_analysis.fermat_pot_analysis import labels_Df as  param_names    
+from Plots.plotting_tools import base_colors
+from Posterior_analysis.fermat_pot_analysis import get_mcmc_Df
+#from Posterior_analysis.fermat_pot_analysis import labels_Df as  param_names   
 #################################################################
 fnt = 16
 plt.rcParams['xtick.labelsize'] = fnt
@@ -31,8 +30,8 @@ plt.rc('xtick', labelsize=fnt)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=fnt)    # fontsize of the tick labels
 plt.rc('legend', fontsize=fnt)    # legend fontsize
 #################################################################
-    
-def plot_sup_corner_Df(setting_list,fermat_mcmc=None,col=base_colors,savefig_dir=None,name_pdf="Df_sup",cut_mcmc=None,simple_legend=False,
+"""
+def plot_sup_corner_Df_old(setting_list,fermat_mcmc=None,col=base_colors,savefig_dir=None,name_pdf="Df_sup",cut_mcmc=None,simple_legend=False,
         param_names=param_names,already_BC=False,backup_path="backup_results/"):
     print("Producing Df superposed corner plot")
     # for fermat potentials
@@ -68,6 +67,46 @@ def plot_sup_corner_Df(setting_list,fermat_mcmc=None,col=base_colors,savefig_dir
             corner(mcmc_Dfi.T,labels = param_names,show_titles=True,color=col[i%len(col)],plot_datapoints=False,hist_kwargs= {"density":True},fig=fg)
         else:
             corner(mcmc_Dfi.T,color=col[i%len(col)],fig=fg,plot_datapoints=False,hist_kwargs= {"density":True})
+    axdel=ax[0][2]
+    axdel.legend(handles=legend_elements)
+    axdel.axis("off")
+    #plt.tight_layout()
+    if savefig_dir:
+        fg.savefig(str(savefig_dir)+"/"+name_pdf+".pdf")
+        print("Produced "+name_pdf+".pdf in "+str(savefig_dir))
+    else:
+        return fg,ax
+""" 
+
+def plot_sup_corner_Df(setting_list,Df_mcmc=None,param_names=None,BC=True,cut_mcmc=None,
+                       col=base_colors,savefig_dir=None,name_pdf="Df_sup",simple_legend=False,
+                       backup_path="backup_results/"):
+    print("Producing Df superposed corner plot")
+    #print("Note: imput is assumed to be already the difference of fermat Potentials") #doesn't matter as we also get the param_names
+    # for fermat potentials
+    settings_name = get_setting_name(setting_list)
+    if Df_mcmc is None:
+        Df_mcmc = [get_mcmc_Df(st,backup_path,noD=BC) for st in settings_name]
+    if param_names is None:
+        if BC:
+            from Posterior_analysis.fermat_pot_analysis import labels_Df_BC as param_names   
+        else:
+            from Posterior_analysis.fermat_pot_analysis import labels_Df_AD as param_names   
+        param_names = [ p.replace(" [\"^2]","")+" [\"^2]" for p in param_names]
+        
+    fg, ax = plt.subplots(3,3,figsize=(10,10))
+    legend_elements  = []
+    for i,mcmc_Df_iT in enumerate(Df_mcmc):
+        cut_mcmc_scaled = 0
+        if cut_mcmc:
+            cut_mcmc_scaled = int(len(mcmc_Df_iT)*cut_mcmc/1000)
+        mcmc_Dfi   = np.transpose(mcmc_Df_iT[cut_mcmc_scaled:]) 
+        legend_elements.append(Patch(facecolor=col[i%len(col)],label=strip_setting_name(settings_name[i],filter=simple_legend)))
+        if i==0:
+            warnings.warn("Given the low S/N of image D, I will discard here and instead consider Delta BC")    
+            corner(mcmc_Dfi,labels=param_names,show_titles=True,color=col[i%len(col)],plot_datapoints=False,hist_kwargs= {"density":True},fig=fg)
+        else:
+            corner(mcmc_Dfi,color=col[i%len(col)],fig=fg,plot_datapoints=False,hist_kwargs= {"density":True})
     axdel=ax[0][2]
     axdel.legend(handles=legend_elements)
     axdel.axis("off")
@@ -156,7 +195,55 @@ def get_sample_and_kwpair(setting_names,smpl_mcmc=None,cut_mcmc=None,prm_mcmc=No
     prm_comp = list(kw_pair)
     return samples_comp,prm_comp
 
-def plt_SC_LandFP(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=None,fermat_mcmc=None,param_fermat=param_names,already_BC=False,stnd_lnsprm=False,
+def plt_SC_LandFP(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=None,Df_mcmc=None,param_fermat=None,BC=True,stnd_lnsprm=False,
+                    col=base_colors,savefig_dir=None,simple_legend=False,name_pdf="lnDf_sup",backup_path="backup_results/"):
+    print("Producing superposed corner plot for lens params and Df ")
+    settings_names = get_setting_name(setting_list)
+    if Df_mcmc is None:
+        Df_mcmc = [get_mcmc_Df(st,backup_path,noD=BC) for st in setting_list]
+    if param_fermat is None:
+        if BC:
+            from Posterior_analysis.fermat_pot_analysis import labels_Df_BC as param_fermat   
+        else:
+            from Posterior_analysis.fermat_pot_analysis import labels_Df_AD as param_fermat   
+        param_fermat = [ p.replace(" [\"^2]","")+" [\"^2]" for p in param_fermat]
+            
+    samples_comp,prm_comp  = get_sample_and_kwpair(setting_names=setting_names, smpl_mcmc=smpl_mcmc,prm_mcmc=prm_mcmc,cut_mcmc=cut_mcmc)
+    _prm_comp = [newProfile(prcmp)[0] for prcmp  in prm_comp] 
+    prm_comb2 = [*_prm_comp,*param_fermat]
+    
+    fg, ax = plt.subplots(len(prm_comb2),len(prm_comb2),figsize=(10,10))
+    legend_elements  = []
+    for i,sett_nm in enumerate(settings_names):
+        col_i = col[i%len(col)]
+        if stnd_lnsprm or ign_lnsprm_qphi:
+            corner_data = samples_comp[i]
+        else:
+            corner_data = np.array(samples_comp[i])
+            ind_e1,ind_e2 = list(prm_comp).index("e1_lens0"),list(prm_comp).index("e2_lens0")
+            e1,e2 = corner_data[ind_e1],corner_data[ind_e2]
+            q,phi = qphi_from_e1e2(e1,e2,ret_deg=True)
+            corner_data[ind_e1],corner_data[ind_e2] = q,phi
+            prm_comb2[ind_e1],prm_comb2[ind_e2] = "$q_1$","$\phi_1$"
+            corner_data = corner_data.tolist()
+        samples_comb2 = np.transpose([*corner_data,*Df_mcmc[i]]).tolist()
+        legend_elements.append(Patch(facecolor=col_i,label=strip_setting_name(sett_nm,filter=simple_legend)))
+        if i==0:    
+            corner(samples_comb2,labels =prm_comb2,show_titles=True,color=col_i,plot_datapoints=False,hist_kwargs= {"density":True},fig=fg)
+        else:
+            corner(samples_comb2,color=col_i,fig=fg,plot_datapoints=False,hist_kwargs= {"density":True})
+    axdel=ax[0][-1]
+    axdel.legend(handles=legend_elements)
+    axdel.axis("off")
+ 
+    if savefig_dir is not None:
+        fg.savefig(str(savefig_dir)+"/"+name_pdf+".pdf")
+        print("Produced "+name_pdf+".pdf in "+str(savefig_dir))
+    else:
+        return fg,ax
+
+"""
+def plt_SC_LandFP_old(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=None,fermat_mcmc=None,param_fermat=param_names,already_BC=False,stnd_lnsprm=False,
                     col=base_colors,savefig_dir=None,simple_legend=False,name_pdf="lnDf_sup",backup_path="backup_results/"):
     print("Producing superposed corner plot for lens params and Df ")
     settings_names = get_setting_name(setting_list)
@@ -208,7 +295,7 @@ def plt_SC_LandFP(setting_list,smpl_mcmc=None,prm_mcmc=None,cut_mcmc=None,fermat
     else:
         return fg,ax
 
-        
+"""
 
 
 
@@ -228,6 +315,8 @@ if __name__=="__main__":
                         help="Draw a simplified legend with only the name of the filters")
     parser.add_argument("-is","--ignore_source",dest="ignore_source", default=False,action="store_true",
                         help="Ignore source parameters (if all settings have them)")
+    parser.add_argument("-AD", dest="AD", default=False,action="store_true",
+                        help="Consider AD couple instead of BC")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
 
     args = parser.parse_args()
@@ -239,7 +328,7 @@ if __name__=="__main__":
     ign_lnsprm_qphi = args.ignore_lens_param_qphi
     simple_legend   = args.simple_legend
     ign_source      = args.ignore_source        
-
+    BC              = not args.AD
     setting_name    = get_setting_name(setting_names)
     
     #############################
@@ -259,16 +348,14 @@ if __name__=="__main__":
     
     smpl_mcmc = [get_mcmc_smpl(st,backup_path=backup_path) for st in setting_names]
     prm_mcmc  = [get_prm_list(st,backup_path=backup_path) for st in setting_names]
-    fermat_mcmc = [np.array(get_mcmc_fermat(st,backup_path)).tolist() for st in setting_names]
-    already_BC  = False
+    Df_mcmc   = [np.array(get_mcmc_Df(st,backup_path,noD=BC)).tolist() for st in setting_names]
     if not ign_Df:
-        plot_sup_corner_Df(setting_name,savefig_dir=save_dir,fermat_mcmc=fermat_mcmc,simple_legend=simple_legend,param_names=param_names,backup_path=backup_path,already_BC=already_BC) 
-
+        plot_sup_corner_Df(setting_name,savefig_dir=save_dir,Df_mcmc=Df_mcmc,BC=BC,simple_legend=simple_legend,backup_path=backup_path)
     if stnd_lnsprm or not ign_lnsprm_qphi:
         plt_sup_corner_lnsprm(setting_name,smpl_mcmc=smpl_mcmc,prm_mcmc=prm_mcmc,cut_mcmc=cut_mcmc,stnd_lnsprm=stnd_lnsprm,ign_lnsprm_qphi=ign_lnsprm_qphi,\
                                 savefig_dir=save_dir,simple_legend=simple_legend,backup_path=backup_path)
 
-    plt_SC_LandFP(setting_name,smpl_mcmc=smpl_mcmc,prm_mcmc=prm_mcmc,fermat_mcmc=fermat_mcmc,param_fermat=param_names,already_BC=already_BC,stnd_lnsprm=stnd_lnsprm,
+    plt_SC_LandFP(setting_name,smpl_mcmc=smpl_mcmc,prm_mcmc=prm_mcmc,Df_mcmc=Df_mcmc,BC=BC,stnd_lnsprm=stnd_lnsprm,
                     col=base_colors,savefig_dir=save_dir,simple_legend=simple_legend,backup_path=backup_path)
     
     success(sys.argv[0])

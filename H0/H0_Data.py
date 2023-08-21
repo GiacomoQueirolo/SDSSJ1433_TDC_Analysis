@@ -3,7 +3,7 @@ import os,dill
 from datetime import datetime
 from Utils.get_res import get_combined_Df
 from TD_analysis.pycs_get_res import get_combined_res
-from Utils.tools import mkdir,get_config,get_combined_setting_respath,get_config_respath
+from Utils.tools import mkdir,get_config,get_combined_setting_respath,get_config_respath,save_log_command
 
 
 def create_PH0resdir(res_dir="./results/",dir_ph0="PH0/",verbose=False,overwrite=False):
@@ -65,7 +65,7 @@ def get_Df_post(df_name,PH0_resdir="results/PH0",lenstronomy_path="./lenstronomy
     print("For fermat pot. using posterior: ",str(dir_df))
     return combined_setting,Combined_PDF,Combined_bins_or_points
     
-def write_readme(path,dt_name,df_name,lenstronomy_path="./lenstronomy/",pycs_path="./my_pycs_scripts/",configpath="/myconfig/"):
+def write_readme(path,dt_name,df_name,lenstronomy_path="./lenstronomy/",pycs_path="./my_pycs_scripts/",configpath="/myconfig/",log_command=True):
     # save a txt file in the final path specifing the path
     # used for to find the dt and df data for the posterior
 
@@ -76,4 +76,6 @@ def write_readme(path,dt_name,df_name,lenstronomy_path="./lenstronomy/",pycs_pat
         f.write(str(dt_path)+"\n")
         f.write("Fermat potential posterior used:\n")
         f.write(str(df_path)+"\n")
+    if log_command:
+        save_log_command(path)
     return 0
