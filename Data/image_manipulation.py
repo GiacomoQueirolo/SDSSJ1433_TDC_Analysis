@@ -66,13 +66,13 @@ def create_mask(image,setting):
 
 def load_fits(image_path,HDU=0):
     #load the image and read it as numpy array
-    with fits.open(image_path) as hdulist:
+    with fits.open(image_path,ignore_missing_end=True) as hdulist:
         image   = hdulist[HDU].data
     return image
 
 def load_fitshead(image_path,HDU=0):
     #load the image header
-    with fits.open(image_path) as hdulist:
+    with fits.open(image_path,ignore_missing_end=True) as hdulist:
         head   = hdulist[HDU].header
     return head
     
@@ -476,13 +476,9 @@ def extract_q_ll(model_name,setting,min_ra=0.):
 
 
 
-
 def fits_with_copied_hdr(data,fits_parent_path,data_object="",data_history="",fits_res_namepath=None,overwrite=True,verbose=True):
-    
-    with fits.open(fits_parent_path,ignore_missing_end=True) as target:
-        scihdr  = target[0].header
-    
-    hdu = fits.PrimaryHDU(data=data,header=scihdr)
+    scihdr = load_fitshead(fits_parent_path,HDU=0)
+    hdu    = fits.PrimaryHDU(data=data,header=scihdr)
     
     if data_object!="":
         hdu.header["OBJECT"]=str(data_object)
@@ -498,6 +494,11 @@ def fits_with_copied_hdr(data,fits_parent_path,data_object="",data_history="",fi
         hdu.writeto(fits_res_namepath, overwrite=overwrite)
         return 0
         
+def copy_fits(fits_path):
+    data = load_fits(fits_path)
+    cp_fits = fits_with_copied_hdr(data,fits_path)
+    return cp_fits
+
 def multifits_with_copied_hdr(data_list,fits_parent_path,data_object=[],fits_res_namepath=None,overwrite=True,verbose=True):
     hdu_list = fits.HDUList()
     for i,data in enumerate(data_list):
@@ -593,3 +594,4 @@ def get_PHOTFLAM(setting):
     else:
         data_path = data_path+"/"+setting.image_name
         return get_header(data_path,"PHOTFLAM")
+

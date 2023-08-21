@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from copy import copy
 from astropy import units as u
-from Utils.tools import get_setting_module
+from Utils.tools import get_setting_module,check_setting
 from Data.image_manipulation import get_transf_matrix
 
 #Idea: we need to change the frame of reference such that all filters has the same coordinates
@@ -95,9 +95,9 @@ def conv_general(ref_pos, to_convert_pos,transform_pix2angle,angle_at_pix0):
 
 
 """
+@check_setting
 def conv_total(setting,to_conv_pos):
-    sets = get_setting_module(setting,sett=True)
-    transform_pix2angle = get_transf_matrix(sets.data_path+sets.image_name,in_arcsec=True)
+    transform_pix2angle = get_transf_matrix(setting.data_path+"/"+setting.image_name,in_arcsec=True)
     angle_at_pix0 = [0,0] # should be always 0,0
     return conv_general(to_conv_pos,transform_pix2angle,angle_at_pix0)
 """
@@ -186,11 +186,12 @@ def conv_xy_from_setting1_to_setting2(x1,y1,setting1,setting2):
     setting1 = name of setting file for coord x1,y1
     setting2 = name of setting file over which we want to convert
     """
-    ra,dec = conv_total(setting1,[x1,y1])
-    x2,y2  = conv_radec_to_xy(setting2,ra,dec)
+    sett1    = get_setting_module(setting1,1)
+    sett2    = get_setting_module(setting2,1)
+    trans_m1 = get_transf_matrix(sett1.data_path+"/"+sett1.image_name,in_arcsec=True)
+    ra,dec   = conv_general([x1,y1],trans_m1,[sett1.ra_at_xy_0,sett1.dec_at_xy_0])
+    x2,y2    = conv_radec_to_xy(sett2,ra,dec)
     return x2,y2
-
-
 
 ### from ellipticities_conversion.py -> heaviliy reworked from param_util.py from lenstronomy ###
 

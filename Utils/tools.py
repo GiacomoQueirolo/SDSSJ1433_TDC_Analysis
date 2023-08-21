@@ -242,7 +242,7 @@ def find_combined_setting_path(combined_setting_name,main_dir="./"):
     if combined_setting_name in next(walk(main_dir), (None, None, []))[2]:
             cmb_setting_path.append(main_dir)
     if cmb_setting_path==[]:
-        raise FileNotFoundError(f"Combined Setting file not found:{combined_setting_name}")
+        raise RuntimeError(f"Combined Setting file not found:{combined_setting_name}")
     elif len(cmb_setting_path)>1:
         string= "More then one setting found with same name in:"
         for cst in cmb_setting_path:
@@ -402,12 +402,9 @@ def create_path_from_list(ordered_list):
     for p in ordered_list:
         if type(p) is not str:
             raise RuntimeError(f"Input must be a list of str, not {type(p)}")
-        if "." not in p and p==ordered_list[-1]:
-            p+="/"
         if p[0]!="/" and p[0]!=".":
             p=f"/{p}"
         path+=p
-    #return pth.Path(*ordered_list)
     return path
         
 def save_json(data,filename):
@@ -424,8 +421,7 @@ def save_json_name(setting,path,filename):
 
 
 def save_mcmc_json(setting,data,filename,backup_path="backup_results"):
-    setting_name  = get_setting_name(setting)
-    savemcmc_path = get_savemcmcpath(setting_name,backup_path)
+    savemcmc_path = get_savemcmcpath(setting,backup_path)
     name = save_json_name(setting,savemcmc_path,filename)
     save_json(data,name)
     
@@ -518,7 +514,7 @@ def pickle_results(res,name,savefig_path=""):
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
-
+    
 def general__eq__(obj_self,other_obj):
     # generic equality function to implement in classes 
     for attr in dir(obj_self):
@@ -529,7 +525,6 @@ def general__eq__(obj_self,other_obj):
             except AttributeError:
                 return False
     return True
-
 
 ###
 # for nice formatting:
@@ -569,5 +564,4 @@ def check_success_analysis(path):
     success = pickle.load(open(path+"/success.data","rb"))
     return success["success"]
 ##########################################
-
 

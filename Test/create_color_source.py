@@ -59,21 +59,3 @@ if __name__=="__main__":
             fits.writeto(save_name, overwrite=True)
     success(sys.argv[0])
 
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-

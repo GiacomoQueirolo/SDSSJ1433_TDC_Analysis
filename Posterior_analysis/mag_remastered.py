@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 # define a function mag that returns the magnification given the parameters
-# In[1]:
 
 
-import numpy as np
-from lenstronomy.LensModel.lens_model import LensModel
-import os,sys
-import pathlib as pth
-import json
-import argparse
 import corner
+import argparse
+import sys,json
+import numpy as np
+import pathlib as pth
+from lenstronomy.LensModel.lens_model import LensModel
+
 
 from Utils.tools import *
 from Utils.get_res import *
@@ -66,9 +65,6 @@ def mag(setting,svpth=False):
     
     #I want to obtain the correct image order
     #########################################
-    #read kwargs results
-    kwargs_result = get_kwres(setting,backup_path)["kwargs_results"]
-
     # the first one is A no matter what
     
     #new_order = image_order(ra_im,dec_im)+1 #bc it gives the order assuming A in 0
@@ -84,11 +80,7 @@ def mag(setting,svpth=False):
         return mcmc_mag_ratio
     else:
         return mcmc_mag_ratio, savefig_path
-
-
-# In[ ]:
-
-
+ 
 # MOD_LLFR
 def get_mag_ratio(lens_model_class,kwargs_lens,kwargs_ps):
     cent_ra,cent_dec = kwargs_ps[0]["ra_image"] ,kwargs_ps[0]["dec_image"]
@@ -158,7 +150,7 @@ if __name__=="__main__":
     corner_plot = args.corner_plot
     FR = args.FR
     if FR:
-        from input_data import *
+        from Data.input_data import *
         
     for sets in settings:
         if len(settings)>1:

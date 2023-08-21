@@ -11,11 +11,9 @@ import numpy as np
 from corner import quantile
 
 from Utils.tools import *
-from Utils.get_res import load_whatever
+from Utils.get_res import get_mcmc_smpl,get_mcmc_prm
 
-
-# In[ ]:
-
+ 
 
 def rewrite_read_results(setting,cut_mcmc=0,backup_path="backup_results"):
     #MCMC sample
@@ -38,12 +36,9 @@ def rewrite_read_results(setting,cut_mcmc=0,backup_path="backup_results"):
             kwargs_results_updated["dec_image_"+str(n_dec)]=val          
             n_dec+=1
 
-    with open(get_savemcmcpath(setting_name,backup_path)+'/read_results_updated.data', 'wb') as file:
+    with open(get_savemcmcpath(setting,backup_path)+'/read_results_updated.data', 'wb') as file:
         pickle.dump(kwargs_results_updated, file)
-
-
-# In[ ]:
-
+ 
 
 if __name__=="__main__":
 
@@ -54,6 +49,7 @@ if __name__=="__main__":
     args = parser.parse_args()
     settings = args.SETTING_FILE
     cut_mcmc = args.cut_mcmc
+    backup_path = "./backup_results/"
     present_program(sys.argv[0])
     for setting in settings:
         rewrite_read_results(setting,cut_mcmc,backup_path)

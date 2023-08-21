@@ -213,7 +213,6 @@ class logL_Prior_Lens_Light(object):
         # Gaussian prior on the ellipticity of the lens mass profile given the corresponding 
         # light profile
         #  if LL is subtracted, the phi_ll is given as a fixed value
-        #  else it is computed from the corresponding lens light model
         # moreover we consider a free center of the lens light and mass, 
         # but normally correlated
         

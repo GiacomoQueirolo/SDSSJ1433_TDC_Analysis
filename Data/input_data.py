@@ -133,7 +133,8 @@ def init_multi_band_list(setting,saveplots=False,backup_path="backup_results",re
 def init_lens_model_list(setting):
     lens_model_list = ['SIE']
     if setting.CP:
-        lens_model_list = ['PEMD']
+        #lens_model_list = ['PEMD']
+        lens_model_list = ['EPL_NUMBA'] #test
     lens_model_list = [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
     return lens_model_list
 
@@ -146,25 +147,22 @@ def init_lens_light_model_list(setting):
     if hasattr(setting,"no_pert"):
         if setting.no_pert==True:
             light_model_list=["UNIFORM"]
+    if getattr(setting,"no_bckg",False):
+        light_model_list.remove("UNIFORM")
     return light_model_list
 
 @check_setting
 def init_source_model_list(setting):
     if not setting.WS:
-        if hasattr(setting,"ellipt"):
-            if setting.ellipt:
-                source_model_list = ['SERSIC_ELLIPSE']
-            else:
-                source_model_list = ['SERSIC']
-        #test w. shapelts
-        elif hasattr(setting,"shapelets"):
-            if setting.shapelets:
-                source_model_list = ['SHAPELETS']
-            else:
-                source_model_list = ['SERSIC']
-        else:
+        if getattr(setting,"ellipt",False):
             source_model_list = ['SERSIC_ELLIPSE']
-            
+        elif getattr(setting,"shapelets",False):
+            source_model_list = ['SHAPELETS']
+        # MOD_2SRC: add a second source Sersic
+        elif getattr(setting,"second_source",False):
+            source_model_list = ['SERSIC','SERSIC']
+        else:
+            source_model_list = ['SERSIC']
     else:
         source_model_list = None
     return source_model_list

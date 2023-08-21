@@ -60,6 +60,7 @@ def get_mcmc_chain(setting_name,mcmc_name,backup_path="backup_results"):
 def get_mcmc_fermat(setting_name,backup_path="backup_results"):
     return get_mcmc_chain(setting_name,"ordered_fermat",backup_path)
 
+"""
 def get_mcmc_Df(setting_name,backup_path="backup_results",noD=True):
     # noD: ignore image D and return AB,AC and BC instead
     # return : mcmc_Df, shape: len_mcmc, 3
@@ -76,7 +77,7 @@ def get_mcmc_Df(setting_name,backup_path="backup_results",noD=True):
     else:
         mcmc_Df    = mcmc_DfT.T.tolist()
     return mcmc_Df    
-
+"""
 
 def get_mcmc_mag(setting_name,backup_path="backup_results"):
     return get_mcmc_chain(setting_name,"mag_rt",backup_path)

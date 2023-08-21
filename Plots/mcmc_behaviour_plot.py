@@ -64,8 +64,10 @@ def my_plot_mcmc_simil_behaviour(ax, samples_mcmc, param_mcmc,col="b", num_avera
     plots the MCMC behaviour and looks for convergence of the chain
     :param samples_mcmc: parameters sampled 2d numpy array
     :param param_mcmc: list of parameters
+    :param col: color of plot
     :param num_average: number of samples to average 
         (should coincide with the number of samples in the emcee process)
+    :param boundary: if not none (and not an image position), plot the minimum and/or maximum boundary if visible in the plot
     :return:
     """
     num_samples = len(samples_mcmc[:, 0])
@@ -141,7 +143,31 @@ def find_bound(param_name, setting,num=None):
     else:
         raise ValueError("Unrecognised parameter name:"+param_name)
     return lower[prm],upper[prm]
-
+    
+def my_plot_mcmc_logL(ax, mcmc_logL, num_average=100):
+                """
+                plots the MCMC behaviour and looks for convergence of the chain
+                :param samples_mcmc: parameters sampled 2d numpy array
+                :param param_mcmc: list of parameters
+                :param dist_mcmc: log likelihood of the chain
+                :param num_average: number of samples to average (should coincide with the number of samples in the emcee process)
+                :return:
+                """
+                num_samples = len(mcmc_logL)
+                if all_logL:
+                    num_average = 1
+                else:
+                    num_average = int(num_average)
+                n_points = int((num_samples - num_samples % num_average) / num_average)
+                mcmc_logL_averaged = -np.max(mcmc_logL[:int(n_points * num_average)].reshape(n_points, num_average), axis=1)
+                mcmc_logL_normed = (mcmc_logL_averaged - np.max(mcmc_logL_averaged)) / (np.max(mcmc_logL_averaged) - np.min(mcmc_logL_averaged))
+                if all_logL:
+                    ax.scatter(np.arange(0,len(mcmc_logL_normed)),mcmc_logL_normed,color='k',marker=".", alpha=0.001)
+                else:
+                    ax.plot(mcmc_logL_normed, color='k', linewidth=2)
+                ax.set_title("Log Likelihood")
+                ax.set_xlabel("MCMC Steps/"+str(num_average))
+                return ax
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Produces the MCMC behaviour plots of ALL parameter separately for the given filter model")
@@ -289,30 +315,7 @@ if __name__=="__main__":
     ########
     if logL_go:
 
-            def my_plot_mcmc_logL(ax, mcmc_logL, num_average=100):
-                """
-                plots the MCMC behaviour and looks for convergence of the chain
-                :param samples_mcmc: parameters sampled 2d numpy array
-                :param param_mcmc: list of parameters
-                :param dist_mcmc: log likelihood of the chain
-                :param num_average: number of samples to average (should coincide with the number of samples in the emcee process)
-                :return:
-                """
-                num_samples = len(mcmc_logL)
-                if all_logL:
-                    num_average = 1
-                else:
-                    num_average = int(num_average)
-                n_points = int((num_samples - num_samples % num_average) / num_average)
-                mcmc_logL_averaged = -np.max(mcmc_logL[:int(n_points * num_average)].reshape(n_points, num_average), axis=1)
-                mcmc_logL_normed = (mcmc_logL_averaged - np.max(mcmc_logL_averaged)) / (np.max(mcmc_logL_averaged) - np.min(mcmc_logL_averaged))
-                if all_logL:
-                    ax.scatter(np.arange(0,len(mcmc_logL_normed)),mcmc_logL_normed,color='k',marker=".", alpha=0.001)
-                else:
-                    ax.plot(mcmc_logL_normed, color='k', linewidth=2)
-                ax.set_title("Log Likelihood")
-                ax.set_xlabel("MCMC Steps/"+str(num_average))
-                return ax
+            
             if np.inf in np.abs(mcmc_logL):
                 print(sys.argv[0]+" - my_plot_mcmc_logL - WARNING: I am deleting part of the numbers for the LogL plot")
                 print("n* of inf points: ",len(mcmc_logL[np.isinf(mcmc_logL)]) )
@@ -379,11 +382,6 @@ if __name__=="__main__":
                 plt.legend(loc="upper right")
                 
                 plt.savefig(savefig_path.replace("MCMC_bhv","")+"all_PD/PD_logL.png")
-                plt.close() 
-
-
-    # In[42]:
-
-
+                plt.close()
     success(sys.argv[0])
 

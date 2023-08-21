@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+
 
 
 #### Def.source position from image position
@@ -16,7 +16,7 @@ from Utils.tools import *
 from Utils.get_res import *
 from Data.input_data import init_lens_model
 
-# In[ ]:
+
 
 
 def pll_get_source_pos(kwargs_result_i,lensModel):
@@ -164,7 +164,7 @@ def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True):
             str_src+=str(labels_source_comb[i]+"  " +str(np.trunc(np.array(val)*fact)/fact)+\
                             " +- "+str(np.trunc(np.array(sig_max)*fact)/fact)+"\n")
         else:
-            str_src+=str(labels_sinit_lens_modelource_comb[i]+" " +str(np.trunc(np.array(val)*fact)/fact)+\
+            str_src+=str(labels_source_comb[i]+" " +str(np.trunc(np.array(val)*fact)/fact)+\
                             " - "+str(np.trunc(np.array(sig_min)*fact)/fact)+\
                             " + "+str(np.trunc(np.array(sig_max)*fact)/fact)+"\n")
         if i==0:
@@ -203,7 +203,7 @@ def get_source_gen(ra_image,dec_image,kw_lens,setting=None,lensModel=None):
     return source_x,source_y
 
 
-# In[ ]:
+
 
 
 if __name__=="__main__":

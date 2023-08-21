@@ -16,7 +16,6 @@ def plot_probability3D(prob3D,bins,labels=None,udm=None,figsize=(12,12),contour_
     bin_densities = marginalise_prob(prob3D,bins) 
     ticks = []
     for i in range(len(bins)):
-        rng = bins[i][-1]- bins[i][0]
         stp = bins[i][1] - bins[i][0]
         ticks_i=[]
         for j in range(len(bins[i])):
@@ -74,8 +73,6 @@ def plot_probability3D(prob3D,bins,labels=None,udm=None,figsize=(12,12),contour_
 
     return plt
 
-
-# In[ ]:
 
 
 def plot_probability3D_KDE(KDE,Positions,labels=None,udm=None,figsize=(12,12),contour_levels=30,colors=base_colors,alpha=1):
@@ -151,7 +148,6 @@ def plot_probability3D_KDE(KDE,Positions,labels=None,udm=None,figsize=(12,12),co
     return plt
 
 
-# In[ ]:
 
 
 def plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,""),verbose=True):
@@ -243,9 +239,6 @@ def get_median_with_error(prob,bins,ret_str=True):
         return str(np.round(median,rounding))+"$_{"+sig_down_rnd+"}^{"+sig_up_rnd+"}$"
     else:
         return median,sigmas
-
-
-# In[ ]:
 
 
 import scipy.stats as st
@@ -474,10 +467,6 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
 
     return plt
 
-
-# In[ ]:
-
-
 def overplot_probability3D(prob3D_list,bins_list,labels=None,labels_list=None,udm=None,figsize=(12,12),contour_levels=30,colors=[["r","darkorange"],["b","royalblue"],["g","lime"]]):
     fg,ax= plt.subplots(3,3,figsize=figsize) 
     alpha=0.3
@@ -546,8 +535,6 @@ def overplot_probability3D(prob3D_list,bins_list,labels=None,labels_list=None,ud
 
     return plt
 
-
-# In[ ]:
 
 
 def averaged_plot(ax,prm_steps,col="b", num_average=100,plot_scatter=False,param_name=None,renorm=False):
