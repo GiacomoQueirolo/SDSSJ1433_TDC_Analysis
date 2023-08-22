@@ -21,8 +21,18 @@ def get_cosmo_prm(setting,cosmo=None):
     cosmo_dds = cosmo.angular_diameter_distance_z1z2(z1=z_lens,z2=z_source).to("kpc") #kpc
     
     return cosmo,cosmo_dd,cosmo_ds,cosmo_dds
-"""
 
+def k_analytical_nosett(z_lens,z_source,cosmo=None):
+    if not cosmo:
+        cosmo  = default_cosmology.get()
+    Dd  = cosmo.angular_diameter_distance(z_lens)
+    Ds  = cosmo.angular_diameter_distance(z_source)
+    Dds = cosmo.angular_diameter_distance_z1z2(z1=z_lens,z2=z_source)
+    H0  = cosmo.H0
+    # see Notes 10th May '23
+    k_test = (1+z_lens)*Dd*Ds*H0/(const.c*Dds)
+    return k_test.to("").value
+"""
 def k_analytical(setting,cosmo=None):
     if not cosmo:
         cosmo  = default_cosmology.get()

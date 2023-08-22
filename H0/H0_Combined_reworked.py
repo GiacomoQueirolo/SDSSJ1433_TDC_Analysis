@@ -23,8 +23,12 @@ import numpy as np
 import pickle
 import copy,time
 import argparse as ap
-from scipy.stats import multivariate_normal
+import multiprocess
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 from astropy.cosmology import Planck18
+from astropy.cosmology import FlatLambdaCDM
+from scipy.stats import multivariate_normal
 
 from Utils.tools import *
 from Plots.plot_H0 import plot_H0
@@ -85,6 +89,45 @@ def get_PH0(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1),cosmo=Pla
         print("WARNING: sum of PH0 == 0")
     return np.array(PH0),H0
 
+def _pll_PH0i_OmegaM(args):
+    return _PH0i_OmegaM(*args)
+
+def _PH0i_OmegaM(Omi,Dt_kw,Df_dens,Df_dens_bins,setting,H0,cosmo0):
+    cosmoi  = FlatLambdaCDM(Om0=Omi,H0=cosmo0.H0,Tcmb0=cosmo0.Tcmb0)
+    PH0i,H0 = get_PH0(Dt_kw=Dt_kw,Df_dens=Df_dens,Df_dens_bins=Df_dens_bins,setting=setting,H0=H0,cosmo=cosmoi)
+    #PH0i,H0 = get_PH0_nosett(Dt_kw=Dt_kw,Df_dens=Df_dens,Df_dens_bins=Df_dens_bins,\
+    #                           z_lens=setting.z_lens,z_source=setting.z_source,H0=H0,cosmo=cosmoi)
+    return PH0i,H0
+    
+def get_PH0_marg_OmegaM(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1),cosmo0 = Planck18,Omega_M=np.arange(0,1.002,.002),parall=False):
+    if parall:
+        def _get_PH0_marg_OmegaM(Omi):
+            cosmoi  = FlatLambdaCDM(Om0=Omi,H0=cosmo0.H0,Tcmb0=cosmo0.Tcmb0)
+            PH0i,H0i = get_PH0(Dt_kw=Dt_kw,Df_dens=Df_dens,Df_dens_bins=Df_dens_bins,setting=setting,H0=H0,cosmo=cosmoi)
+            return PH0i,H0i
+        with multiprocess.Pool() as pool:
+            #PH0s,verify_H0s = [pool.starmap(_pll_PH0i_OmegaM,(Omi,Dt_kw,Df_dens,Df_dens_bins,setting,H0,cosmo0)) for Omi in Omega_M]
+            PH0s,verify_H0s = zip(*pool.map(_get_PH0_marg_OmegaM,Omega_M))
+    else:    
+        PH0s = []
+        verify_H0s = [H0]
+        for Omi in Omega_M:
+            PH0i,H0 = _PH0i_OmegaM(Omi,Dt_kw,Df_dens,Df_dens_bins,setting,H0,cosmo0)
+            PH0s.append(PH0i)
+            verify_H0s.append(H0)
+    for H0i in verify_H0s:
+        if np.array(H0i).tolist()!=np.array(verify_H0s[0]).tolist():
+            raise RuntimeError("Something went wrong with the sampling")
+    H0 = verify_H0s[0]
+    # PH0_marg = integ ( d Omega_M * P(H0,Omega_m)) = sum (d Omega_M[const] * P(H0,Omega_m)) = dOmega_M*sum(P(H0,Omega_m))
+    Marg_PH0 = np.sum(PH0s,axis=0)*0.001
+    norm_PH0 = Marg_PH0/np.sum(Marg_PH0)
+    return norm_PH0,H0,PH0s
+
+# default paths to directory for pycs, pycs config and lenstronomy
+kwpycs = {"pycs_path":"./time_J1433/","configpath":"/myconfig/"}
+kwlnst = {"lenstronomy_path":"./lens_J1433/"}
+
 
 if __name__ == '__main__':
         
@@ -98,6 +141,7 @@ if __name__ == '__main__':
     help_fermatpot = "Name of the posterior of the difference of Fermat Potential (name of combined setting file)"
     help_postdir   = "Name of the directory which will be containing the H0 combined posterior"
     help_overwrite = "Overwrite previous result. If False and I find the same result directory, I will create a new one with today's date."
+    help_margOm    = "Consider marginalised Posterior with respect to Omega_m"
     parser.add_argument("-dPH0","--dir_PostH0",dest='dir_ph0', type=str,default="PH0",
                         metavar='dir_ph0', action='store',
                         help=help_postdir)
@@ -113,8 +157,14 @@ if __name__ == '__main__':
                     help="Maximum value for H0 sampling")
     parser.add_argument("-h0step",type=float, dest="h0step", default=.1,
                     help="Step for H0 sampling")
+    parser.add_argument('-mOm','--marg_Om',help=help_margOm,
+                        dest="marg_Om", 
+                        default=False,action="store_true")
     parser.add_argument('-ovw','--overwrite',help=help_overwrite,
                         dest="overwrite", 
+                        default=False,action="store_true")
+    parser.add_argument('-pll','--parallel',help="Use parallel computing",
+                        dest="parellel", 
                         default=False,action="store_true")
     parser.add_argument('-v','--verbose',help="Verbosity",
                         dest="verbose", 
@@ -126,16 +176,16 @@ if __name__ == '__main__':
     h0max     = args.h0max
     h0min     = args.h0min
     h0step    = args.h0step
+    marg_Om   = args.marg_Om 
     verbose   = args.verbose
+    parallel  = args.parellel
     overwrite = args.overwrite
 
+    
     res_dir   = "./results/"
     mkdir(res_dir)
     PH0_resdir = create_PH0resdir(res_dir=res_dir,dir_ph0=dir_ph0,verbose=verbose,overwrite=overwrite)
 
-    # default paths to directory for pycs, pycs config and lenstronomy
-    kwpycs = {"pycs_path":"./my_pycs_scripts/","configpath":"/myconfig/"}
-    kwlnst = {"lenstronomy_path":"./lenstronomy/"}
     # loading data
     Dt_res = get_Dt_post(dt_name=dt_name,PH0_resdir=PH0_resdir,overwrite=overwrite,**kwpycs)
     combined_setting,PDF_Df,PDF_Df_bins = get_Df_post(df_name=df_name,PH0_resdir=PH0_resdir,overwrite=overwrite,**kwlnst)
@@ -161,4 +211,38 @@ if __name__ == '__main__':
     H0_res = H0_Res(h0_res,[err_min,err_max])
     print("analytical: ", H0_res)
     plot_H0(H0,PH0,figname=PH0_resdir+"/PH0_dtf.pdf",add_mode=False)
+    
+    if marg_Om:
+        f, ax = plt.subplots(1, 1, figsize=(18, 10))
+        ax = plot_H0(H0,PH0,add_mode=False,color="blue",return_plot=True,ax=ax)
+        handles = [Patch(facecolor="blue",label=r"$\Omega_{m,0}$"+f"={np.round(Planck18.Om0,3)}")]
+        # uniform Om = U[0,1]
+        marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo0=Planck18,parall=parallel)
+        with open(f"{PH0_resdir}/marg_ph0_results.data","wb") as f:
+            pickle.dump([marg_PH0,H0],f)    
+        ax = plot_H0(H0,marg_PH0,ax=ax,return_plot=True,color="cyan",add_mode=False)
+        handles.append(Patch(facecolor="cyan",label=r"$\Omega_{m,0}$= $\mathcal{U}$(0.,1.)"))
+        # the followings are inspired by TDCOSMO XIII, Section 6
+        # uniform Om = U[0.05,.5]
+        marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,\
+                            Omega_M=np.arange(0.05,0.502,0.001),setting=combined_setting,cosmo0=Planck18,parall=parallel)
+        with open(f"{PH0_resdir}/marg_ph0_results_OmU005_05.data","wb") as f:
+            pickle.dump([marg_PH0,H0],f)    
+        ax = plot_H0(H0,marg_PH0,ax=ax,return_plot=True,color="darkorange",add_mode=False)
+        handles.append(Patch(facecolor="darkorange",label=r"$\Omega_{m,0}$= $\mathcal{U}$(0.05,0.5)"))
+        # uniform Om = N[0.334, 0.018]
+        marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,\
+                            Omega_M=np.random.normal(0.334,0.018,1000),setting=combined_setting,cosmo0=Planck18,parall=parallel)
+        with open(f"{PH0_resdir}/marg_ph0_results_OmN0334_0018.data","wb") as f:
+            pickle.dump([marg_PH0,H0],f)    
+        ax = plot_H0(H0,marg_PH0,ax=ax,return_plot=True,color="yellow",add_mode=False)
+        handles.append(Patch(facecolor="yellow",label=r"$\Omega_{m,0}$= $\mathcal{U}$(0.05,0.5)"))
+        
+        ax.legend(handles=handles)
+        figname =f"{PH0_resdir}/PH0_dtf_cosmo_marg_extended.pdf"
+        plt.savefig(figname)
+        plt.close()
+        print(f"Saved {figname}")
+    
+        
     success(sys.argv[0])
