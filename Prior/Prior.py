@@ -11,15 +11,16 @@
 # import of standard python libraries
 import copy
 import json
-import emcee
+#import emcee
 import numpy as np 
 
 from Utils.tools import *
-from Utils.get_res import get_mcmc_smpl
-from Data.input_data import init_lens_model
+#from Utils.get_res import get_mcmc_smpl
+#from Data.input_data import init_lens_model
 from Utils.order_images import get_new_image_order
 from Data.Param import get_prm_list,get_Param,count_images
-from Posterior_analysis.mag_remastered import get_mag_mcmc
+from Posterior_analysis.mag_remastered import gen_mag_ratio_mcmc
+from Posterior_analysis.mag_remastered import Warning_BC as Warning_BC_magrt
 from Posterior_analysis.fermat_pot_analysis import gen_mcmc_Df,_get_fermat,get_Df_from_frm
  
 class Prior():
@@ -31,9 +32,12 @@ class Prior():
         self.Param   = get_Param(setting)
         self.Nsample = Nsample
         self.BC      = BC
+        self.order   = get_new_image_order(setting=self.setting,starting_from_A=True,check_prev=True)
+
     def is_within_Prior(self,point):
         lim_min,lim_max = self.Param.param_limits()
         return np.all([lim_min[i]<p<lim_max[i] for i,p in enumerate(point)])
+    
     def get_sample(self):
         if hasattr(self,"sample"):
             return self.sample
@@ -41,12 +45,18 @@ class Prior():
             # shape: N,dim
             self.sample = np.random.uniform(*self.Param.param_limits(),(self.Nsample,self.Param.num_param()[0]))
             return self.sample
+    # Df
     def get_Df_sample(self,BC=None):
         if BC is None:
             BC = self.BC
         if hasattr(self,"Df_sample"):
             if BC!=self.BC:
-                print("Warning: The Df you want (AB,AC,BC) is not the one we already have (AB,AC,AD). Recalculating...")
+                prev_abcd = "(AB,AC,AD)"
+                curr_abcd = "(AB,AC,BC)"
+                if self.BC:
+                    prev_abcd = curr_abcd
+                    curr_abcd = "(AB,AC,AD)"
+                print(f"Warning: The Df you want {curr_abcd} is not the one we already have {prev_abcd}. Recalculating...")
                 return self._get_Df_sample(BC)
             return self.Df_sample
         else:
@@ -54,14 +64,39 @@ class Prior():
     def _get_Df_sample(self,BC):
         sample  = self.get_sample()
         self.BC = BC
-        self.Df_sample = gen_mcmc_Df(sample,self.setting,param_class=self.Param,BC=BC)
+        self.Df_sample = gen_mcmc_Df(sample,self.setting,param_class=self.Param,BC=BC,order=self.order)
         return self.Df_sample
-            
+    
+    # mag_ratio
+    def get_mag_ratio_sample(self,BC=False):
+        # BC should be disregarded
+        if BC:
+            print(Warning_BC_magrt)
+        if hasattr(self,"mag_ratio"):
+            if BC!=self.BC:
+                prev_abcd = "(AB,AC,AD)"
+                curr_abcd = "(AB,AC,BC)"
+                if self.BC:
+                    prev_abcd = curr_abcd
+                    curr_abcd = "(AB,AC,AD)"
+                print(f"Warning: The mag ratio you want {curr_abcd} is not the one we already have {prev_abcd}. Recalculating...")
+                return self._get_mag_ratio_sample(BC)
+            return self.mag_ratio_sample
+        else:
+            return self._get_mag_ratio_sample(BC)
+    def _get_mag_ratio_sample(self,BC):
+        sample  = self.get_sample()
+        self.BC = BC    
+        self.mag_ratio_sample = gen_mag_ratio_mcmc(samples_mcmc=sample,setting=self.setting,
+                                param_mcmc=self.Param.list_param,order=self.order,BC=BC)
+        return self.mag_ratio_sample
+
     def get_kw(self):
         # to reproduce it
-        kw = {"setting",get_setting_name(self.setting),
-              "Nsample",self.Nsample}
+        kw = {"setting":get_setting_name(self.setting),
+              "Nsample":self.Nsample}
         return kw
+    
     def __eq__(self,other_prior):
         if self.lens_prior==other_prior.lens_prior:
             if self.Nsample==other_prior.Nsample:
@@ -70,7 +105,7 @@ class Prior():
         
 # This parts give the mcmc of the fermat potential given the samples_mcmc prior
 
-
+"""
 # Compute the likelihood of the parameters given the data.
 def lnLike(params,prior,Df_boundaries, lensModel=None):
     # Check if point inside Prior 
@@ -211,7 +246,7 @@ def get_mcmc_mag_prior(mcmc_prior,setting,mag_boundaries=None,threshold_mcmc_poi
         return mcmc_prior_mag_cut,success,Ntot
     
     return mcmc_prior_mag,success,Ntot # shape: mag_ai, mcmc_steps
-
+"""
 
 """# This parts give the mcmc of the mag ratio the samples_mcmc prior
 def get_mcmc_mag_prior(mcmc_prior,param_mcmc,setting,mag_boundaries=None,threshold_mcmc_points=100): 

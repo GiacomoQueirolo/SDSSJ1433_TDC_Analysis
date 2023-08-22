@@ -26,7 +26,7 @@ def _get_Param(setting):
                         kwargs_upper_lens_light=kwargs_upper_lens_light, kwargs_upper_ps=kwargs_upper_ps,
                         kwargs_upper_special=None, kwargs_upper_extinction=None,
                         kwargs_lens_init=None, **kwargs_constraints)
-
+    param_class.list_param = param_class.num_param()[1]
     return param_class
 
 def get_Param(setting):#,save=True):
@@ -44,7 +44,7 @@ def get_Param(setting):#,save=True):
 
 def get_prm_list(setting,backup_path="./backup_path"):
     param_class = get_Param(setting)
-    list_prm    = param_class.num_param()[1]
+    list_prm    = param_class.list_param
     # validity check:
     try:
         list_prm_mcmc=get_mcmc_prm(setting,backup_path=backup_path)

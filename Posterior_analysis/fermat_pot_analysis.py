@@ -17,6 +17,7 @@ from Utils.get_res import *
 from Data.Param import get_Param
 from Data.input_data import init_lens_model
 from Utils.order_images import get_new_image_order
+from Posterior_analysis.tools_Post import get_array_BC
 
 #labels_Fermat = ["$\phi_{Fermat}A$", "$\phi_{Fermat}B$","$\phi_{Fermat}C$" ,"$\phi_{Fermat}D$"]
 #labels_Df     = ["$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} AD$"]
@@ -32,7 +33,7 @@ def _get_fermat(mcmc_i,param_class,lensModel):
     fermat_potential_i = lensModel.fermat_potential(x_image,y_image,kwargs_result_i["kwargs_lens"])
     return fermat_potential_i.tolist()
 
-def gen_mcmc_fermat(mcmc,setting,lensModel=None,param_class=None,verbose=False):
+def gen_mcmc_fermat(mcmc,setting,lensModel=None,param_class=None,order=None,verbose=False):
     # mcmc_prior shape = param, n_points
     # setting   = setting module
     if lensModel is None:
@@ -44,20 +45,18 @@ def gen_mcmc_fermat(mcmc,setting,lensModel=None,param_class=None,verbose=False):
         return _get_fermat(mcmc_i,param_class,lensModel)
         
     with multiprocess.Pool() as pool:
-        mcmc_fermat = pool.map(getferm,mcmc) 
-        #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
-    
-    # I want to obtain the correct image order
+        mcmc_fermat = pool.map(getferm,mcmc) #[_get_fermat(mcmc_i,param_class,lensModel) for mcmc_i in mcmc]
+    #I want to obtain the correct image order
     ########################################
-    new_order  = get_new_image_order(setting,mcmc,verbose=verbose)
-
+    if order is None:
+        order  = get_new_image_order(setting,verbose=verbose,check_prev=True)
     tmp_mcmc    = np.array(mcmc_fermat).transpose()
-    mcmc_fermat = np.transpose([tmp_mcmc[i] for i in new_order])
+    mcmc_fermat = np.transpose([tmp_mcmc[i] for i in order])
     return mcmc_fermat.tolist() # shape: (steps, f(i) )
 
-def gen_mcmc_Df(mcmc,setting,mcmc_fermat=None,lensModel=None,param_class=None,BC=True,verbose=False):
+def gen_mcmc_Df(mcmc,setting,mcmc_fermat=None,lensModel=None,param_class=None,order=None,BC=True,verbose=False):
     if mcmc_fermat is None:
-        mcmc_fermat = gen_mcmc_fermat(mcmc,setting,lensModel=lensModel,param_class=param_class,verbose=verbose)
+        mcmc_fermat = gen_mcmc_fermat(mcmc,setting,lensModel=lensModel,param_class=param_class,order=order,verbose=verbose)
     mcmc_DfT    = get_Df_from_frm(np.transpose(mcmc_fermat),BC=BC)
     mcmc_Df     = mcmc_DfT.T.tolist()  #shape: steps, D_AB, D_AC, D_AD [or D_BC depending on BC], meaning Df_i - Df_A
     return mcmc_Df
@@ -190,11 +189,15 @@ def get_Df_from_frm(fermat_distr,BC=True):
         raise RuntimeError(f"The shape of the insterted fermat distribution must be (4,N_steps), not {np.shape(fermat_distr)}")
     fermat_distr = np.array(fermat_distr)
     Df    = fermat_distr[1:]-fermat_distr[0] # B,C,D-A: AB,AC,AD
-    if BC:        
-        Df_c    = np.array(copy.deepcopy(Df))
-        Df_BC   = Df_c[1] - Df_c[0]  # AC-AB = (C-A)-(B-A) = C - A - B + A = C - B = BC
-        Df_c[2] = Df_BC 
-        Df      = Df_c #AB,AC,BC
+    
+    if BC:
+        Df = get_array_BC(Df,relation="subtraction")
+        """
+        Df_cp    = np.array(copy.deepcopy(Df))
+        Df_BC    = Df_cp[1] - Df_cp[0]  # AC-AB = (C-A)-(B-A) = C - A - B + A = C - B = BC
+        Df_cp[2] = Df_BC 
+        Df       = Df_cp #AB,AC,BC
+        """
     return Df
 
 

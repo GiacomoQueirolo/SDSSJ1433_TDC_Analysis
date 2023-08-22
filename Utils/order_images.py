@@ -4,10 +4,10 @@
 
 # A general way to order the images in a standardised order
 
-
+import pickle
 import numpy as np
-from Utils.tools import get_setting_module,check_setting
-from Utils.get_res import get_mcmc_smpl
+from Utils.tools import get_savemcmcpath,check_setting
+from Utils.get_res import get_mcmc_smpl,load_whatever
 from Data.Param import get_prm_list
 
 #wo A order   x    B       ,     C      ,    D
@@ -42,11 +42,16 @@ def image_order(ra,dec,ret_order=True,verbose=True):
         return ra[image_order],dec[image_order]
 
 
-# In[ ]:
-
-
 @check_setting
-def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results",verbose=True):
+def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results",check_prev=False,verbose=True):
+    savepath = f"{get_savemcmcpath(setting,backup_path)}/new_order.pkl"
+    if check_prev:
+        try:
+            return load_whatever(savepath)
+        except FileNotFoundError:
+            if verbose:
+                print(f"File {savepath} not found, creating now...")
+            
     param_mcmc   = get_prm_list(setting,backup_path)
     if mcmc is None:
         mcmc = get_mcmc_smpl(setting,backup_path)
@@ -67,10 +72,9 @@ def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="back
     if starting_from_A:
         new_order+= 1 #bc it gives the order assuming A in 0
         new_order = [0,*new_order]
+    with open(savepath,"wb") as f:
+        pickle.dump(new_order,f)
     return new_order
-
-
-# In[45]:
 
 
 # test:

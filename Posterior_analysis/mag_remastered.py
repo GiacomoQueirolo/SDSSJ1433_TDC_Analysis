@@ -2,37 +2,40 @@
 # coding: utf-8
 # define a function mag that returns the magnification given the parameters
 
-
 import corner
 import argparse
 import sys,json
 import numpy as np
+import multiprocess
 import pathlib as pth
-from lenstronomy.LensModel.lens_model import LensModel
-
+from os.path import getmtime as last_mod
 
 from Utils.tools import *
 from Utils.get_res import *
 from Utils.order_images import get_new_image_order
+from Posterior_analysis.tools_Post import get_array_BC
+from Data.input_data import init_lens_model,init_kwrg_data,init_kwrg_numerics
 
-labels = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_D$/$\mu_A$"]
-fr_nms = ["$FR_B/FR_A$","$FR_C/FR_A$","$FR_D/FR_A$"]
-    
-def mag(setting,svpth=False):
-    setting = get_setting_module(setting).setting()
-    #lnst_path     = pth.Path(setting_path).parent
-    backup_path    = "./backup_results/"
+labels_mr_BC = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_C$/$\mu_B$"]
+labels_mr_AD = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_D$/$\mu_A$"]
+labels_fr_BC = ["$FR_B/FR_A$","$FR_C/FR_A$","$FR_C/FR_B$"]
+labels_fr_AD = ["$FR_B/FR_A$","$FR_C/FR_A$","$FR_D/FR_A$"]  
+Warning_BC   = "Warning: we are considering the image couple BC instead of AD, this is not the standard analysis, be careful."
+
+@check_setting
+def gen_mag_ratio(setting,svpth=False,backup_path="./backup_results/",BC=False):
     mcmc_dir_path  = get_savemcmcpath(setting,backup_path)
-    mcmc_file_path = mcmc_dir_path+"/mcmc_smpl_"+strip_setting_name(setting)+".json"
-    mcmc_mag_rt_file_path = pth.Path(str(mcmc_file_path).replace("smpl","mag_rt")) #mag ratio
+    mcmc_file_path = save_json_name(setting,mcmc_dir_path,"mcmc_mag_rt") #mag ratio
+    if BC:
+        print(Warning_BC)
+        mcmc_file_path = mcmc_file_path.replace("mcmc_mag_rt","mcmc_mag_rt_BC")
+    mcmc_mag_rt_file_path = pth.Path(mcmc_file_path) 
     
     #this needed for the ordering of the images (if needed)
     savefig_path = get_savefigpath(setting,backup_path)
     
-    
     #First check if there is the mcmc_mag.json file; if so, load and return it, if not compute it and save it
     try:
-        from os.path import getmtime as last_mod
         if last_mod(str(mcmc_mag_rt_file_path))<last_mod(str(mcmc_file_path)):
             print("Mag ratio file present, but outdated")
             raise
@@ -46,34 +49,18 @@ def mag(setting,svpth=False):
     except:
         print("Warning: No "+mcmc_mag_rt_file_path.name+" found; We create one now.")
         pass
-
-    
-    
-    ###########
-    CP = check_if_CP(setting)
-    ##########
-    
     ########
     # Load Samples_mcmc and Param_mcmc
     kw_res       = get_mcmc(setting,backup_path)
     samples_mcmc = kw_res["mcmc_smpl"]
     param_mcmc   = kw_res["mcmc_prm"]
     ########
-    
-    mag_mcmc = get_mag_mcmc(samples_mcmc,param_mcmc,setting,CP)
-    
-    
     #I want to obtain the correct image order
     #########################################
     # the first one is A no matter what
-    
-    #new_order = image_order(ra_im,dec_im)+1 #bc it gives the order assuming A in 0
-    #new_order = [0,*new_order] 
-    new_order = get_new_image_order(setting,samples_mcmc,starting_from_A=False)
-    temp_mcmc = np.array(mag_mcmc).transpose()
-    mcmc_i = [temp_mcmc[i] for i in new_order] 
-    mcmc_mag_ratio = (np.array(mcmc_i).transpose()).tolist() #shape = (n*steps, dimensions)
-    
+    new_order      = get_new_image_order(setting,samples_mcmc,starting_from_A=True,check_prev=True)
+    mcmc_mag_ratio = gen_mag_ratio_mcmc(setting,samples_mcmc,param_mcmc,BC=BC,order=new_order)
+
     with mcmc_mag_rt_file_path.open(mode="w") as f:
         json.dump(mcmc_mag_ratio,f)
     if not svpth:
@@ -82,42 +69,85 @@ def mag(setting,svpth=False):
         return mcmc_mag_ratio, savefig_path
  
 # MOD_LLFR
-def get_mag_ratio(lens_model_class,kwargs_lens,kwargs_ps):
-    cent_ra,cent_dec = kwargs_ps[0]["ra_image"] ,kwargs_ps[0]["dec_image"]
-    mag = lens_model_class.magnification(*cent_ra,*cent_dec,kwargs_lens)
-    # !! We assume correct order of the images !! #
+def gen_mag_ratio_i(lens_model_class,kwargs_lens,kwargs_ps,BC=False,order=None):
+    mag = np.array(gen_mag_i(lens_model_class,kwargs_lens,kwargs_ps,order=order))
     mag_ratio = mag[1:] / mag[0]
-    return mag_ratio
+    if BC:
+        mag_ratio = get_array_BC(mag_ratio,relation="ratio")
+    return np.array(mag_ratio).tolist()
 
-def get_mag_mcmc(samples_mcmc,param_mcmc,setting,CP=False):
-    if not CP:
-        lens_model_list = ['SIE','SIS','SHEAR_GAMMA_PSI']
+def gen_mag_i(lens_model_class,kwargs_lens,kwargs_ps,order=None):
+    cent_ra,cent_dec = kwargs_ps[0]["ra_image"] ,kwargs_ps[0]["dec_image"]
+    mag = lens_model_class.magnification(cent_ra,cent_dec,kwargs_lens)
+    if order is None:
+        order = np.arange(len(mag))
+    mag_ordered = [mag[i] for i in order] 
+    return np.array(mag_ordered).tolist() 
+
+
+@check_setting
+def gen_mag_ratio_mcmc(setting,samples_mcmc=None,param_mcmc=None,order=None,BC=False,parall=True):
+    if samples_mcmc is None:
+        samples_mcmc = get_mcmc_smpl(setting_name=get_setting_name(setting))
+    if param_mcmc is None:
+        param_mcmc = get_mcmc_prm(setting_name=get_setting_name(setting))
+    if order is None:
+        order = get_new_image_order(setting=setting,mcmc=samples_mcmc,starting_from_A=True,check_prev=True)
+    lens_model_class = init_lens_model(setting) 
+    if parall:
+        def _gen_mag_ratio_mcmc(i):
+            kwargs_result_i  = setting.produce_kwargs_result(samples_mcmc,param_mcmc,i)
+            kwargs_lens      = kwargs_result_i["kwargs_lens"]        
+            kwargs_ps        = kwargs_result_i["kwargs_ps"]
+            mag_ratio        = gen_mag_ratio_i(lens_model_class,kwargs_lens,kwargs_ps,BC=BC,order=order)
+            return mag_ratio
+        with multiprocess.Pool() as pool:
+            mag_mcmc  = pool.map(_gen_mag_ratio_mcmc,np.arange(0,len(samples_mcmc)))
     else:
-        lens_model_list = ['PEMD','SIS','SHEAR_GAMMA_PSI']
-    lens_model_class = LensModel(lens_model_list=lens_model_list)
-    mag_mcmc = []
-    for i in range(len(samples_mcmc)):
-        kwargs_result_i  = setting.produce_kwargs_result(samples_mcmc,param_mcmc,i)
-        kwargs_lens      = kwargs_result_i["kwargs_lens"]        
-        kwargs_ps        = kwargs_result_i["kwargs_ps"]
-        mag_ratio        = get_mag_ratio(lens_model_class,kwargs_lens,kwargs_ps)
-        mag_mcmc.append(mag_ratio)
+        mag_mcmc = []    
+        for i in range(len(samples_mcmc)):
+            kwargs_result_i  = setting.produce_kwargs_result(samples_mcmc,param_mcmc,i)
+            kwargs_lens      = kwargs_result_i["kwargs_lens"]        
+            kwargs_ps        = kwargs_result_i["kwargs_ps"]
+            mag_ratio        = gen_mag_ratio_i(lens_model_class,kwargs_lens,kwargs_ps,order=order)
+            mag_mcmc.append(mag_ratio)
     return mag_mcmc
 
+@check_setting
+def gen_mag_mcmc(setting,samples_mcmc=None,param_mcmc=None,order=None,parall=True):
+    if samples_mcmc is None:
+        samples_mcmc = get_mcmc_smpl(setting_name=get_setting_name(setting))
+    if param_mcmc is None:
+        param_mcmc = get_mcmc_prm(setting_name=get_setting_name(setting))
+    if order is None:
+        order = get_new_image_order(setting=setting,mcmc=samples_mcmc,starting_from_A=True,check_prev=True)
+    lens_model_class = init_lens_model(setting) 
+    if parall:
+        def _gen_mag_mcmc(i):
+            kwargs_result_i  = setting.produce_kwargs_result(samples_mcmc,param_mcmc,i)
+            kwargs_lens      = kwargs_result_i["kwargs_lens"]        
+            kwargs_ps        = kwargs_result_i["kwargs_ps"]
+            mag_ratio        = gen_mag_i(lens_model_class,kwargs_lens,kwargs_ps,order=order)
+            return mag_ratio
+        with multiprocess.Pool() as pool:
+            mag_mcmc  = pool.map(_gen_mag_mcmc,np.arange(0,len(samples_mcmc)))
+    else:
+        mag_mcmc = []    
+        for i in range(len(samples_mcmc)):
+            kwargs_result_i  = setting.produce_kwargs_result(samples_mcmc,param_mcmc,i)
+            kwargs_lens      = kwargs_result_i["kwargs_lens"]        
+            kwargs_ps        = kwargs_result_i["kwargs_ps"]
+            mag_ratio        = gen_mag_i(lens_model_class,kwargs_lens,kwargs_ps,order=order)
+            mag_mcmc.append(mag_ratio)
+    return mag_mcmc
 
-# In[ ]:
-
-
-def flux_ratio(setting,kwargs_result,kwargs_numerics=None,kwargs_data=None,
-               lens_model_list=None,light_model_list=None,point_source_list=['LENSED_POSITION'],outnames=False):
-    setting=get_setting_module(setting,1)
+@check_setting
+def flux_ratio(setting,kwargs_result,BC=False,outnames=False):
     # check in old/mag_remasterd_notes.py an old, correct while 
     # less precise and more complicated way to do it
     kwargs_ps = kwargs_result["kwargs_ps"][0]
     amp_i     = kwargs_ps["point_amp"]
-    # Let's do it wrt image A
-    #amp_max = np.max(amp_i)
-    #FR = np.array(amp_i)/amp_max
+    # Let's do it wrt image A 
     ####################
     # reorder them so that it is in alphabetical order
     new_order    = get_new_image_order(setting,starting_from_A=True)
@@ -125,13 +155,17 @@ def flux_ratio(setting,kwargs_result,kwargs_numerics=None,kwargs_data=None,
     ####################
     amp_A = amp_i[0]
     FR    = np.array(amp_i[1:])/amp_A
+    if BC:
+        print(Warning_BC)
+        FR = get_array_BC(FR,relation="ratio")
+
     if outnames:
-        return FR,fr_nms
+        if BC:
+            return FR,labels_fr_BC
+        else:
+            return FR,labels_fr_AD
     else:
         return FR
-
-
-# In[ ]:
 
 
 if __name__=="__main__":
@@ -143,47 +177,39 @@ if __name__=="__main__":
                     help="DO NOT plot the corner plot")
     parser.add_argument("-NFR","--NoFluxRatio", action="store_false", dest="FR", default=True,
                     help="Do NOT compute the expected Flux Ratio (wrt image A)")
+    parser.add_argument("-BC", dest="BC", default=False,action="store_true",
+                        help="Consider BC couple instead of AD (warning: not the standard)")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
     args = parser.parse_args()
     
-    settings=args.SETTING_FILES
+    settings    = get_setting_module(args.SETTING_FILES,1)
     corner_plot = args.corner_plot
-    FR = args.FR
-    if FR:
-        from Data.input_data import *
-        
-    for sets in settings:
+    FR          = args.FR
+    BC          = args.BC 
+
+    labels_mr = labels_mr_AD
+    labels_fr = labels_fr_AD
+    if BC:
+        print(Warning_BC)
+        labels_mr = labels_mr_BC
+        labels_fr = labels_fr_BC
+
+    for setting in settings:
+        sets = get_setting_name(setting)
         if len(settings)>1:
             print("Analysing: ",sets)
-        setting = get_setting_module(sets).setting()
-        mcmc_mag,savefig_path = mag(sets,svpth=True)
+        mcmc_mag,savefig_path = gen_mag_ratio(setting,svpth=True,BC=BC)
         if corner_plot:
-            plot = corner.corner(np.array(mcmc_mag), labels=labels, show_titles=True)
-            plot.savefig(str(savefig_path)+"/Mag.png")
+            plot = corner.corner(np.array(mcmc_mag), labels=labels_mr, show_titles=True)
+            plot.savefig(str(savefig_path)+"/Mag_Rt.png")
         if FR:
             kwargs_data     = init_kwrg_data(setting,saveplots=False)
             kwargs_numerics = init_kwrg_numerics(setting)
-            kwargs_result   = get_kwres(sets)["kwargs_results"]
+            kwargs_result   = get_kwres(sets)["kwargs_results"]     
+
+            fr_i  = flux_ratio(setting,kwargs_result,BC=BC)
             
-            #lens_model_list
-            lens_model_list = ['SIE']
-            if check_if_CP(setting):
-                lens_model_list = ['PEMD']
-            lens_model_list = [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
-            
-            # light_model_list
-            if setting.sub==False:
-                light_model_list = ["SERSIC_ELLIPSE", "SERSIC","UNIFORM"]
-            else:
-                light_model_list = ["SERSIC","UNIFORM"]
-            if hasattr(setting,"no_pert"):
-                light_model_list=["UNIFORM"]
-        
-        
-            fr_i  = flux_ratio(setting,kwargs_result,kwargs_numerics,kwargs_data,\
-                             lens_model_list,light_model_list)
-            
-            kw_fr  = { nm:fr for nm,fr  in zip(fr_nms,fr_i)}
+            kw_fr  = { nm:fr for nm,fr  in zip(labels_fr,fr_i)}
             with open(str(savefig_path)+"/FR.json","w") as f:
                 json.dump(kw_fr,f)
     success(sys.argv[0])
