@@ -13,9 +13,8 @@ from corner import quantile
 import matplotlib.pyplot as plt
 from pycs3.tdcomb.comb import Group
 
+from Utils.tools import get_analdir
 from Utils.math_tools import sqrt_sum, sqrt_sum_list
-# In[3]:
-
 
 class Error_main():
     
@@ -53,9 +52,9 @@ class Error_main():
         self.accuracy = np.mean(tot) #prob not needed anymore
         
 class Error():
-    
-    def __init__(self,error_path=None):
+    def __init__(self,error_path=None,wD=False):
         self.error_path = error_path
+        self.wD         = wD
         if error_path is not None:
             if os.path.exists(error_path):
                 self.create_error()
@@ -77,7 +76,10 @@ class Error():
             # do not consider tA,tB and tC, but DtAB,DtAC AND DtBC 
             # tsarr.shape = 20,3
             tsarrT = tsarr.T # shape 3,20
-            new_tsarrT = np.array([tsarrT[1]-tsarrT[0],tsarrT[2]-tsarrT[0],tsarrT[2]-tsarrT[1]]) # AB,AC,BC: shape 3,20
+            if not self.wD:
+                new_tsarrT = np.array([tsarrT[1]-tsarrT[0],tsarrT[2]-tsarrT[0],tsarrT[2]-tsarrT[1]]) # AB,AC,BC: shape 3,20
+            else:
+                new_tsarrT = np.array([tsarrT[1]-tsarrT[0],tsarrT[2]-tsarrT[0],tsarrT[3]-tsarrT[0]]) # AB,AC,AD: shape 3,20
             new_tsarr = np.transpose(new_tsarrT) # shape 20,3 
             if i==0:
                 dts = new_tsarr
@@ -88,13 +90,19 @@ class Error():
     def get_meas_dt(self):
         if hasattr(self,"measdt") is False:
             self.measdt = self.get_dt("meas")
-        self.labels_measdt = ["AB","AC","BC"]
+        if self.wD:
+            self.labels_measdt = ["AB","AC","AD"]
+        else:
+            self.labels_measdt = ["AB","AC","BC"]
         return self.measdt
     
     def get_sim_dt(self):
         if hasattr(self,"simdt") is False:
             self.simdt = self.get_dt("sim")
-        self.labels_simdt = ["AB","AC","BC"]
+        if self.wD:
+            self.labels_simdt = ["AB","AC","AD"]
+        else:
+            self.labels_simdt = ["AB","AC","BC"]
         return self.simdt 
 
     def get_distr(self):
@@ -109,21 +117,40 @@ class Error():
         if self.labels_measdt==self.labels_simdt:
             self.labels = self.labels_simdt
         else:
+            print(self.labels_measdt,self.labels_simdt)
             raise RuntimeError("Check the labels/dimensions")
         return self.distr
             
     def create_error(self):    
         err_all = self.get_distr()
 
-        errors_up,errors_down,rnd,sys =[],[],[],[]
-        tot=[]
+        errors_up,errors_down,rnd,sys,tot =[],[],[],[],[]
+        # TEST : MOD_INTRSCATTER 
+        data_path = get_analdir(self.error_path)
+        if "/"==data_path[-1]:
+            data_path=data_path[:-1]
+        data_path = "/".join(data_path.split("/")[:-1])
+        if str(data_path)=="":
+            intrsct = [0,0,0]
+        else:
+        
+            try:
+                Gr = getresults(data_path=data_path)
+            except:
+                print(self.error_path)
+                exit()
+            intrsct = np.std(Gr.data,axis=1)
+        print("intrinsic error",intrsct)        
+         
         for i in range(len(err_all)):
             min_e,med_e,max_e = quantile(err_all[i],q=[0.16,0.5,0.84])
             err_up,err_down = max_e-med_e,med_e-min_e
             errors_up.append(err_up)
             errors_down.append(err_down)
             rnd.append((err_up+err_down)/2.)
-            sys.append(med_e)
+            sys.append(np.sign(med_e)*sqrt_sum(med_e,intrsct[i]))
+            #print("added to sys:",med_e,"->",sys[i])
+            #sys.append(med_e)
         #tot =  sqrt(rnd² +sys²)
         ############################################################
         #tot = [np.sqrt(rnd[i]**2 + sys[i]**2) for i in range(len(err_all))]
@@ -137,13 +164,11 @@ class Error():
         self.accuracy = np.mean(tot) #prob not needed anymore
 
 
-# In[ ]:
-
-
 class Error_mag():
     
-    def __init__(self,error_path=None):
+    def __init__(self,error_path=None,wD=False):
         self.error_path = error_path
+        self.wD         = wD
         if error_path is not None:
             if os.path.exists(error_path):
                 self.create_error()
@@ -159,22 +184,35 @@ class Error_mag():
             rr = pkl.load(open(self.error_path+"/"+file,"rb"))
             if meas_or_sim=="meas":
                 magsarr = rr.magsarray
-                self.labels_measdmag = ["AB","AC","BC"]
+                if self.wD:
+                    self.labels_measdmag  = ["AB","AC","AD"]
+                else:
+                    self.labels_measdmag = ["AB","AC","BC"]
             elif meas_or_sim=="sim":
                 magsarr = rr.truemagsarray
-                self.labels_simdmag = ["AB","AC","BC"]
+                if self.wD:
+                    self.labels_simdmag  = ["AB","AC","AD"]
+                else:
+                    self.labels_simdmag = ["AB","AC","BC"]
             elif meas_or_sim=="error":
                 # error defined as dmag- simulated dmag
                 magsarr = rr.magsarray - rr.truemagsarray
-                self.labels = ["AB","AC","BC"]
-                self.labels_simdmag = ["AB","AC","BC"]
-                self.labels_measdmag = ["AB","AC","BC"]
+                if self.wD :
+                    self.labels          = ["AB","AC","AD"]
+                    self.labels_simdmag  = ["AB","AC","AD"]
+                    self.labels_measdmag = ["AB","AC","AD"]
+                else:
+                    self.labels          = ["AB","AC","BC"]
+                    self.labels_simdmag  = ["AB","AC","BC"]
+                    self.labels_measdmag = ["AB","AC","BC"]
             # MOD_DELTA
             # do not consider mA,mB and mC, but DmAB,DmAC AND DmBC 
             # magsarr.shape = 20,3
             magsarrT = magsarr.T # shape 3,20
-            
-            Dmagsarr = np.array([magsarrT[1]-magsarrT[0],magsarrT[2]-magsarrT[0],magsarrT[2]-magsarrT[1]]) # AB,AC,BC: shape 3,20
+            if not self.wD :
+                Dmagsarr = np.array([magsarrT[1]-magsarrT[0],magsarrT[2]-magsarrT[0],magsarrT[2]-magsarrT[1]]) # AB,AC,BC: shape 3,20
+            else:
+                Dmagsarr = np.array([magsarrT[1]-magsarrT[0],magsarrT[2]-magsarrT[0],magsarrT[3]-magsarrT[0]]) # AB,AC,AD
             #new_magsarr = np.transpose(new_magsarrT) # shape 20,3 
             if i==0:
                 dms = Dmagsarr
@@ -201,6 +239,7 @@ class Error_mag():
         if self.labels_measdmag==self.labels_simdmag:
             self.labels = self.labels_simdmag
         else:
+            print("mag",self.labels_measdmag,self.labels_simdmag)
             raise RuntimeError("Check the labels/dimensions")
         return self.distr
             
@@ -208,6 +247,20 @@ class Error_mag():
         err_all = self.get_distr()
 
         errors_up,errors_down,rnd,sys =[],[],[],[]
+        # TEST : MOD_INTRSCATTER 
+        data_path = get_analdir(self.error_path)
+        if "/"==data_path[-1]:
+            data_path=data_path[:-1]
+        data_path = "/".join(data_path.split("/")[:-1])
+        if str(data_path)=="":
+            # measn that we are doing combined error,
+            # intrinsic scatter already considered
+            intrsct = [0,0,0]
+        else:
+            Gr = getresults_mag(data_path=data_path)
+            intrsct = np.std(Gr.data,axis=1)
+        print("intrinsic error mag",intrsct)        
+    
         tot=[]
         for i in range(len(err_all)):
             min_e,med_e,max_e = quantile(err_all[i],q=[0.16,0.5,0.84])
@@ -215,10 +268,13 @@ class Error_mag():
             errors_up.append(err_up)
             errors_down.append(err_down)
             rnd.append((err_up+err_down)/2.)
-            sys.append(med_e)
+            sys.append(np.sign(med_e)*sqrt_sum(med_e,intrsct[i]))
+            #sys.append(med_e)
+            #print("added to sys:",med_e,"->",sys[i])
         #tot =  sqrt(rnd² +sys²)
         ############################################################
         #tot = [np.sqrt(rnd[i]**2 + sys[i]**2) for i in range(len(err_all))]
+        
         tot = sqrt_sum(rnd,sys)
         ############################################################
         self.err_up   = errors_up
@@ -229,8 +285,6 @@ class Error_mag():
         self.accuracy = np.mean(tot) #prob not needed anymore
 
 
-# In[2]:
-
 
 class Group():
     def __init__(self,error=None,data_distr=None,labels=["AB","AC","BC"],name="", color="royalblue"):
@@ -239,7 +293,7 @@ class Group():
         self.labels = labels
         self.name   = name
         self.color  = color
-        
+        self.wD     = False if "BC" in self.labels else True
         if self.data is not None:
             self.results = np.mean(data_distr,axis=1)  # as usual median or mean? 
         else:
@@ -249,10 +303,10 @@ class Group():
             if isinstance(error,(Error,Error_mag)):
                 self.error = error
             elif type(error)==str : 
-                error       = Error(error)
+                error       = Error(error,wD=self.wD)
                 self.error  = error
             else:
-                error_tmp       = Error("None")
+                error_tmp       = Error("None",wD=self.wD)
                 error_tmp.distr = error 
                 self.error      = error_tmp
             self.error.create_error()
@@ -268,7 +322,7 @@ class Group():
             self.accuracy   = self.error.accuracy
 
 
-# In[ ]:
+
 
 
 ## Useful functions 
@@ -300,12 +354,16 @@ def getresults_mag(data_path,name="",error=None,color="royalblue",labels=["AB","
         return None
     with open(str(data_path)+"/dmags.data","rb") as f:
         dmags = pkl.load(f)
-    dmags = np.transpose(dmags) #shape now: lcs, mci
-    # create a Group out of them
-    DmagBC = dmags[2] - dmags[1] # BC
-    Dmags  = dmags[1:]- dmags[0] #rel to A : AB,AC
-    Dmags  = np.append(Dmags,[DmagBC],0).tolist()
-    # now AB,AC,BC -> mostly to be consistent w. dt
+    if labels[-1]=="BC":
+        # to implement better:
+        dmags = np.transpose(dmags) #shape now: lcs, mci
+        # create a Group out of them
+        DmagBC = dmags[2] - dmags[1] # BC
+        Dmags  = dmags[1:]- dmags[0] #rel to A : AB,AC
+        Dmags  = np.append(Dmags,[DmagBC],0).tolist()
+        # now AB,AC,BC -> mostly to be consistent w. dt
+    else:
+        Dmags = np.transpose(dmags).tolist()
     group =  Group(data_distr=Dmags,error = error,name=name,labels=labels, color=color)
     return group
 
@@ -360,10 +418,14 @@ def combine_group_list_methodB(list_G):
 
 
 def get_ref_index(series):
-    err = [G.tot_error for G in series]
+    #err = [G.tot_error for G in series]
+    # 16th dec 22 : this way this is selecting only the result with the single lower error
+    # while we might want the one with - in average - the lower error
+    # shouldn't change too much
+    err       = [np.mean(G.tot_error) for G in series]
     ref_index = int(np.where(err==np.min(err))[0])
     return ref_index
-
+    
 def tau(dt_i,dt_j,sig_i,sig_j): 
     #simplified version bc considering method A
     tau_val = abs(dt_i-dt_j)/sqrt_sum(sig_i,sig_j) #~ Z val
@@ -417,16 +479,12 @@ def combine_series(series,sigmathresh=0.5,return_combined_list=False):
 #######################################################################
 
 
-# In[ ]:
-
-
 ### Try: method B (see Nov 2nd-3rd)
 def corr_distr(err_distr,dt_meas):
     if len(np.transpose(err_distr))==len(dt_meas):
         err_distr=np.transpose(err_distr)
     elif not len(err_distr)==len(dt_meas):
-        raise RuntimeError("err_distr and dt_meas must have at least 1 dim in common, \
-                           instead ",np.shape(err_distr)," and ",np.shape(dt_meas))
+        raise RuntimeError("err_distr and dt_meas must have at least 1 dim in common, instead ",np.shape(err_distr)," and ",np.shape(dt_meas))
     corr_dist,sys = [],[]
     for i in range(len(dt_meas)):
         sys.append(np.mean(err_distr[i]))
@@ -440,7 +498,7 @@ def combine_groups_methodB(G1,G2):
     
     #Following method B in Notes - 27th October 
     
-    #first we "correct" the error distr
+    #first we "correct" the error distr 
     G1.corr_distr,G1.sys = corr_distr(G1.err_distr,G1.results)
     G2.corr_distr,G2.sys = corr_distr(G2.err_distr,G2.results)
     
@@ -503,6 +561,7 @@ def combine_series_methodB(series,sigmathresh=0.5,return_combined_list=False):
     ref_index = get_ref_index(series) # this, provided that each Group has its own tot_error,doens't change
     ref_G     = copy.copy(series[ref_index])
     ignore_G  = [ref_G.name]
+    combined_groups=[ref_G]
     print("Initial best result: ",ref_G.name)
     # check tension
     tension_series =[] 
@@ -511,12 +570,11 @@ def combine_series_methodB(series,sigmathresh=0.5,return_combined_list=False):
             tension_series.append(G)
     
     print("Combining results series...")
-    combined_indexes=[]
     while len(tension_series)>0:
         tns_index = get_ref_index(tension_series)
         tns_ref   = tension_series[tns_index]
         ignore_G.append(tns_ref.name)
-        combined_indexes.append(tns_index)
+        combined_groups.append(tns_ref)
         ref_G = combine_groups_methodB(ref_G,tns_ref)
         tension_series =[]
         for G in series:
@@ -526,7 +584,6 @@ def combine_series_methodB(series,sigmathresh=0.5,return_combined_list=False):
     ref_G.name+=r"\nCombined result with $\tau_{thresh}=$"+str(sigmathresh)
     ref_G.combined_names = ignore_G
     if return_combined_list:
-        return ref_G,ignore_G,combined_indexes
+        return ref_G,ignore_G,combined_groups
     else:
         return ref_G
-
