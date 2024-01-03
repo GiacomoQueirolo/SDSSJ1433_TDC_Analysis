@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-import numpy as np
+import os
 import argparse
-from Custom_Model.my_lenstronomy.my_kwargs2args import my_kwarg2args
+import numpy as np
+import matplotlib.pyplot as plt
 
 from Utils.tools import *
 from Utils.get_res import * 
-
+from Custom_Model.my_lenstronomy.my_kwargs2args import my_kwarg2args
 from Posterior_analysis.fermat_pot_analysis import gen_mcmc_Df,labels_Df
 
 
@@ -23,7 +23,7 @@ def plot_Dfs(Dfs,names,figsize=(12,12),nticks=6,colors=["r","b","g","y","k"]):
         stp = (rgt - lft)/nticks
         ticks_i = []
         for k in range(nticks):
-            ticks_i.append(np.round(lft + k*stp,2))
+            ticks_i.append(lft + k*stp)
         ticks.append(ticks_i)
         
     fg,ax= plt.subplots(2,2,figsize=figsize) 
@@ -45,17 +45,17 @@ def plot_Dfs(Dfs,names,figsize=(12,12),nticks=6,colors=["r","b","g","y","k"]):
                     if i!=j:
                         ax_ij.set_xlabel(labels_Df[x])
                         ax_ij.set_ylabel(labels_Df[y])
-                        ax_ij.set_xticks(ticks[x])
+                        #ax_ij.set_xticks(ticks[x])
                     elif i==0:
                         ax_ij.set_ylabel(labels_Df[y])
-                        ax_ij.set_yticks(ticks[y])
+                        #ax_ij.set_yticks(ticks[y])
                     elif j==1:                    
-                        ax_ij.set_xticks(ticks[x])
+                        #ax_ij.set_xticks(ticks[x])
                         ax_ij.set_xlabel(labels_Df[x])
 
                     ax_ij.axvline(Df[x],c=col)
                     ax_ij.axhline(Df[y],c=col) #label=names[k]
-
+                    ax_ij.scatter(Df[x],Df[y],c=col,marker="s")
     
     axdel=ax[0][1]
     for i,set_name in enumerate(names):
@@ -86,10 +86,14 @@ if __name__=="__main__":
     st_pos = [find_setting_path(st) for st in settings]
     
     
+    if dir_name==".":
+        dir_name = "_".join(names)
+        
     savefig_path = create_dir_name(settings,save_dir="PDF_superposition_II",dir_name=dir_name,backup_path=backup_path)
     
     Dfs = []            
     for i,sets in enumerate(settings):
+        os.system("cp "+st_pos[i]+"/"+sets+" "+savefig_path+"/.")
         if len(settings)>1:
             print("Considering: ",sets)
         # results from best logL
@@ -103,6 +107,5 @@ if __name__=="__main__":
     plt.title(r"Compare $\Delta \phi$ from different filters")
     plt.savefig(savefig_path+"/PSO_results_compare.png") 
     print("Plot saved as "+savefig_path+"/PSO_results_compare.png")
-
 
     success(sys.argv[0])
