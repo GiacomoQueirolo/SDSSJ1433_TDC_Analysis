@@ -4,7 +4,8 @@ from lenstronomy.Sampling.Likelihoods.time_delay_likelihood import TimeDelayLike
 from lenstronomy.Sampling.Likelihoods.image_likelihood import ImageLikelihood
 from lenstronomy.Sampling.Likelihoods.position_likelihood import PositionLikelihood
 from lenstronomy.Sampling.Likelihoods.flux_ratio_likelihood import FluxRatioLikelihood
-from lenstronomy.Sampling.Likelihoods.prior_likelihood import PriorLikelihood
+#from lenstronomy.Sampling.Likelihoods.prior_likelihood import PriorLikelihood
+from Prior.prior_likelihood_KDE import PriorLikelihood_KDE
 import lenstronomy.Util.class_creator as class_creator
 import numpy as np
 
@@ -33,7 +34,7 @@ class LikelihoodModule(object):
                  prior_source_kde=[], prior_lens_light_kde=[], prior_ps_kde=[], prior_special_kde=[],
                  prior_extinction_kde=[], prior_lens_lognormal=[], prior_source_lognormal=[],
                  prior_extinction_lognormal=[], prior_lens_light_lognormal=[], prior_ps_lognormal=[],
-                 prior_special_lognormal=[], custom_logL_addition=None, kwargs_pixelbased=None):
+                 prior_special_lognormal=[],precomputed_prior_kde=None, custom_logL_addition=None, kwargs_pixelbased=None):
         """
         initializing class
 
@@ -76,13 +77,14 @@ class LikelihoodModule(object):
 
         self.param = param_class
         self._lower_limit, self._upper_limit = self.param.param_limits()
-        self._prior_likelihood = PriorLikelihood(prior_lens, prior_source, prior_lens_light, prior_ps, prior_special,
+        self._prior_likelihood = PriorLikelihood_KDE(prior_lens, prior_source, prior_lens_light, prior_ps, prior_special,
                                                  prior_extinction,
                                                  prior_lens_kde, prior_source_kde, prior_lens_light_kde, prior_ps_kde,
                                                  prior_special_kde, prior_extinction_kde,
                                                  prior_lens_lognormal, prior_source_lognormal,
                                                  prior_lens_light_lognormal, prior_ps_lognormal,
                                                  prior_special_lognormal, prior_extinction_lognormal,
+                                                 precomputed_prior_kde,
                                                  )
         self._time_delay_likelihood = time_delay_likelihood
         self._image_likelihood = image_likelihood
@@ -150,7 +152,7 @@ class LikelihoodModule(object):
         if self._check_bounds is True:
             penalty, bound_hit = self.check_bounds(args, self._lower_limit, self._upper_limit, verbose=verbose)
             if bound_hit is True:
-                return -np.inf
+                return -10**15
         return self.log_likelihood(kwargs_return, verbose=verbose)
 
     def log_likelihood(self, kwargs_return, verbose=False):

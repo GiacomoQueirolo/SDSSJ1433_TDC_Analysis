@@ -60,7 +60,7 @@ class MultiPool(Pool):
         Extra arguments passed to the :class:`multiprocessing.pool.Pool` superclass.
 
     """
-    wait_timeout = 3600
+    wait_timeout = 1 #3600
 
     def __init__(self, processes=None, initializer=None, initargs=(), **kwargs):
         new_initializer = functools.partial(_initializer_wrapper, initializer)
@@ -118,7 +118,7 @@ class MultiPool(Pool):
         # a Condition.wait() without a timeout swallows KeyboardInterrupts.
         r = self.map_async(func, iterable, chunksize=chunksize,
                            callback=callbackwrapper)
-
+                           
         while True:
             try:
                 return r.get(self.wait_timeout)

@@ -368,8 +368,10 @@ class MyParticleSwarmOptimizer(object):
     def my_save_psos(self,pos,lkl):
         #save the array of distances and likelihood of every particle
         pos    = np.array(pos)
-        dist   = self.get_distance(pos)
-        data_sampling = [lkl,pos.tolist(),dist.tolist()]
+        dist   = np.array(self.get_distance(pos)).tolist()
+        lkl    = np.array(lkl).tolist()
+        pos    = pos.tolist()
+        data_sampling = [lkl,pos,dist]
         with open(self.savingname,"w") as fl:
             json.dump(data_sampling,fl)
         return 0

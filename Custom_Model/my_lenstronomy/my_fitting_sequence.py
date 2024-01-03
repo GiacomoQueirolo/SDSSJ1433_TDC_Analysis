@@ -2,13 +2,14 @@ from lenstronomy.Workflow.psf_fitting import PsfFitting
 from lenstronomy.Workflow.alignment_matching import AlignmentFitting
 from lenstronomy.ImSim.MultiBand.single_band_multi_model import SingleBandMultiModel
 from lenstronomy.Workflow.multi_band_manager import MultiBandUpdateManager
-from lenstronomy.Sampling.likelihood import LikelihoodModule
+#from lenstronomy.Sampling.likelihood import LikelihoodModule
 #from lenstronomy.Sampling.sampler import Sampler
 from lenstronomy.Sampling.Samplers.multinest_sampler import MultiNestSampler
 from lenstronomy.Sampling.Samplers.polychord_sampler import DyPolyChordSampler
 from lenstronomy.Sampling.Samplers.dynesty_sampler import DynestySampler
 
 from Custom_Model.my_lenstronomy.My_Sampling.my_sampler import MySampler
+from Custom_Model.my_lenstronomy.My_Sampling.likelihood import LikelihoodModule
 
 import numpy as np
 import lenstronomy.Util.analysis_util as analysis_util

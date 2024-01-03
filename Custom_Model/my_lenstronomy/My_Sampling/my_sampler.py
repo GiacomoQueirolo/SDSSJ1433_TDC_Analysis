@@ -39,8 +39,6 @@ class MySampler(object):
         print('Performing the optimization using algorithm:', method)
         time_start = time.time()
 
-        #negativelogL = lambda x: -1 * self.chain.logL(x)
-
         result = minimize(self.chain.negativelogL, x0=init_pos, method=method,
                           options={'maxiter': n_iterations, 'disp': True})
         logL = self.chain.logL(result['x'])
@@ -102,7 +100,7 @@ class MySampler(object):
 
         time_start = time.time()
 
-        result, [chi2_list, pos_list, vel_list] = pso.optimize(n_iterations)
+        result, [log_likelihood_list, pos_list, vel_list] = pso.optimize(n_iterations)
 
         if pool.is_master():
             kwargs_return = self.chain.param.args2kwargs(result)
@@ -253,7 +251,7 @@ class MySampler(object):
             print(time_end - time_start, 'time used for ', print_key)
             print('===================')
         ############
-        pool.close()
+        #pool.close()
         ############
         return result, [log_likelihood_list, pos_list, vel_list]
 
