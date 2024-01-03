@@ -1,34 +1,29 @@
+import os
 import argparse
 from datetime import datetime
-import os
+
 from Utils.tools import strip_setting_name
 
+
 # add some final commands
-progs=["fermat_pot_analysis",
-       "rewrite_read_results",
-       "MCMC_posterior",
-       "mcmc_behaviour_plot",
-       "mag_remastered",
-       "t_corner",
-       "psos_plot",
-       "prior_fermat",
-       "pso_behaviour",
-       "ellipticity_study",
-       "pos_img",
-       "initial_pos_vs_result",
-       "create_fits",
-       "plot_critical_curves",
-       "prior_source",
-       "check_psf"]
-"""
-for dirpath, dirnames, filenames in os.walk("."):
-     for fn in filenames:
-         if fn.replace(".py","") in progs:
-             if dirnames!=[]:
-                 print("'"+dirpath+"/"+dirnames[0]+"/"+fn+"'")
-             else:
-                 print("'"+dirpath+"/"+fn+"'")
-"""
+progs=["",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "",
+       "convergence_mcmc"]
+ 
 progs=['./Plots/Corner_Plots/psos_plot.py'
 './Plots/Corner_Plots/mcmc_behaviour_plot.py'
 './Plots/Corner_Plots/plot_critical_curves.py'
@@ -44,7 +39,8 @@ progs=['./Plots/Corner_Plots/psos_plot.py'
 './Posterior_analysis/PSO/mag_remastered.py'
 './Posterior_analysis/PSO/ellipticity_study.py'
 './Posterior_analysis/PSO/fermat_pot_analysis.py'
-'./Posterior_analysis/PSO/pso_behaviour.py']
+'./Posterior_analysis/PSO/pso_behaviour.py',
+'./Posterior_analysis/convergence_mcmc.py']
 
 
 
@@ -54,8 +50,8 @@ def last_command(setting_name,prog,log=False,run=False):
     if log:
         now = datetime.now()
         str_com+=" &> logs/"+setting_name_wo_py.replace("settings_","")+"_"+prog+"_"+str(now.strftime("%d%b"))+".log "
-    if "fermat_pot"  not in prog and "rewrite_read_results" not in prog :
-        str_com+=" &"
+    #if "fermat_pot"  not in prog and "rewrite_read_results" not in prog :
+    #    str_com+=" &"
     if run:
         os.system(str_com)
     return(str_com)

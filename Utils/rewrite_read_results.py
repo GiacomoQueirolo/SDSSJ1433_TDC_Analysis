@@ -13,9 +13,7 @@ from corner import quantile
 from Utils.tools import *
 from Utils.get_res import get_mcmc_smpl,get_mcmc_prm
 
- 
-
-def rewrite_read_results(setting,cut_mcmc=0,backup_path="backup_results"):
+def rewrite_read_results(setting,cut_mcmc=0,backup_path="backup_results",save=True):
     #MCMC sample
     samples_mcmc = get_mcmc_smpl(setting,backup_path)[cut_mcmc:]
     #parameters' name
@@ -35,10 +33,11 @@ def rewrite_read_results(setting,cut_mcmc=0,backup_path="backup_results"):
         else:
             kwargs_results_updated["dec_image_"+str(n_dec)]=val          
             n_dec+=1
-
-    with open(get_savemcmcpath(setting,backup_path)+'/read_results_updated.data', 'wb') as file:
-        pickle.dump(kwargs_results_updated, file)
- 
+    if save:
+        with open(get_savemcmcpath(setting,backup_path)+'/read_results_updated.data', 'wb') as file:
+            pickle.dump(kwargs_results_updated, file)
+        print("Saved ",get_savemcmcpath(setting,backup_path)+'/read_results_updated.data') 
+    return kwargs_results_updated
 
 if __name__=="__main__":
 
@@ -47,11 +46,10 @@ if __name__=="__main__":
     parser.add_argument("-c", "--cut_mcmc", type=int, dest="cut_mcmc", default=0,
                         help="cut the first <c> steps of the mcmc to ignore them")
     args = parser.parse_args()
-    settings = args.SETTING_FILE
+    settings = args.SETTING_FILES
     cut_mcmc = args.cut_mcmc
-    backup_path = "./backup_results/"
     present_program(sys.argv[0])
     for setting in settings:
-        rewrite_read_results(setting,cut_mcmc,backup_path)
+        rewrite_read_results(setting,cut_mcmc,backup_path="backup_results")
     success(sys.argv[0])
 

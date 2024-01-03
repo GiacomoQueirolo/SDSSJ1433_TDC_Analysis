@@ -1,9 +1,8 @@
 ## little functions to easily get the results from previous calculations
-import json,pickle 
-from copy import deepcopy
+import json,pickle ,dill
 from corner import quantile
 from numpy import abs as npabs
-from numpy import array,transpose
+from numpy import array
 
 from Utils.tools import *
 
@@ -16,9 +15,13 @@ def load_whatever(name):
             with open(name, 'rb') as f:
                 data = pickle.load(f)
         except:
-            with open(name, 'r') as f:
-                data = f.readlines()
-            data = [data_l.replace(",\n","") for data_l in data]   
+            try:
+                with open(name,'rb') as f:
+                    data = dill.load(f)
+            except:
+                with open(name, 'r') as f:
+                    data = f.readlines()
+                data = [data_l.replace(",\n","") for data_l in data]   
     return data
 
 def get_kwres(setting_name,updated=False,backup_path="backup_results"):
@@ -98,10 +101,15 @@ def get_mcmc_smpl_for_prm(setting_name,prm_name,backup_path="backup_results"):
     return smpl[:,index_prm]
     
 
-def get_pso_chain(setting_name,backup_path="backup_results"): 
+def get_pso_chain(setting_name,backup_path="backup_results",use_backup=False): 
     savemcmc_path = get_savemcmcpath(setting_name,backup_path)
-    pso_file_name = save_json_name(setting_name,savemcmc_path,"pso")
-    pso_chain     = load_whatever(pso_file_name)
+    try:
+        if use_backup:
+            raise FileNotFoundError("use_backup=True")
+        pso_file_name = save_json_name(setting_name,savemcmc_path,"pso")
+        pso_chain     = load_whatever(pso_file_name)
+    except FileNotFoundError:
+        pso_chain     = load_whatever(f"{savemcmc_path}/psobackup.json")
     return pso_chain
     
 def get_mcmc(setting_name,backup_path="backup_results"):
@@ -134,7 +142,7 @@ def check_logL(setting_name,backup_path="backup_results",max_diff=5,index_logl=2
 
 
 
-def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True):
+def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True,backup_path="./backup_results/"):
     sett = get_setting_module(setting,1)
     if mcmc_chain is None:
         _mcmc_chain = get_mcmc(sett).values()
@@ -144,7 +152,7 @@ def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True):
     n_ra,n_dec = 0,0
     sampler_type, samples_mcmc, param_mcmc, dist_mcmc  = mcmc_chain 
     if print_res is None:
-        print_res = open(get_savefigpath(sett)+"/results.txt","a")
+        print_res = open(get_savefigpath(sett,backup_path)+"/results.txt","a")
         
     for i in range(len(param_mcmc)):
         val_min, val, val_max = quantile(samples_mcmc[:,i],q=[0.16, 0.5, 0.84])
@@ -174,7 +182,7 @@ def get_sigma_kw(setting,mcmc_chain=None,print_res=None,save=True):
         print_res.write("\n#################################\n")
     if save:
         for name,res in zip(["read_sigma_low","read_sigma_up"],[kwargs_sigma_lower,kwargs_sigma_upper]):
-            save_name = get_savefigpath(sett)+"/"+name+".data"
+            save_name = get_savefigpath(sett,backup_path)+"/"+name+".data"
             print("Saving "+save_name)
             pickle.dump(res,open(save_name,"wb"))
     else:
@@ -185,19 +193,36 @@ def get_combined_Df(combined_sett,main_dir="./"):
     combined_setting = get_combined_setting_module(combined_sett,main_dir=main_dir)
     dir_path         = combined_setting.get_respath()
     KDE              = combined_setting.KDE
-
-    with open(f"{dir_path}/Combined_PDF{['_KDE' if KDE else ''][0]}.pkl","rb") as f:
-        Combined_PDF = pickle.load(f)
+    
+    Combined_PDF = load_whatever(f"{dir_path}/Combined_PDF{['_KDE' if KDE else ''][0]}.pkl")
+    
         
     if KDE:
-        with open(f"{dir_path}/Combined_PDF_KDE_positions.pkl","rb") as f:
-            Positions_KDE = pickle.load(f)
+        Positions_KDE = load_whatever(f"{dir_path}/Combined_PDF_KDE_positions.pkl")
     else:
-        with open(f"{dir_path}/Combined_PDF_bins.pkl","wb") as f:
-            Combined_bins = pickle.load(f)
+        Combined_bins = load_whatever(f"{dir_path}/Combined_PDF_bins.pkl")
 
     if KDE:
         return combined_setting, np.array(Combined_PDF),np.array(Positions_KDE)
     else:
         return combined_setting, np.array(Combined_PDF),np.array(Combined_bins)
+    
+    
+
+def get_combined_Rmag(combined_sett,main_dir="./"):
+    combined_setting = get_combined_setting_module(combined_sett,main_dir=main_dir)
+    dir_path_mag     = combined_setting.get_respath()+"/Mag/"
+    KDE              = combined_setting.KDE
+
+    Combined_mag_PDF = load_whatever(f"{dir_path_mag}/Combined_mag_PDF{['_KDE' if KDE else ''][0]}.pkl")
+        
+    if KDE:
+        Positions_mag_KDE = load_whatever(f"{dir_path_mag}/Combined_mag_PDF_KDE_positions.pkl")
+    else:
+        Combined_mag_bins = load_whatever(f"{dir_path_mag}/Combined_mag_PDF_bins.pkl")
+        
+    if KDE:
+        return combined_setting, np.array(Combined_mag_PDF),np.array(Positions_mag_KDE)
+    else:
+        return combined_setting, np.array(Combined_mag_PDF),np.array(Combined_mag_bins)
     

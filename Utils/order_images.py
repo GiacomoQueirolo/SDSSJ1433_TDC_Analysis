@@ -39,7 +39,7 @@ def image_order(ra,dec,ret_order=True,verbose=True):
     if ret_order: # I only return the order to be applied to the array 
         return image_order
     else:
-        return ra[image_order],dec[image_order]
+        return np.array(ra)[image_order],np.array(dec)[image_order]
 
 
 @check_setting

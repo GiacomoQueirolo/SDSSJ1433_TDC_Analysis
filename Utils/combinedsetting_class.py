@@ -11,7 +11,7 @@ def test_zlist(zlist):
     return 0
 
 class combined_setting():
-    def __init__(self,comment,z_source,z_lens,filters,setting_names,savedir,KDE=False):
+    def __init__(self,comment,z_source,z_lens,filters,setting_names,savedir,KDE=False,BC=True):
         self.comment  = comment
         if type(z_source) is not list:
             self.z_source = z_source
@@ -27,6 +27,15 @@ class combined_setting():
         self.filters = filters
         self.savedir = savedir
         self.KDE     = KDE
+        self.BC      = BC   # if True, the Df combinations are AB,AC,BC, else AB,AC,AD
+        if self.BC:
+            from Posterior_analysis.fermat_pot_analysis import labels_Df_BC as labels_Df
+            from Posterior_analysis.mag_remastered import labels_Rmag_BC as labels_Rmag
+        else:
+            from Posterior_analysis.fermat_pot_analysis import labels_Df_AD as labels_Df
+            from Posterior_analysis.mag_remastered import labels_Rmag_AD as labels_Rmag
+        self.labels_Df     = labels_Df      
+        self.labels_Rmag   = labels_Rmag     
         self.setting_names = setting_names
         # absolute path for the main lenstronomy directory
         # this only works if the program that calls this class was run in

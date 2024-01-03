@@ -22,27 +22,15 @@ def find_EVERY_setting_path(setting_name):
     if setting_path==[]:
         raise RuntimeError("Setting file not found:"+setting_name)
     return setting_path
-"""
-def get_setting_from_path(setting_path):
-    path_setting = str(setting_path).split("/")
-    path = "/".join(path_setting[:-1])
-    setting = path_setting[-1]
-    sys.path.append(path)
-    setting_module = importlib.import_module(setting) 
-    return setting_module.setting()
 
-def get_setting_with_path(setting,path):
-    sys.path.append(path)
-    setting_module = importlib.import_module(setting) 
-    return setting_module.setting()
-"""
+
 def split_comment(comm):
     if ":" in comm:
         orig   = comm.split(":")[0]
         comm2  = " ".join(comm.split(":")[1:])
         orig_l = orig.split(" ")
         for i in orig_l:
-            if "setting" in i or ".py" in i or any([filt in i for filt in ["160","475","814"]]):
+            if "setting" in i or ".py" in i or any([filt in i for filt in ["140","105","160","475","814"]]):
                 return i,comm2
     else:
         orig = comm.split(" ")
@@ -65,6 +53,7 @@ def censure_comment(comm):
         comm = comm.replace(s,n)
     return comm
 
+"""
 def redo_comment(comm):
     comm = censure_comment(comm)
     if len(comm)>80:
@@ -72,6 +61,22 @@ def redo_comment(comm):
         _comm = [*_comm[:int(len(_comm)/2)],"<BR />",*_comm[int(len(_comm)/2):]]
         comm = " ".join(_comm)
     return comm
+"""
+def redo_comment(comm,n_cut=80):
+    comm = censure_comment(comm)
+    newline = "<BR />" 
+    if len(comm)>n_cut:
+        _comm = [*comm.split(" ")[1:]]
+        new_comm = []
+        cnt_chr = 0
+        for c in _comm:
+            cnt_chr+=len(c)
+            if cnt_chr>n_cut:
+                new_comm.append(newline)
+                cnt_chr=0
+            new_comm.append(c)
+        comm = " ".join(new_comm)
+    return comm 
     
 def get_string_node(name,comm):
     return "<<FONT POINT-SIZE='20'>"+name+ "</FONT> <BR /> <FONT POINT-SIZE='15'>"+comm+"</FONT>>"

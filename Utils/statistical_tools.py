@@ -5,7 +5,113 @@
 
 
 import numpy as np
+from corner import quantile
 from Utils.tools import ProgressBar
+"""
+def get_median_with_error(prob,bins,ret_str=True):
+    median = estimate_median([prob],[bins])[0]
+    sigmas = estimate_sigma([prob],[bins],median=[median],averaged=False)[0]
+    rounding = int(1-np.log10(max(sigmas)))
+    if ret_str:
+        sig_up_rnd,sig_down_rnd = str(np.round(sigmas[0],rounding)),str(np.round(sigmas[1],rounding))
+        if sig_up_rnd==sig_down_rnd:
+            return str(np.round(median,rounding))+"$\pm$"+sig_up_rnd
+        return str(np.round(median,rounding))+"$_{"+sig_down_rnd+"}^{"+sig_up_rnd+"}$"
+    else:
+        return median,sigmas
+        """
+def truncate(f, n):
+    '''Truncates/pads a float f to n decimal places without rounding'''
+    s = '{}'.format(f)
+    if 'e' in s or 'E' in s:
+        return '{0:.{1}f}'.format(f, n)
+    i, p, d = s.partition('.')
+    return float('.'.join([i, (d+'0'*n)[:n]]))
+
+def simp(val_raw,sig_raw1,sig_raw2,ignore_debug=False): 
+    _, fact1 =simp_sig(sig_raw1)
+    _, fact2 =simp_sig(sig_raw2)
+    
+    if val_raw ==0:
+        val= "0.0"
+    elif fact1 is None and fact2 is None :
+        if abs(val_raw)>1000 or abs(val_raw)<0.001:
+            val= "{:.2e}".format(val_raw) 
+        else:
+            fact=1000
+            val= str(np.round(val_raw,fact))
+    else:
+        fact = max(fact1,fact2)
+        val  = np.round(val_raw,fact)
+        sig1 = np.round(sig_raw1,fact)
+        sig2 = np.round(sig_raw2,fact)
+        if abs(val_raw)>1000 or abs(val_raw)<0.001:
+            power_v  = -int(('%E' % val_raw) [-3:])
+            power_s1 = -int(('%E' % sig_raw1)[-3:])
+            power_s2 = -int(('%E' % sig_raw2)[-3:])
+            power_s  = max([power_s1,power_s2])
+            dp       = power_s - power_v
+            val      = str(np.round(val_raw*(10**power_v),dp))
+            sig1     = str(np.round(sig_raw1*(10**(power_v)),dp))
+            sig2     = str(np.round(sig_raw2*(10**(power_v)),dp))
+            if sig1!=sig2:        
+                return "$ "+val+"^{+"+sig1+"}_{-"+sig2+r"}\cdot 10^{"+str(-power_v)+r"}$"
+            else:
+                return "$ "+val+ r"\pm"+sig1+r"\cdot 10^{"+str(-power_v)+r"}$"
+        else:
+            val =str(val)
+            sig1=str(sig1) 
+            sig2=str(sig2)
+    if val=="0.0" and val_raw!=0 or len(sig1)>len(val) or len(sig2)>len(val) :
+        if not ignore_debug:
+            raise RuntimeError(f"#DEBUG\nval {val}\nval_raw {val_raw}\nsig_raw1 {sig_raw1}\nsig_raw2 {sig_raw2}\nsig1 {sig1}\nsig2 {sig2}\n#DEBUG")
+    if sig1!=sig2:
+        return "$ "+val + "^{+"+sig1+"}"+"_{-"+sig2+"} $"
+    else:
+        return "$ "+val + "\\pm"+sig2+" $"
+            
+
+def simp_wo_sig(val_raw,rnd_vl=1):
+    if abs(val_raw)>1000 or abs(val_raw)<0.001:
+        power_v  = -int(('%E' % val_raw) [-3:])
+        val      = str(np.round(val_raw*(10**power_v),1))
+        return "$ "+val+ r"\cdot 10^{"+str(-power_v)+r"}$"
+    else:
+        return "$"+str(np.round(val_raw,rnd_vl))+"$"
+
+
+def simp_sig(val):
+    if val ==0:
+        return ("0.0",None)
+    else: 
+        fact=1
+        while truncate(val,fact)==0.0:
+            fact+=1
+        return (str(np.round(val,fact)),fact)
+
+
+def easy_res(mcmc,quantiles=None):
+    median = np.median(mcmc)
+    if not quantiles:
+        return {"median":median,"std":np.std(mcmc)}
+    else:
+        qnt = quantile(mcmc,q=quantiles)
+        min_err = median - np.min(qnt)
+        max_err = -median + np.max(qnt)
+        return {"median":median,"quantiles":quantiles,"min_err":min_err,"max_err":max_err}
+        
+def easy_res_str(mcmc,quantiles:bool=True):
+    if quantiles:
+        quantiles = [0.16,0.84]
+    res = easy_res(mcmc,quantiles=quantiles)
+    if not quantiles:
+        rounding = int(1-np.log10(res["std"]))
+        return f"${np.round(res['median'],rounding)}\pm{np.round(res['std'],rounding)}$"
+    else:
+        #rounding = int(1-np.log10(np.max([res["min_err"],res["max_err"]])))
+        #return f"${np.round(res['median'],rounding)}"+"_{-"+str(np.round(res['min_err'],rounding))+"}^{+"+str(np.round(res['max_err'],rounding))+"}$"
+        return simp(res['median'],res['min_err'],res["max_err"])
+
 # My sampling procedure
 
 def inside_bin_i(pos,i,bins): 
@@ -116,10 +222,6 @@ def sampler(init_pos,prob,bins,mcmc_sigma,mcmc_steps,mcmc_range=None,prior="unif
     chain = [np.array(mcmc_chain),np.array(mcmc_likelihood)]
     return chain
 
-
-# In[ ]:
-
-
 def get_bins_volume(bins):    
     vol = []
     for dim_i in range(len(bins)):
@@ -140,10 +242,7 @@ def get_bins_volume(bins):
             vol_bin_i.append(vol_bin_j)
         vol_grid.append(vol_bin_i)
     return np.array(vol_grid)
-   
-#def vector_mult(Vects,Index):
-#    return np.prod([Vects[i][index] for i,index in enumerate(Index)]) 
-
+    
 def marginalise_prob(prob,bins):
     #marginalise over the other dimensions
     marg_prob = []

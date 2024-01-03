@@ -7,7 +7,7 @@ import copy
 import numpy as np
 from astropy import units as u
 from astropy import constants as const
-from astropy.cosmology import default_cosmology
+from Posterior_analysis.tools_Post import default_cosmo
 
 """
 # now defined specifically in MtL_ratio
@@ -22,9 +22,9 @@ def get_cosmo_prm(setting,cosmo=None):
     
     return cosmo,cosmo_dd,cosmo_ds,cosmo_dds
 
-def k_analytical_nosett(z_lens,z_source,cosmo=None):
-    if not cosmo:
-        cosmo  = default_cosmology.get()
+"""
+def k_analytical_nosett(z_lens,z_source,cosmo=default_cosmo):
+
     Dd  = cosmo.angular_diameter_distance(z_lens)
     Ds  = cosmo.angular_diameter_distance(z_source)
     Dds = cosmo.angular_diameter_distance_z1z2(z1=z_lens,z2=z_source)
@@ -32,10 +32,8 @@ def k_analytical_nosett(z_lens,z_source,cosmo=None):
     # see Notes 10th May '23
     k_test = (1+z_lens)*Dd*Ds*H0/(const.c*Dds)
     return k_test.to("").value
-"""
-def k_analytical(setting,cosmo=None):
-    if not cosmo:
-        cosmo  = default_cosmology.get()
+
+def k_analytical(setting,cosmo=default_cosmo):
     z_d = setting.z_lens
     z_s = setting.z_source
     Dd  = cosmo.angular_diameter_distance(z_d)

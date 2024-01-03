@@ -7,6 +7,7 @@ import numpy as np
 def _get_kwargs_ps(samples_mcmc,param_mcmc,i):
     return [{"ra_image":np.array(samples_mcmc[i][param_mcmc.index('ra_image'):param_mcmc.index('ra_image')+4]),
     'dec_image':np.array(samples_mcmc[i][param_mcmc.index('ra_image')+4:param_mcmc.index('ra_image')+8]) }]
+    
 def standard(samples_mcmc,param_mcmc,i):
     """
     return the kwargs_result needed for this model specifically
@@ -256,5 +257,59 @@ def newProfile_noPert(samples_mcmc,param_mcmc,i):
                     ]
 
     kwargs_result_i["kwargs_ps"] =  _get_kwargs_ps(samples_mcmc,param_mcmc,i)
+    
+    return kwargs_result_i
+    
+
+def newProfile_with_MLL_and_fixed_QSO(sett,samples_mcmc,param_mcmc,i):
+    """
+    for the model with PEMD profile with main lens light not subtracted and qso pos fixed (for F140W testprof)
+    
+    return the kwargs_result needed for this model specifically
+    needed for the fermat potential measurement 
+    """
+    kwargs_result_i= {}
+    kwargs_result_i["kwargs_lens"]= [{"theta_E":samples_mcmc[i][param_mcmc.index("theta_E_lens0")],
+                    "e1":samples_mcmc[i][param_mcmc.index("e1_lens0")],
+                    "e2":samples_mcmc[i][param_mcmc.index("e2_lens0")],
+                    "gamma":samples_mcmc[i][param_mcmc.index("gamma_lens0")],
+                    "center_x":samples_mcmc[i][param_mcmc.index('center_x_lens_light0')],
+                    "center_y":samples_mcmc[i][param_mcmc.index('center_y_lens_light0')]},
+                    {"theta_E":samples_mcmc[i][param_mcmc.index("theta_E_lens1")],
+                    "center_x":samples_mcmc[i][param_mcmc.index('center_x_lens_light1')],
+                    "center_y":samples_mcmc[i][param_mcmc.index('center_y_lens_light1')]},
+                    {"gamma_ext":samples_mcmc[i][param_mcmc.index('gamma_ext_lens2')],
+                    "psi_ext":samples_mcmc[i][param_mcmc.index('psi_ext_lens2')]}
+                    ]
+
+    kwargs_result_i["kwargs_ps"]                 = sett.ps_params[0]
+    kwargs_result_i["kwargs_ps"][0]["ra_image"]  = sett.ps_params[2][0]["ra_image"]
+    kwargs_result_i["kwargs_ps"][0]["dec_image"] = sett.ps_params[2][0]["dec_image"]
+    
+    return kwargs_result_i
+    
+def SIEProfile_with_MLL_and_fixed_QSO(sett,samples_mcmc,param_mcmc,i):
+    """
+    for the model with SIE profile with main lens light not subtracted and qso pos fixed (for F140W testprof)
+    
+    return the kwargs_result needed for this model specifically
+    needed for the fermat potential measurement 
+    """
+    kwargs_result_i= {}
+    kwargs_result_i["kwargs_lens"]= [{"theta_E":samples_mcmc[i][param_mcmc.index("theta_E_lens0")],
+                    "e1":samples_mcmc[i][param_mcmc.index("e1_lens0")],
+                    "e2":samples_mcmc[i][param_mcmc.index("e2_lens0")],
+                    "center_x":samples_mcmc[i][param_mcmc.index('center_x_lens_light0')],
+                    "center_y":samples_mcmc[i][param_mcmc.index('center_y_lens_light0')]},
+                    {"theta_E":samples_mcmc[i][param_mcmc.index("theta_E_lens1")],
+                    "center_x":samples_mcmc[i][param_mcmc.index('center_x_lens_light1')],
+                    "center_y":samples_mcmc[i][param_mcmc.index('center_y_lens_light1')]},
+                    {"gamma_ext":samples_mcmc[i][param_mcmc.index('gamma_ext_lens2')],
+                    "psi_ext":samples_mcmc[i][param_mcmc.index('psi_ext_lens2')]}
+                    ]
+
+    kwargs_result_i["kwargs_ps"]                 = sett.ps_params[0]
+    kwargs_result_i["kwargs_ps"][0]["ra_image"]  = sett.ps_params[2][0]["ra_image"]
+    kwargs_result_i["kwargs_ps"][0]["dec_image"] = sett.ps_params[2][0]["dec_image"]
     
     return kwargs_result_i
