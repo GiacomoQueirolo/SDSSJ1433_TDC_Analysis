@@ -8,9 +8,11 @@ import csv
 import warnings
 import numpy as np
 from astropy.io import fits
-import matplotlib.pyplot as plt
+from Plots.plotting_tools import matplotlib
+from matplotlib import pyplot as plt
 
 from Utils.tools import *
+from Utils.statistical_tools import simp_wo_sig
     
 def mask_in(coord_x,coord_y,rad,x_grid,y_grid=None):
     if y_grid ==None:
@@ -37,21 +39,15 @@ def mask_out(coord_x,coord_y,rad,x_grid,y_grid=None):
 def create_mask(image,setting):
     numPix  = image.shape[0]
     setting = get_setting_module(setting).setting()
-    if not hasattr(setting,"R_tot_mask"):
-        R_tot_mask = numPix*1./2.
-    else:
-        R_tot_mask = setting.R_tot_mask
+    R_tot_mask = getattr(setting,"R_tot_mask",numPix*1./2.)
     # we mask all the objects
     mask = np.ones(shape=(numPix,numPix))
     for i in range(len(setting.x_mask)):
         mask*=mask_in(setting.x_mask[i] ,setting.y_mask[i],setting.r_mask[i],numPix) 
     
     # we mask everything further out than a certain radius
-    if not hasattr(setting,"new_center_mask_out"):
-        x_mask_out,y_mask_out = numPix/2,numPix/2
-    else:
-        x_mask_out,y_mask_out = setting.new_center_mask_out
-        
+    x_mask_out,y_mask_out = getattr(setting,"new_center_mask_out",[numPix/2,numPix/2])
+            
     mask*=mask_out(x_mask_out,y_mask_out,rad=R_tot_mask,x_grid=numPix)
     
     # We mask eventual residuals in center (due to lens light modelling imperfections)
@@ -183,19 +179,11 @@ def plot_image(image,setting,savefig_path_name=None,err_image=False):
     cmap.set_under('k')
     setting  = get_setting_module(setting).setting()
     if not err_image:
-        if hasattr(setting, 'v_min'):
-            v_min = setting.v_min
-            v_max = setting.v_max
-        else:
-            v_min = -4
-            v_max = 1
+        v_min = getattr(setting,"v_min",-4)
+        v_max = getattr(setting,"v_max",1)
     else:
-        if hasattr(setting, 'e_v_min'):
-            v_min = setting.e_v_min
-            v_max = setting.e_v_max
-        else:
-            v_min = -1
-            v_max = 0
+        v_min = getattr(setting,"e_v_min",-1)
+        v_max = getattr(setting,"e_v_max",0)
     f, ax = plt.subplots(1, 1, figsize=(6, 6), sharex=False, sharey=False)
     ax.matshow(np.log10(image), origin='lower',  vmin=v_min, vmax=v_max, cmap=cmap, extent=[0, 1, 0, 1])
     ax.get_xaxis().set_visible(False)
@@ -206,7 +194,10 @@ def plot_image(image,setting,savefig_path_name=None,err_image=False):
     else:
         plt.savefig(savefig_path_name)
 
-def plot_projection(data,savefigpath=None,ax0=None,udm="<e-/sec>",title="PSF profile",filename="PSF_projection",plot_midax=True):
+
+def plot_projection(data,savefigpath=None,udm="<e-/sec>",title="PSF profile",\
+                    filename="PSF_projection",plot_midax=False,FWHM=True,pixscale=None,pssf=1,
+                    fig0=None,color="k",label=None,figsize=(6,6),scale_to_max=False,_return_fwhm=False):
     # by default this is implemented for the PSF projection
     # data = NxM matrix 
     # ax0  = axis 0 along which project (by default, center)
@@ -214,31 +205,113 @@ def plot_projection(data,savefigpath=None,ax0=None,udm="<e-/sec>",title="PSF pro
     # title = title of the plot
     # filename = filename to save
     # savefigpath = path where to save
-    cnt_data_x = int(len(data[1])/2.)
+    """cnt_data_x = int(len(data[1])/2.)
     cnt_data_y = ax0 if ax0 else int(len(data[0])/2.)
+    
     dx  = int(cnt_data_x/2)
     x0  = int(cnt_data_x-dx)
     x1  = int(cnt_data_x+dx)
 
-    proj_data  = data[cnt_data_y][x0:x1]
-    x_projdata = np.arange(x0,x1,dtype=int)
-    fig,ax = plt.subplots(figsize=(6,6),dpi=80)
-    ax.plot(x_projdata,proj_data,c="k")
-    #,marker="x",color="k")
-    ax.set_xlabel("Pixels[]")
-    ax.set_ylabel(udm)
+    proj_data  = np.array(data[cnt_data_y][x0:x1])
+    x_projdata = np.arange(x0,x1,dtype=int)"""
+    cnt_data_x,cnt_data_y = np.where(data==np.max(data))
+    cnt_data_x,cnt_data_y = int(cnt_data_x[0]), int(cnt_data_y[0])
+    rad = np.min([cnt_data_x,cnt_data_y,len(data[0])-cnt_data_x,len(data[1])-cnt_data_y])
+    radii = np.arange(-rad,rad+1)
+    #projection_profile = np.zeros(len(data[1]))
+    projection_profile = np.zeros(len(radii))
+    for angle in np.linspace(0, 360, 360, endpoint=False): 
+        angle_rad = np.radians(angle)
+        #x_projection = cnt_data_x + np.cos(angle_rad) * np.arange(-cnt_data_x,+cnt_data_x+1)
+        #y_projection = cnt_data_y + np.sin(angle_rad) * np.arange(-cnt_data_y,+cnt_data_y+1)
+        x_projection = cnt_data_x + np.cos(angle_rad) * radii
+        y_projection = cnt_data_y + np.sin(angle_rad) * radii
+        x_projection_rnd = np.array([int(np.round(xi,0)) for xi in x_projection])
+        y_projection_rnd = np.array([int(np.round(yi,0)) for yi in y_projection])
+        prjprofrndi = [data[xi][yi] for xi,yi in zip(x_projection_rnd,y_projection_rnd)]
+        projection_profile+=prjprofrndi
+    proj_data =projection_profile/360
+    if not scale_to_max:
+        proj_data /=np.sum(proj_data) # normalised
+    else:
+        proj_data /=np.max(proj_data)
+    x_projdata=np.arange(len(proj_data))
+
+    fnt = 14
+    plt.rcParams['xtick.labelsize'] = fnt
+    plt.rcParams['ytick.labelsize'] = fnt 
+    plt.rcParams['font.size'] = fnt
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('font', size=fnt)          # controls default text sizes
+    plt.rc('axes', titlesize=fnt)     # fontsize of the axes title
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=fnt)    # legend fontsize
+    if not fig0:
+        fig,ax = plt.subplots(figsize=figsize,dpi=80)
+    else:
+        fig = fig0
+        ax  = fig.axes[0]
+    #dx  = int(cnt_data_x/2)
+    dx  = np.min([1*pssf/pixscale,rad]) #'' -> pix
+
+    #x0  = int(np.round(cnt_data_x-dx))
+    #x1  = int(np.round(cnt_data_x+dx))
+    
+    x0  = int(np.round(np.mean(x_projdata)-dx))
+    x1  = int(np.round(np.mean(x_projdata)+dx))
+    if x0<0:
+        x0=0
+    if x1>len(x_projdata):
+        x1=len(x_projdata)
+    #cnt_data_rcs= cnt_data_x*pixscale/pssf
+    cnt_data_rcs      = np.mean(x_projdata[x0:x1])*pixscale/pssf
+    x_projdata_arcsec = (x_projdata[x0:x1]*pixscale/pssf)-cnt_data_rcs
+    ax.plot(x_projdata_arcsec,proj_data[x0:x1],c=color,label=label)
+
+    ax.set_xlabel(r'Arcsec ["]')
+    ax.set_ylabel("Normalised PSF ["+udm+"]")
     ax.set_title(title)
     if plot_midax:
-        ax.axvline(len(data)/2.,label="Image Center",ls="--",c="r")
-        for max_i in x_projdata[np.array(proj_data)==np.max(proj_data)]:
-            ax.axvline( float(max_i),label="Maximum pixel",ls="-.",c="b")
+        ax.axvline((len(data)*pixscale/pssf/2.)-cnt_data_rcs,label="Image Center",ls="--",c="r")
+        for max_i in x_projdata[x0:x1][proj_data[x0:x1]==np.max(proj_data[x0:x1])]*pixscale/pssf:
+            ax.axvline( float(max_i)-cnt_data_rcs,label="PSF Maximum",ls="-.",c="b")
+        ax.legend()
+    if FWHM:
+        if pixscale is None:
+            raise InterruptedError("Give value of pixel scale to compute FWHM in arcsec")
+        half_max = np.max(proj_data)/2.
+        max_projdata_i = np.where(proj_data[x0:x1]==np.max(proj_data[x0:x1]))[0][0]
+        arr_lft = abs(proj_data[x0:x1][:max_projdata_i]-half_max)
+        res_lft_i = np.where(arr_lft==np.min(arr_lft))[0][0]
+        dlft = abs(res_lft_i-max_projdata_i)
+        arr_rgt = abs(proj_data[x0:x1][max_projdata_i:]-half_max)
+        res_rgt_i = np.where(arr_rgt==np.min(arr_rgt))[0][0]+max_projdata_i
+        drght = res_rgt_i-max_projdata_i
+        #sig_i = (dlft+drght)/2. # this is the sigma lenght in indeces
+        fwhm_i = (dlft+drght) # this is the FWHM in indexes
+        fwhm_pix = (x_projdata[x0:x1][int(fwhm_i)]-x_projdata[x0:x1][0])/pssf #converted into pix val
+        fwhm_arc = fwhm_pix*pixscale #pixscale must be ''/pix 
+        fwhm_simp = simp_wo_sig(fwhm_arc,3)
+
+        if label is None and color=="k":
+            ax.scatter(0,proj_data[max_projdata_i]/2,alpha=0,c="w",label="FWHM="+fwhm_simp+r'"')
+        else:
+            ax.plot([x_projdata_arcsec[int(res_lft_i)],x_projdata_arcsec[int(res_rgt_i)]],\
+                    [half_max,half_max],c=color,label="FWHM="+fwhm_simp+r'" '+label,ls="--")
+        #print("FWHM:",simp_wo_sig(sig_arc,3))
         ax.legend()
     if not savefigpath is None:
+        plt.tight_layout()
         plt.savefig(savefigpath+"/"+filename.replace(".pdf","")+".pdf")
-        return 0
+        return sig_arc
     else:
-        return ax
-
+        if not _return_fwhm:
+            return fig 
+        else:
+            return fig,sig_arc
+    
 def crop_egdes(image,setting):
     setting  = get_setting_module(setting).setting()
     # Crop image
@@ -399,15 +472,15 @@ def get_numPix(setting,twodim=False):
     else: #pragma: no cover
         raise RuntimeError("Image must be squared, numPix should be indentical in both xy not",numPix)
 
-def get_pixscale(setting_or_tm,only_one=True):
+def get_pixscale(setting_or_tm,only_one=True,arcsec=True):
     # check
     # https://danmoser.github.io/notes/gai_fits-imgs.html
     if type(setting_or_tm)!=type(np.array([])) or type(setting_or_tm)!=list:
-        transform_pix2angle = get_transf_matrix(setting_or_tm,False)
+        transform_pix2angle = get_transf_matrix(setting_or_tm,arcsec)
     else:
         transform_pix2angle = setting_or_tm
-    pix_scale1 = np.sqrt(transform_pix2angle[0][0]**2 + transform_pix2angle[1][0]**2)
-    pix_scale2 = np.sqrt(transform_pix2angle[0][1]**2 + transform_pix2angle[1][1]**2)
+    pix_scale1 = np.sqrt(transform_pix2angle[0][0]**2 + transform_pix2angle[0][1]**2)
+    pix_scale2 = np.sqrt(transform_pix2angle[1][0]**2 + transform_pix2angle[1][1]**2)
     if only_one:
         if abs(pix_scale1-pix_scale2)>min([pix_scale1,pix_scale2])*.1/100.: # pragma no cover
             # if we are considering only one and the difference is higher then 0.1 % of the smaller pix_scale

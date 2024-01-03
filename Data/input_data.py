@@ -50,7 +50,7 @@ def init_kwrg_data(setting,saveplots=False,backup_path="backup_results",return_m
         return kwargs_data,mask
     
 @check_setting
-def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_results"):
+def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_results",**kwargs_plot):
     psf_file     = setting.data_path+setting.psf_name 
     err_psf_file = setting.data_path+setting.err_psf
     psf_image = np.array(load_fits(psf_file))
@@ -63,7 +63,9 @@ def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_re
             print("No interpolated PSF found, doing it now")
             psf_image = interpolate_2D(psf_image,mask_zero)
             if saveinterp:
-                fits_with_copied_hdr(psf_image,fits_parent_path=psf_file,data_object="PSF image (neg. values interpolated)",data_history="Used image_manipulation.interpolate_2D to interpolate negative values",
+                fits_with_copied_hdr(psf_image,fits_parent_path=psf_file,\
+                data_object="PSF image (neg. values interpolated)",\
+                data_history="Used image_manipulation.interpolate_2D to interpolate negative values",\
                 fits_res_namepath=psf_file_interp,overwrite=True,verbose=True)
     
     if saveplots:
@@ -72,7 +74,7 @@ def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_re
             plot_image(psf_image,setting,savefig_path+"/psf_supersampled.png")
         else:
             plot_image(psf_image,setting,savefig_path+"/psf.png")
-        plot_projection(psf_image,savefig_path)
+        plot_projection(psf_image,savefig_path,pixscale=setting.pix_scale,pssf=setting.pssf,**kwargs_plot)
     #We import the psf error image 
     err_psf_image = load_fits(err_psf_file)
     err_psf_image = psf_correction(err_psf_image,setting)
@@ -141,7 +143,11 @@ def init_lens_model_list(setting):
 @check_setting
 def init_lens_light_model_list(setting):
     if setting.sub==False:
-        light_model_list = ["SERSIC_ELLIPSE", "SERSIC","UNIFORM"]
+        # MOD_CORESERSIC: consider a core sersic for the lens light
+        if getattr(setting,"core_sersic",False):
+            light_model_list = ['CORE_SERSIC', "SERSIC","UNIFORM"]
+        else:
+            light_model_list = ["SERSIC_ELLIPSE", "SERSIC","UNIFORM"]
     else:
         light_model_list = ["SERSIC","UNIFORM"]
     if hasattr(setting,"no_pert"):
@@ -210,7 +216,7 @@ def get_kwargs_constraints(setting):
                           'solver_type': 'NONE',
                           'joint_lens_with_light':joint_lens_with_light}
     # mod free source
-    if not check_if_WS(setting) and not setting.FS:
+    if not check_if_WS(setting) and not getattr(setting,"FS",False):
         kwargs_constraints['joint_source_with_point_source'] = [[0, 0]]
     return kwargs_constraints
 
@@ -220,3 +226,31 @@ def init_lens_model(setting,lens_model_list=None):
         lens_model_list = init_lens_model_list(setting)
     lensModel = LensModel(lens_model_list=lens_model_list, z_lens=setting.z_lens, z_source=setting.z_source)
     return lensModel
+
+
+from Plots.plotting_tools import _get_ModelPlot
+
+def get_ModelPlot(setting,kwargs_data=None, kwargs_psf=None, kwargs_numerics=None,kwargs_model=None,\
+                  kwargs_results=None,image_likelihood_mask_list=None,arrow_size=0.02, cmap_string="gist_heat",withmask=True):
+    if kwargs_data is None:
+        kwargs_data,mask = init_kwrg_data(setting,saveplots=False,return_mask=True)
+    if kwargs_psf is None:
+        kwargs_psf = init_kwrg_psf(setting,saveplots=False)
+    if kwargs_numerics is None:
+        kwargs_numerics = init_kwrg_numerics(setting)
+    if kwargs_model is None:
+        kwargs_model = get_kwargs_model(setting)
+    if kwargs_results is None:
+        from Utils.get_res import get_kwres
+        kwargs_results = get_kwres(setting)["kwargs_results"]
+    if image_likelihood_mask_list is None and withmask:
+        try:
+            image_likelihood_mask_list = [list(mask)]
+        except:
+            _,mask  = init_kwrg_data(setting,saveplots=False,return_mask=True)
+            image_likelihood_mask_list = [list(mask)]
+    else:
+        image_likelihood_mask_list = []
+    modelplot = _get_ModelPlot(kwargs_data, kwargs_psf, kwargs_numerics,kwargs_model,\
+                  kwargs_results,image_likelihood_mask_list,arrow_size=arrow_size, cmap_string=cmap_string)
+    return modelplot
