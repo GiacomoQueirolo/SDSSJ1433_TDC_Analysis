@@ -154,25 +154,3 @@ def get_sigma_kw_mltf(multifilter_setting,mcmc_chain=None,print_res=None,save=Tr
     else:
         return {"read_sigma_low":kwargs_sigma_lower,"read_sigma_up":kwargs_sigma_upper}
     
-
-"""
-def get_combined_Df(combined_sett,main_dir="./"):
-    combined_setting = get_combined_setting_module(combined_sett,main_dir=main_dir)
-    dir_path         = combined_setting.get_respath()
-    KDE              = combined_setting.KDE
-
-    with open(f"{dir_path}/Combined_PDF{['_KDE' if KDE else ''][0]}.pkl","rb") as f:
-        Combined_PDF = pickle.load(f)
-        
-    if KDE:
-        with open(f"{dir_path}/Combined_PDF_KDE_positions.pkl","rb") as f:
-            Positions_KDE = pickle.load(f)
-    else:
-        with open(f"{dir_path}/Combined_PDF_bins.pkl","wb") as f:
-            Combined_bins = pickle.load(f)
-
-    if KDE:
-        return combined_setting, np.array(Combined_PDF),np.array(Positions_KDE)
-    else:
-        return combined_setting, np.array(Combined_PDF),np.array(Combined_bins)
-"""

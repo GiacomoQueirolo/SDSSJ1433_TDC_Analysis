@@ -9,7 +9,7 @@ from Utils.get_res import load_whatever
 # standard multiflter directory
 stnd_mutlifilter_setting_dir = "multifilter_settings"
 class Setting_Multifilter():
-    def __init__(self,settings,backup_path,multifilter_setting_dir=stnd_mutlifilter_setting_dir,name=None,main_dir="./"):
+    def __init__(self,settings,backup_path,multifilter_setting_dir=stnd_mutlifilter_setting_dir,name=None,main_dir="./",BC=False):
         self.backup_path = backup_path
         self.settings    = get_setting_module(settings,1)
         self.main_dir    = main_dir
@@ -36,6 +36,8 @@ class Setting_Multifilter():
         self.arrange_params_ps()
         if not self.allWS:
             self.arrange_params_source()
+            
+        self.BC = BC
         self._savemyself()
         pass
     def _create_savefigdir(self):
@@ -173,13 +175,13 @@ def _check_same_prior_lens(settings,ret_prior=False):
     return 0
 
 @check_setting
-def create_multifilter_setting(settings,backup_path,multifilter_setting_dir=None,name=None,main_dir="./"):
+def create_multifilter_setting(settings,backup_path,multifilter_setting_dir=None,name=None,main_dir="./",BC=False):
     settings = get_setting_module(settings,1)
     if multifilter_setting_dir is None:
         print(f"Defining multifilter setting directory as the standard one: {stnd_mutlifilter_setting_dir}")
         multifilter_setting_dir = stnd_mutlifilter_setting_dir
     return Setting_Multifilter(settings=settings,backup_path=backup_path,name=name,\
-                               multifilter_setting_dir=multifilter_setting_dir,main_dir=main_dir)
+                               multifilter_setting_dir=multifilter_setting_dir,main_dir=main_dir,BC=BC)
 
 def create_comments(settings):
     cmnt= "Multifilter setting file considering setting files:\n"+" ".join([get_setting_name(sett)for sett in settings ])
