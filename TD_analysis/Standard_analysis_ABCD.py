@@ -35,6 +35,7 @@ from plot_distrib import plot_result_single
 
 
 
+
 # to have standardised plots
 plt.rcParams['font.size']= 16
 plt.rcParams['xtick.labelsize'] = 18
@@ -123,13 +124,8 @@ def standard_analysis(config,verbose=False):
 
                 
                 with open(saveml_path+"/kwargs_mc.data","wb") as f:
-                    pickle.dump(kwargs_mc,f)
-                    
-                data_vct= {"mc_res":config.mc_res,"tsrand":config.tsrand,"lcs":lcs,\
-                           "savesplines_path":savesplines_path,\
-                           "orig_shift_mag":orig_shift_mag,\
-                           "orig_shift_time":orig_shift_time,"knt":knt,\
-                           "mlparams":kwargs_ml}
+                    pickle.dump(kwargs_mc,f) 
+                data_vct = get_data_vect_single_analysis(config,savesplines_path,orig_shift_mag,knt,kwargs_ml)
                 begin = time.time()
                 
                 if __name__ == '__main__':
@@ -165,7 +161,7 @@ def standard_analysis(config,verbose=False):
                 with open(saveml_path+"/splines.data", 'wb') as f:
                     pickle.dump(splines, f)
                 # MOD_ROB
-                success = check_analysis(timedelays,max_std=5)
+                success = check_analysis(timedelays,max_std=5) #max_std should be given by the config file
                 with open(saveml_path+"/success.data","wb") as f:
                     pickle.dump(success,f)
                 ########## Plot the resulting time delay distribution #############
@@ -174,8 +170,8 @@ def standard_analysis(config,verbose=False):
                 
                 distr = np.transpose(timedelays)
                 distr_dmag = np.transpose(dmags)
-                plot_result_single(distr,name,saveml_path,wD=True)
-                plot_result_single(distr_dmag,name,saveml_path,wD=True,mag=True)
+                plot_result_single(distr,name,saveml_path,labels=config.delay_labels)
+                plot_result_single(distr_dmag,name,saveml_path,labels=config.delay_labels,mag=True)
 
 
 #Auxiliary functions:
@@ -201,7 +197,24 @@ def mask_A_peak(lcs):
     return lcs
  
 
-def single_analysis(mc_i,mc_res,tsrand,lcs,savesplines_path,orig_shift_mag,orig_shift_time,knt,mlparams):
+def get_data_vect_single_analysis(config,savesplines_path,orig_shift_mag,knt,kwargs_ml):
+    orig_shift_time = config.timeshifts
+    lcs = config.get_lcs() 
+    if config.maskA:
+        lcs=mask_A_peak(lcs)
+    
+    data_vect= {"spl":config.spl1,"mc_res":config.mc_res,"tsrand":config.tsrand,"lcs":lcs,\
+            "get_mllist":config.get_mllist,\
+            "attachml":config.attachml,\
+            "savesplines_path":savesplines_path,\
+            "orig_shift_mag":orig_shift_mag,\
+            "orig_shift_time":orig_shift_time,"knt":knt,\
+            "mlparams":kwargs_ml}
+
+    return data_vect
+#def single_analysis(config,mc_i,mc_res,tsrand,lcs,savesplines_path,orig_shift_mag,orig_shift_time,knt,mlparams,ret_lcs=False):
+# change bc config is a module and cannot be pickled for multiprocess
+def single_analysis(mc_i,spl,mc_res,tsrand,lcs,get_mllist,attachml,savesplines_path,orig_shift_mag,orig_shift_time,knt,mlparams,ret_lcs=False):
     if mc_i%(20/mc_res)==0:
         print("Iteration "+str(mc_i+1)+" of "+str(mc_res)+" ("+str(np.round((mc_i+1)*100/mc_res,3))+"%)")
     
@@ -209,7 +222,6 @@ def single_analysis(mc_i,mc_res,tsrand,lcs,savesplines_path,orig_shift_mag,orig_
     
     sig_mag =[np.median(lci.getmagerrs()) for lci in lcs]
 
-    spl = config.spl1
     #this avoid that bad choices of parameters make the spline fitting fail
     while True:
         # initialise mag, dt and lightcurves:
@@ -229,22 +241,13 @@ def single_analysis(mc_i,mc_res,tsrand,lcs,savesplines_path,orig_shift_mag,orig_
         pycs3.gen.lc_func.applyshifts(lcs, shift_time, shift_mag)
         
         # consider the microlensing for lc B, C and D
-        config.attachml(lcs,mlparams) 
+        attachml(lcs,mlparams) 
         try: 
             spline = spl(lcs,kn=knt)
             break
         except:
             pass
-        
-    """
-    l = pycs3.gen.lc_func.getnicetimedelays(lcs) 
-    all_dt=[]
-    for j in (l.split(" ")):
-        if '\n' in j or j==l.split(" ")[-1]:
-            all_dt.append(-float(j.split("\n")[0]))  
-    timedelay_ab,timedelay_ac,timedelay_bc = all_dt[:3]
-    """
-    #timedelays = get_kwdt(lcs)
+         
     timedelays  = get_dts(lcs,only_indep=True,wD=True)
     # Auxiliary info # discontinued for now
     # so we can see the spline and ml when secondary peaks appears
@@ -260,7 +263,7 @@ def single_analysis(mc_i,mc_res,tsrand,lcs,savesplines_path,orig_shift_mag,orig_
     in_mag_shift  = [lc.magshift for lc in lcs]
     
     # FR study - 16th March
-    mllist = config.get_mllist(mlparams["mllist_name"] )
+    mllist = get_mllist(mlparams["mllist_name"] )
     mag_ml_shift = []
     for j in range(len(lcs)):
         if j in mllist:
@@ -281,7 +284,7 @@ def single_analysis(mc_i,mc_res,tsrand,lcs,savesplines_path,orig_shift_mag,orig_
     dmag = -mag_shift
     # (Dmag will be the differences of dmag btw images: Dmag_i = dmag_i - dmag_A)    
     #raise # check and decide how to do the next step    
-    Dmag = dmag[1:]-dmag[0]
+    Dmag = dmag[1:]-dmag[0] # AB,AC,AD
     Dmag = Dmag.tolist()
     
     #residuals and chired
@@ -292,9 +295,12 @@ def single_analysis(mc_i,mc_res,tsrand,lcs,savesplines_path,orig_shift_mag,orig_
         pycs3.gen.lc_func.display(lcs,[spline],nicefont=True,showdelays=True,
                     filename=savesplines_path+"fit.png")
     
-    return timedelays,Dmag,\
+    if ret_lcs:
+        return lcs,timedelays,Dmag,\
         in_time_shift,in_mag_shift, chi_red, spline, residual
-
+    else:
+        return timedelays,Dmag,in_time_shift,in_mag_shift,\
+            chi_red, spline, residual
 
 def get_kwdt(lcs):
     dts_string = pycs3.gen.lc_func.getnicetimedelays(lcs)
@@ -315,13 +321,7 @@ def get_dts(lcs,only_indep=False,wD=True):
     #index_A = np.array([ "A" in ksi for ksi in dts_lett])
     # better to just give it hardcoded
     if wD:
-        dts = [kwdt["AB"
-# In[ ]:
-
-
-
-
-],kwdt["AC"],kwdt["AD"]]
+        dts = [kwdt["AB"],kwdt["AC"],kwdt["AD"]]
     else:
         dts = [kwdt["AB"],kwdt["AC"],kwdt["BC"]]
     return dts
@@ -364,4 +364,3 @@ if __name__ == '__main__':
     #os.system(comand)
     ####
 
-    success(name_prog)

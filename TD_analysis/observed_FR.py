@@ -219,10 +219,10 @@ def combine_models_mag(config,sigmathresh=None):
     print("Saved group_list as ",str(marginalisation_dir +  config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_groups.pkl'),\
         "and combined result as ",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_combined.pkl') )
     pkl.dump(group_list,
-             open(marginalisation_dir  +"mag_"+ config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_groups.pkl',
+            open(marginalisation_dir  + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_groups.pkl', 
                   'wb'))
     pkl.dump(combined,
-             open(marginalisation_dir  +"mag_"+ config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_combined.pkl',
+             open(marginalisation_dir  + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_combined.pkl',
                   'wb'))
 
 

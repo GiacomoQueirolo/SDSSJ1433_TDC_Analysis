@@ -10,7 +10,6 @@ import warnings
 import numpy as np
 import pickle as pkl
 from corner import quantile
-import matplotlib.pyplot as plt
 from pycs3.tdcomb.comb import Group
 
 from Utils.tools import get_analdir

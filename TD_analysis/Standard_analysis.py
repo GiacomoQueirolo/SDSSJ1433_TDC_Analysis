@@ -166,7 +166,7 @@ def standard_analysis(config,verbose=False):
                 with open(saveml_path+"/splines.data", 'wb') as f:
                     pickle.dump(splines, f)
                 # MOD_ROB
-                success = check_analysis(td_data)
+                success = check_analysis(timedelays)
                 with open(saveml_path+"/success.data","wb") as f:
                     pickle.dump(success,f)
                 ########## Plot the resulting time delay distribution #############

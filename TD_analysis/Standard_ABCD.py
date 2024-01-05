@@ -42,8 +42,7 @@ from pycs3_mod.sim.run import multirun
 from pycs3_mod.sim.draw import multidraw
 from inspect_results import plt_err, plt_err_tot, plt_intr_err
 ####################
-
-
+ 
 #################################
 ########### Script 1 ############
 #################################
@@ -71,7 +70,7 @@ def setup_directories(config):
     if not os.path.exists(config.report_directory):
         print("I will create the report directory for you ! ")
         mkdir(config.report_directory)
-
+    
 
 #################################
 ########### Script 2 ############
@@ -93,9 +92,9 @@ def init_fit(config):
                 mllist_name,mlfp = ml_config 
                 kwargs_ml = {"mltype":mltype_i,"mllist_name":mllist_name}
                 
-                if mltype_i=="polyml":
+                if mltype_i=="polyml": 
                     kwargs_ml["mlfp"] = mlfp
-                elif mltype_i=="splml":
+                elif mltype_i=="splml": 
                     kwargs_ml["forcen"] = config.forcen
                     kwargs_ml["nmlspl"] = mlfp
                 saveml_path = saveknt_path/config.get_savemlpath(mltype_i,ml_config)# saveknt_path/str("ml"+mltype_i[:-2]+mllist_name+mlfp_str) 
@@ -200,14 +199,9 @@ def set_param_intrinsic(config):
             for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):  
                 mllist_name,mlfp = ml_config 
                 kwargs_ml = {"mltype":mltype_i,"mllist_name":mllist_name}
-                if mltype_i=="polyml":
-                    mlfp_str="_mlfp_"+str(mlfp)
+                if mltype_i=="polyml": 
                     kwargs_ml["mlfp"] = mlfp
-                elif mltype_i=="splml":
-                    if config.forcen:
-                        mlfp_str="_nmlspl_"+str(mlfp)
-                    else:
-                        mlfp_str="_knstml_"+str(mlfp)
+                elif mltype_i=="splml": 
                     kwargs_ml["forcen"] = config.forcen
                     kwargs_ml["nmlspl"] = mlfp
 
@@ -365,13 +359,6 @@ def my_draw_mocks(config):
         for mlt_i, mltype_i in enumerate(config.mltype): #ml type
             for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):  
                 mllist_name,mlfp = ml_config 
-                if mltype_i=="polyml":
-                    mlfp_str="_mlfp_"+str(mlfp)
-                elif mltype_i=="splml":
-                    if config.forcen:
-                        mlfp_str="_nmlspl_"+str(mlfp)
-                    else:
-                        mlfp_str="_knstml_"+str(mlfp)
                 combdir = saveknt_path/config.get_savemlpath(mltype_i,ml_config)# saveknt_path/str("ml"+mltype_i[:-2]+mllist_name+mlfp_str) saveknt_path/str("ml"+mltype_i[:-2]+mllist_name+mlfp_str)
                 combdir = str(combdir)
                 #MOD_ROB
@@ -471,14 +458,9 @@ def optimise_sim(config):
                 lcs = copy.deepcopy(base_lcs)
                 mllist_name,mlfp = ml_config 
                 kwargs_ml = {"mltype":mltype_i,"mllist_name":mllist_name}
-                if mltype_i=="polyml":
-                    mlfp_str="_mlfp_"+str(mlfp)
+                if mltype_i=="polyml": 
                     kwargs_ml["mlfp"] = mlfp
-                elif mltype_i=="splml":
-                    if config.forcen:
-                        mlfp_str="_nmlspl_"+str(mlfp)
-                    else:
-                        mlfp_str="_knstml_"+str(mlfp)
+                elif mltype_i=="splml": 
                     kwargs_ml["forcen"] = config.forcen
                     kwargs_ml["nmlspl"] = mlfp
                     
@@ -522,7 +504,6 @@ def optimise_sim(config):
                     """
                     job_args = [(j, config, lcs,  kwargs, opts, combdir) for j in range(nworkers)]
                     clean_previous_simopt(*job_args[0][1:])
-                    #TEST
                     success_list_simu=[]
                     no_parall = False
                     if mltype_i=="polyml":
@@ -544,9 +525,38 @@ def optimise_sim(config):
     print("OPTIMISATION DONE : report written in %s" % (os.path.join(config.report_directory, 'report_optimisation_%s.txt' % config.simoptfctkw)))
     f.close()
 
+from pycs3_mod.sim.run import rewrite_RunRes
 
+def exec_rewrite_rr(job_args):
+    return rewrite_RunRes(*job_args)
 
-
+def _rewrite_RunRes(config):
+    
+    savefig_path=pth.Path(config.simu_directory)
+    for knt_i, knt in enumerate(config.knotstep_marg): #knotstep of the intr.spline
+        saveknt_path = savefig_path/str("simulation_kn"+str(knt))
+        for mlt_i, mltype_i in enumerate(config.mltype): #ml type
+            for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):  
+                
+                mllist_name,mlfp = ml_config 
+                kwargs_ml = {"mltype":mltype_i,"mllist_name":mllist_name}
+                if mltype_i=="polyml": 
+                    kwargs_ml["mlfp"] = mlfp
+                elif mltype_i=="splml": 
+                    kwargs_ml["forcen"] = config.forcen
+                    kwargs_ml["nmlspl"] = mlfp
+                    
+                combdir = saveknt_path/config.get_savemlpath(mltype_i,ml_config)# saveknt_path/str("ml"+mltype_i[:-2]+mllist_name+mlfp_str)
+                combdir = str(combdir)
+                #MOD_ROB
+                if not check_success_analysis(get_analdir(combdir)):
+                    print("Analysis from "+get_analdir(combdir)+" was not sufficiently precise. Ignored.")
+                    continue
+                for c, opts in enumerate(config.optset):
+                    kwargs = {'kn': knt, 'name': config.simoptfctkw}
+                    kwargs = {**kwargs,**kwargs_ml} #combine the 2 dict     
+                    job_args = (config, kwargs, opts, combdir)
+                    exec_rewrite_rr(job_args)  
 
 #################################
 ########### Script 4a ###########
@@ -565,8 +575,7 @@ def get_res_Group_i(config,knt,mltype,ml_config):
     
     savefig_path=pth.Path(config.analysis_directory)
     saveknt_path = savefig_path/str("analysis_kn"+str(knt))
-            
-    mllist_name,mlfp = ml_config 
+    
     """
     kwargs_ml = {"mltype":mltype,"mllist_name":mllist_name}
     if mltype=="polyml":
@@ -586,11 +595,14 @@ def get_res_Group_i(config,knt,mltype,ml_config):
     sim_path  = sim_path+"/sims_" + config.simset_mock+"_opt_"+config.optset[0]
 
     #ERROR
-    error = Error(sim_path)
-    error_distr = error.get_distr()
+    error = Error(sim_path,wD=True)
+    error.get_distr()
     error.create_error()
     #RES
     res_Group = getresults(data_path,error=error,labels=config.delay_labels)
+    res_Group.data_path = data_path
+    res_Group.sim_path  = sim_path
+    
     return res_Group
 
 
@@ -615,13 +627,10 @@ def combine_models(config,sigmathresh):
     color_id = 0
 
     group_list = []
-
-    opt = config.optset[0]
-        
+      
     # Redefine the keyword here because you don't necessary want to marginalise over everything
     # mlknotsteps_marg now correspond to ml_config, which therefore contains all combinations of ml_lc and degrees
 
-    masked_A = config.maskA
     
     savefig_path=pth.Path(config.analysis_directory)
     for knt_i, knt in enumerate(config.knotstep_marg): #knotstep of the intr.spline
@@ -634,7 +643,6 @@ def combine_models(config,sigmathresh):
                 if not check_success_analysis(get_analdir(combdir)):
                     print("Analysis from "+get_analdir(combdir)+" was not sufficiently precise. Ignored.")
                     continue
-                    
                 group_i = get_res_Group_i(config,knt,mltype_i,ml_config)
                 group_i.color=colors[color_id]
                 name = config.combkw[knt_i][mlt_i][mlc_i].replace("_"," ")+" "+str(mltype_i)+" "+str(mllist_name)+" "+str(mlfp)
@@ -646,11 +654,10 @@ def combine_models(config,sigmathresh):
                 f.write('Set %s, knotstep : %2.2f, deg : %s %s \n' % (name, knt, mllist_name,mlfp))
                 f.write('Tweak ml name : %s \n' % config.tweakml_name_marg_spline[0])
                 f.write('------------------------------------------------ \n')
-    
     #combine results
     
     #combined = combine_series(group_list, sigmathresh=sigmathresh)
-    combined,comb_list,combined_indexes = combine_series_methodB(group_list, sigmathresh=sigmathresh,return_combined_list=True)
+    combined,comb_list,combined_groups = combine_series_methodB(group_list, sigmathresh=sigmathresh,return_combined_list=True)
     
     
     print("Final combination for marginalisation ", config.name_marg_spline)
@@ -658,7 +665,7 @@ def combine_models(config,sigmathresh):
     savefig = indiv_marg_dir + config.name_marg_spline + "_sigma_%2.2f_myplot.pdf" % sigmathresh
     
     #create plot
-    delayplot(group_list,savefig,colors=colors,refgroup=combined)
+    delayplot(group_list,savefig,refgroup=combined)
     
     print("Saved group_list as ",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_groups.pkl'),\
         "and combined result as ",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_combined.pkl') )
@@ -681,8 +688,16 @@ def combine_models(config,sigmathresh):
     #mkdir(mag_marginalisation_dir)   
     
     series_to_combine = []
-    for name_to_comb in comb_list :
-        """
+    for cmb_grp in combined_groups:
+        print("names comb groups:",cmb_grp.name)
+        error = Error_mag(cmb_grp.sim_path,wD=True)
+        error.create_error()
+        res_Group = getresults_mag(cmb_grp.data_path,error=error,labels=["AB","AC","AD"],name=cmb_grp.name)
+        res_Group.color = cmb_grp.color
+        series_to_combine.append(res_Group)
+    """
+    for i,name_to_comb in enumerate(comb_list) :
+        ####
         str_to_comb = name_to_comb.replace(" ","_").replace("spl1_","") 
         
         knt = int(str_to_comb.split("_")[0].replace("ks",""))
@@ -699,7 +714,7 @@ def combine_models(config,sigmathresh):
             noml = True
             ml_dir= "/"
         mlfp  = mlfp_+ str(str_to_comb.split("_")[-1])
-        """
+        ###
         lst_str  = name_to_comb.split(" ")[1:]
         knt      = int(lst_str[0].replace("ks",""))
         mltype   = lst_str[1].split("ml")[0]+"ml"
@@ -715,12 +730,14 @@ def combine_models(config,sigmathresh):
         sim_path    = sim_path+"/sims_" + config.simset_mock+"_opt_"+config.optset[0]
 
         #ERROR
-        error = Error_mag(sim_path)
+        error = Error_mag(sim_path,wD=True)
         error.create_error()
         #RES
-        res_Group = getresults_mag(data_path,error=error,labels=["AB","AC","BC"],name=name_to_comb)
+        res_Group = getresults_mag(data_path,error=error,labels=["AB","AC","AD"],name=name_to_comb)
+        res_Group.color = combined_groups[i].color
+
         series_to_combine.append(res_Group)
-        
+    """
     #mag_combined = series_to_combine[0]
     #if len(series_to_combine)>1:
     #    for G in series_to_combine[1:]:  
@@ -734,7 +751,7 @@ def combine_models(config,sigmathresh):
     savefig = indiv_marg_dir +"mag_" +config.name_marg_spline + "_sigma_%2.2f_myplot.pdf" % sigmathresh
     
     #create plot
-    dmagplot(series_to_combine,savefig,colors=colors,refgroup=mag_combined)
+    dmagplot(series_to_combine,savefig,refgroup=mag_combined)
     
     print("Saved group_list as mag_",str(marginalisation_dir +  config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_groups.pkl'),\
         "and combined result as mag_",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_combined.pkl') )
@@ -746,11 +763,7 @@ def combine_models(config,sigmathresh):
                   'wb'))
 
 
-
-
-
-
-def standard_pipeline(config,verbose=False):  
+def standard_pipeline(config,verbose=False):
     #Creating missing directories
     if verbose:
         print("Setting up directories\n")
@@ -770,19 +783,18 @@ def standard_pipeline(config,verbose=False):
     if verbose:
         print("Optimising the simulation\n")
     optimise_sim(config)
+    
     # Plot resulting error distribution and original analysis distribution 
     if verbose:
         print("Plotting the error distribution\n")
     plot_err(config)
-    
     print("Done standard error analysis\n")
     
     # Combine the results obtained from different models and plot them
     if verbose:
         print("Combining models\n")
+
     combine_models(config,sigmathresh=config.sigmathresh)
-
-
 
 
 

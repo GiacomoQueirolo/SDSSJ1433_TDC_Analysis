@@ -32,7 +32,7 @@ def plt_err(config,savefig_dir):
     
     # err vs knts mltype and mllcs
     fig,axes = plt.subplots(3,figsize=(12,12)) 
-    lets     = ["AB","AC","BC"]
+    lets     = config.delay_labels
     comb     = []
     dof_comb = []
     
@@ -50,18 +50,22 @@ def plt_err(config,savefig_dir):
             marker="1" #no ml
             dof_mrk = "P"
             alpha=.1
-            if mlcnf[i][0]=="AB":
+            if mlcnf[i][0]==lets[0]:
                 marker="o"
-                cmb+="ab"
-            elif mlcnf[i][0]=="AC":
+                cmb+=lets[0].lower()
+            elif mlcnf[i][0]==lets[1]:
                 marker="v"
-                cmb+="ac"
-            elif mlcnf[i][0]=="BC":
+                cmb+=lets[1].lower()
+            elif mlcnf[i][0]==lets[2]:
                 marker="^"
-                cmb+="bc"
+                cmb+=lets[2].lower()
             elif mlcnf[i][0]=="ABC":
                 marker="s"
                 cmb+="abc"
+                alpha=1
+            elif mlcnf[i][0]=="ABCD":
+                marker="1"
+                cmb+="abcd"
                 alpha=1
             if cmb not in comb:
                 desc+=" "+str(mlcnf[i][0])
@@ -106,9 +110,9 @@ def plt_err_tot(config,savefig_dir):
     
     _       = [i["error"].create_error() for i in error]
     Err_tot = [i["error"].tot for i in error]
-    lets     = ["AB","AC","BC"]
+    lets     = config.delay_labels
     
-    fig,axes = plt.subplots(1,figsize=(12,6)) 
+    fig,axes = plt.subplots(1,figsize=(15,30)) 
     comb     = []
     dof_comb = []
     mean_err = []
@@ -126,18 +130,22 @@ def plt_err_tot(config,savefig_dir):
         marker="1" #no ml
         dof_mrk = "P"
         alpha = .1
-        if mlcnf[i][0]=="AB":
+        if mlcnf[i][0]==lets[0]:
             marker="o"
-            cmb+="ab"
-        elif mlcnf[i][0]=="AC":
+            cmb+=lets[0].lower()
+        elif mlcnf[i][0]==lets[1]:
             marker="v"
-            cmb+="ac"
-        elif mlcnf[i][0]=="BC":
+            cmb+=lets[1].lower()
+        elif mlcnf[i][0]==lets[2]:
             marker="^"
-            cmb+="bc"
+            cmb+=lets[2].lower()
         elif mlcnf[i][0]=="ABC":
             marker="s"
             cmb+="abc"
+            alpha=1
+        elif mlcnf[i][0]=="ABCD":
+            marker="1"
+            cmb+="abcd"
             alpha=1
         if cmb not in comb:
             desc+=" "+str(mlcnf[i][0])
@@ -241,9 +249,10 @@ def plt_err_tot(config,savefig_dir):
 def plt_intr_err(config,savefig_dir):
         fig,axes = plt.subplots(3,figsize=(12,12)) 
         fig.suptitle("Intrinsic scatter from the $\Delta t$ analysis")
-        lets     = ["AB","AC","BC"]
+        lets     = config.delay_labels
         savefig_path = config.analysis_directory
-        legends  = []
+        legends  = []   
+        legends_dof  = []
         for a, knt in enumerate(config.knotstep_marg): #knotstep of the intr.spline
             saveknt_path = savefig_path+str("/analysis_kn"+str(knt))
             mkdir(savefig_path)  
@@ -266,29 +275,29 @@ def plt_intr_err(config,savefig_dir):
                         desc = "SplMl"
                     marker="1" #no ml
                     dof_mrk = "P"
-                    if ml_config[0]=="AB":
-                        marker="o"
-                        alpha=.1    
-                    elif ml_config[0]=="AC":
+                    if ml_config[0]==lets[0]:
+                        marker="o" 
+                    elif ml_config[0]==lets[1]:
                         marker="v"
-                        alpha=.1
-                    elif ml_config[0]=="BC":
+                    elif ml_config[0]==lets[2]:
                         marker="^"
-                        alpha=.1
                     elif ml_config[0]=="ABC":
                         marker="s"
                         alpha=1
+                    elif ml_config[0]=="ABCD":
+                        marker="d"
+                        alpha=1
                     else:
-                        desc=None
+                        desc=""
                     if ml_config[1]==2:
                         dof_mrk = "+"
                         dof_desc = "ML dof = 2"
-                    if ml_config[1]==3:
+                    elif ml_config[1]==3:
                         dof_mrk = "x"
                         dof_desc = "ML dof = 3"
                     else:
                         dof_mrk = "P"
-                        dof_desc=None 
+                        dof_desc="" 
                     
                     for i in range(len(distr)): #ABCD          
                         ddt = distr[i]
@@ -300,16 +309,33 @@ def plt_intr_err(config,savefig_dir):
                         mean_err =(err_min+err_max)/2.
 
                         #axes[i].scatter(knt,std_i,c=col,marker=marker,label=desc) 
-                        axes[i].scatter(knt,mean_err,c=col,marker="x",label=desc+" mean error") 
-                        axes[i].scatter(knt,std_i,c="k",marker=dof_mrk,label=dof_desc)
+                        lbl_i =desc+dof_desc+" mean error"
+                        if lbl_i not in legends:
+                            axes[i].scatter(knt,mean_err,c=col,marker=dof_mrk,label=lbl_i) 
+                            legends.append(lbl_i)
+                        else:
+                            axes[i].scatter(knt,mean_err,c=col,marker=dof_mrk)
+                        lbl_stdv_i =desc+dof_desc+" stdv"
+                        if col=="r":
+                            col_stdv="k"
+                        else:
+                            col_stdv = "grey"
+                        if lbl_stdv_i not in legends_dof:
+                            axes[i].scatter(knt,std_i,c=col_stdv,marker=dof_mrk,label=lbl_stdv_i)
+                            legends_dof.append(lbl_stdv_i)
+                        else:
+                            axes[i].scatter(knt,std_i,c=col_stdv,marker=dof_mrk)
                         if a==0 and mlt_i==0:
                             axes[i].set_xlabel("Dt knts [d]")
+                        if i==0:
+                            axes[i].legend()
         for i,ax in enumerate(axes):
             ax.set_title(lets[i])
             ax.set_ylabel("Scatter from time delay [d]")
         plt.tight_layout()
-        plt.savefig(savefig_dir+"/scatter_dt_res.pdf")
-        print("Plotted: "+savefig_dir+"/scatter_dt_res.pdf")
+        nm = savefig_dir+"/scatter_dt_res.pdf"
+        plt.savefig(nm)
+        print("Plotted: "+nm)
 
 
 #"J1433_forcen"
