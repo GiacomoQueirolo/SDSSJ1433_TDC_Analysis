@@ -47,9 +47,12 @@ if __name__=="__main__":
         1 = append  MCMCb = 2000*rf (only used if no previous MCMC found )  MCMCr=8000*rf 
         2 = test run  PSO_it = 3   PSO_prt = 3   MCMCb = 1 MCMCr = 2 
         3 = append test   MCMCb = 2  MCMCr=2 
+        4 = shorter MCMC run (not the burn tho), PSO_it = 1200*rf   PSO_prt = 400*rf    MCMCb = 1000*rf  MCMCr = 2000*rf 
     (PSO_it: PSO iterations, PSO_prt: PSO particles, MCMCr: MCMC run steps, MCMCb: MCMC burn in steps)\n""")
     parser.add_argument('-rf','--run_factor',type=float,dest="run_factor",default=2.,help="Run factor to have longer run")
     parser.add_argument('-tc','--threadCount',type=int,dest="threadCount",default=150,help="Number of CPU threads for the MCMC parallelisation (max=160)")
+    parser.add_argument("-BC", dest="BC", default=False,action="store_true",
+                        help="Consider BC couple instead of AD (warning: not the standard)")
     parser.add_argument('SETTING_FILES',nargs="+",default="",help="setting file to model")
 
     args        = parser.parse_args()
@@ -58,6 +61,7 @@ if __name__=="__main__":
     settings    = get_setting_module(args.SETTING_FILES,1)
     threadCount = args.threadCount  
     RND = False #set a random start of the PSO
+    BC  = args.BC 
     n_run_cut = 50  # to re-implement
     #Model PSO/MCMC settings
     append_MC=False
@@ -80,6 +84,11 @@ if __name__=="__main__":
         append_MC   = True
         n_run  = int(2) #MCMC total steps 
         n_burn = int(1) #MCMC burn in steps
+    elif run_type==4:
+        n_run  = int(800*run_fact) #MCMC total steps 
+        n_burn = int(300*run_fact) #MCMC burn in steps
+        n_iterations = int(2700*run_fact) #number of iteration of the PSO run
+        n_particles  = int(1000*run_fact) #number of particles in PSO run
     else:
         raise RuntimeError("Give a valid run_type or implement it your own")
 
@@ -87,7 +96,7 @@ if __name__=="__main__":
 
 
     backup_path      = "./backup_results_mltf"
-    multifilter_sett = create_multifilter_setting(settings,backup_path=backup_path)
+    multifilter_sett = create_multifilter_setting(settings,backup_path=backup_path,BC=BC)
     mltf_sett_name   = get_multifilter_setting_name(multifilter_sett)
     savemcmc_path    = multifilter_sett.savemcmc_path
     savefig_path     = multifilter_sett.savefig_path
@@ -96,7 +105,7 @@ if __name__=="__main__":
     for sett in settings:
         setting_name = get_setting_name(sett)    
         setting_path = find_setting_path(setting_name)
-        os.system(f"cp {setting_path}/{setting_name} {savefig_path}/.") #we copy the setting file to that directory
+        os.system(f"cp {setting_path}/{setting_name.replace('.py','')}.py {savefig_path}/.") #we copy the setting file to that directory
     CP    = multifilter_sett.CP
     allWS = multifilter_sett.allWS
     if CP:
@@ -148,7 +157,7 @@ if __name__=="__main__":
     if not allWS:
         source_model_list = kwargs_model['source_light_model_list']    
     # Likelihood params
-    kwargs_likelihood = init_kwrg_custom_likelihood_mltf(multifilter_sett,mask=masks,custom="PLL")
+    kwargs_likelihood = init_kwrg_custom_likelihood_mltf(multifilter_sett,mask=masks,custom=multifilter_sett.prior_lens.custom_type)
     # BE CAREFUL CHANGING THIS (MOD_PLL)
     ############################################################################################
     kwargs_constraints = get_kwargs_constraints_mltf(multifilter_sett,kwargs_model=kwargs_model)
@@ -204,7 +213,7 @@ if __name__=="__main__":
     fixed_sources = get_fixed_sources_list_mltf(multifilter_sett)
     update_settings_initial_step['source_add_fixed'] = fixed_sources
 
-    initial_fitting_kwlist = [['update_settings',update_settings_initial_step],
+    """initial_fitting_kwlist = [['update_settings',update_settings_initial_step],
     ['PSO', {'sigma_scale': 1., 'n_particles': 200, 'n_iterations': 100,"threadCount":threadCount}],  # run PSO first band
     ['align_images', {'n_particles': 10*len(settings), 'n_iterations': 100*len(settings), 
                       'align_offset': True, 'align_rotation': True, 
@@ -212,7 +221,16 @@ if __name__=="__main__":
                       'compute_bands': other_bands}],   
     ['update_settings', {'kwargs_likelihood': {'bands_compute': all_bands},  # now we fit all bands jointly
                         'source_remove_fixed': fixed_sources  # and release all parameters of the second band to be free
+                        }]]"""
+    initial_fitting_kwlist = [['update_settings',update_settings_initial_step],
+    ['PSO', {'sigma_scale': 1., 'n_particles': 200, 'n_iterations': 100,"threadCount":threadCount}],  # run PSO first band
+    ['align_images', {'n_particles': 10*len(settings), 'n_iterations': 100*len(settings),
+                       "threadCount":threadCount,
+                      'compute_bands': other_bands}],   
+    ['update_settings', {'kwargs_likelihood': {'bands_compute': all_bands},  # now we fit all bands jointly
+                        'source_remove_fixed': fixed_sources  # and release all parameters of the second band to be free
                         }]]
+
 
     if not append_MC:
         fitting_kwargs_list = [*initial_fitting_kwlist,['PSO', {'sigma_scale': 1., 'n_particles': n_particles, \
@@ -259,7 +277,7 @@ if __name__=="__main__":
         multifilter_sett.savejson_data(data=chain_list[0],filename="pso")
         
     kwargs_result   = fitting_seq.best_fit()
-    param_file_name = savemcmc_path+multifilter_sett.get_savejson_name("prm").replace("json","dat")#multifilter_sett.savename.replace("mltf_setting","mcmc_prm").replace(".dll",".dat")
+    param_file_name = savemcmc_path+multifilter_sett.get_savejson_name("prm").replace("json","dat")
     with open(param_file_name, 'w+') as param_file:
         for i in range(len(param_mcmc)):
             param_file.writelines(param_mcmc[i]+",\n")

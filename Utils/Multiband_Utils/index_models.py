@@ -45,22 +45,15 @@ def get_index_source_light_model_list(settings):
 def get_index_lens_light_model_list(settings):
     # this depends on whether there main lens is subtracted or not
     index_lens_light_model = []
-    ind = 0
     for sett in settings:
-        if not check_if_SUB(sett):
-            # The main lens, the perturber and the background  modelled
-            rng=3
-        else:
+        if check_if_SUB(sett):
             # The perturber and the background are still modelled
-            rng=2
-        indexes = []
-        for _ in range(rng):
-            indexes.append(ind)
-            ind+=1
-        index_lens_light_model.append(indexes)
+            index_lens_light_model.append([1,2])
+        else:
+            index_lens_light_model.append([0,1,2])
     return index_lens_light_model
-
-
+    
+    
 #@check_setting (not needed for this one)
 def get_index_point_source_model_list(settings):
     # easy, for this is the same for all of them and it's 1 PS profile
@@ -71,7 +64,7 @@ def get_index_point_source_model_list(settings):
     return index_ps_model
 
 #@check_setting (not needed for this one)
-def get_index_point_source_frame_list(settings):
+def get_index_point_source_list(settings):
     #point_source_frame_list: list of lists mirroring the structure of the image positions.
     # Integers correspond to the i'th list entry of index_lens_model_list indicating in which frame/band the image is
     # appearing

@@ -13,14 +13,15 @@ import sys,csv
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-import multiprocessing
+
 
 from Utils.tools import *
-from Data.input_data import init_kwrg_psf
+from Utils.get_res import load_whatever
+
 from MassToLight.grid_class import Circ_Grid,Length
 from Data.conversion import conv_xy_to_radec,conv_radec_to_xy
         
-from Utils.math_tools import sqrt_sum_list
+from Data.image_manipulation import load_fits
 
 def _get_EE(setting):
     setting   = get_setting_module(setting,1)
@@ -66,6 +67,8 @@ def resample_psf_grid(sett,subgrid_deg_pixel):
     index = np.array(subgrid_deg_pixel)/sett.pssf
     # integer version of the pixel index
     pix_index = index.astype(int)
+    #return pix_index
+    
     # we only want the unique values, so that we can count the occurence
     unique_pix = np.unique(pix_index,axis=0)
     
@@ -75,7 +78,7 @@ def resample_psf_grid(sett,subgrid_deg_pixel):
         hmsp = len(np.where(pix_index==p)[0])
         if hmsp>sett.pssf:
             resampled_psf_grid.append(p)
-    return resampled_psf_grid
+    return np.array(resampled_psf_grid)-1
     
 def acceptable_newcenter(newCenter_xy,naxis,ri):
     # check that the new center is not too close to the edges
@@ -91,7 +94,11 @@ def acceptable_newcenter(newCenter_xy,naxis,ri):
         return False
     return True
  
-def compare_EE(sett):
+aper_name   = "psf_aper.json"
+EE_name     = "/psf_theoEE.json"
+EE_psf_name = "/psf_measEE.json"
+
+def compare_EE(sett,savedata=True):
     print_setting(sett)
     sett = get_setting_module(sett,1)
     ###########
@@ -100,9 +107,11 @@ def compare_EE(sett):
         sett.pix_scale = sett.pix_scale/sett.pssf
         sett.transform_pix2angle = sett.transform_pix2angle / sett.pssf
     ###########
-    kwrg_psf   = init_kwrg_psf(sett,saveplots=False)
-    psf_image  = kwrg_psf["kernel_point_source"]
-    err_psf    = kwrg_psf["psf_error_map"]
+    #kwrg_psf   = init_kwrg_psf(sett,saveplots=False)
+    #psf_image  = kwrg_psf["kernel_point_source"]
+    psf_file  = sett.data_path+sett.psf_name 
+    psf_image = np.array(load_fits(psf_file))
+    
     
     aper,EE    = _get_EE(sett)
     naxis1,naxis2 = len(psf_image),len(psf_image[0])
@@ -137,42 +146,71 @@ def compare_EE(sett):
         err_flux = []
         previous_center=[]
         for dither_i in range(10):
-            rnd_bound = .5
-            newCenter =  np.random.normal(grid.Center.get_radec(),daper[r_i]*.5).tolist()
-            while ( not acceptable_newcenter(conv_radec_to_xy(sett,*newCenter),naxis,r) ) or ( newCenter in previous_center):
-                rnd_bound+=.1
+            if dither_i!=0:
+                rnd_bound = .5
+                newCenter =  np.random.normal(grid.Center.get_radec(),np.mean(daper)*.25).tolist()
+                while ( not acceptable_newcenter(conv_radec_to_xy(sett,*newCenter),naxis,r) ) or ( newCenter in previous_center):
+                    rnd_bound+=.1
+                    if rnd_bound>1:
+                        break
+                    newCenter = np.random.normal(grid.Center.get_radec(),grid.edge_radec*rnd_bound).tolist()
                 if rnd_bound>1:
                     break
-                newCenter = np.random.normal(grid.Center.get_radec(),grid.edge_radec*rnd_bound).tolist()
-            if rnd_bound>1:
-                break
+            else:
+                newCenter = grid.Center.get_radec()
             subgrid = grid.get_subgrid(r,newCenter=newCenter,input_type="radec")
             subgrid_deg_pixel = subgrid.get_degraded_pixel_circ_grid()
-            if int(sett.pssf)==1:
+            """if int(sett.pssf)==1:
                 Err_subgrid_deg_pixel = subgrid_deg_pixel
             else:
-                Err_subgrid_deg_pixel = resample_psf_grid(sett,subgrid_deg_pixel)
-            _flux = np.sum([psf_image[i[0]][i[1]] for i in subgrid_deg_pixel])
-            _err  = [err_psf[i[0]][i[1]] for i in Err_subgrid_deg_pixel]
-            flux.append(_flux)
-            err_flux.append(sqrt_sum_list(_err))#=sqrt(SUM(sig_pixi**2))
-            previous_center.append(newCenter)
+                Err_subgrid_deg_pixel = resample_psf_grid(sett,subgrid_deg_pixel)"""
+            try:
+                _flux = np.sum([psf_image[i[0]][i[1]] for i in subgrid_deg_pixel])
+                flux.append(_flux)
+                previous_center.append(newCenter)
+            except IndexError:
+                print(f"Dither {dither_i} failed due to subgrid_pixel being out of bounds")
+                continue
+            #_err  = [err_psf[i[0]][i[1]]/(sett.pssf**2) for i in Err_subgrid_deg_pixel]
+            #err_flux.append(sqrt_sum_list(_err))#=sqrt(SUM(sig_pixi**2))
         EE_psf.append(np.average(flux))
-        err_EE.append(sqrt_sum_list(err_flux)/np.sqrt(len(flux)-1))
-    EE_psf = np.array(EE_psf)*max(EE)/max(EE_psf)	
-    err_EE = np.array(err_EE)*max(EE)/max(EE_psf)
-    plt.scatter(aper,EE,label="theo. EE")
+        #err_EE.append(sqrt_sum_list(err_flux)/np.sqrt(len(flux)-1))
+    EE_psf = np.array(EE_psf)*max(EE)/max(EE_psf)
+    #err_EE = np.array(err_EE)*max(EE)/max(EE_psf)
+    if savedata:
+        svpth=get_savemcmcpath(sett)
+        print(svpth)
+        print(svpth+"/"+aper_name)
+        save_json(aper,svpth+"/"+aper_name)
+        print(svpth+"/"+EE_name)
+        save_json(EE,svpth+"/"+EE_name)
+        print(svpth+"/"+EE_psf_name)
+        save_json(EE_psf,svpth+"/"+EE_psf_name)
+    return [aper,EE,EE_psf]
+    
+def plot_EE(sett,aper,EE,EE_psf):
+    fnt = 16
+    plt.rcParams['xtick.labelsize'] = fnt
+    plt.rcParams['ytick.labelsize'] = fnt 
+    plt.rcParams['font.size'] = fnt
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('font', size=fnt)          # controls default text sizes
+    plt.rc('axes', titlesize=fnt)     # fontsize of the axes title
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=fnt)    # legend fontsize
+
+    plt.figure(figsize=(6,5))
+    plt.plot(aper,EE,label="theoretical EE")
     plt.scatter(aper,EE_psf,color="darkorange",label="measured EE")
-    # error is from the scatter obtained form the dither
-    plt.errorbar(aper,EE_psf,yerr=err_EE,color="darkorange",fmt="x",capsize=2)
-    plt.title("EE theoretic vs measured from PSF model")
+    plt.title("Encircled Energy of PSF model")
     plt.xlabel("Aperture [\"]")
-    plt.ylabel("Norm. Flux [pix count]")
-    plt.legend()
+    plt.ylabel("Normalised Flux [pix count]")
+    plt.legend(loc='lower right')
+    #plt.tight_layout()
     plt.savefig(get_savefigpath(sett)+"/EE_dither_pll.pdf")
     print("Saved "+get_savefigpath(sett)+"/EE_dither_pll.pdf")
-    #plt.savefig(get_savefigpath(sett)+"/EE.png")
-    #print("Saved "+get_savefigpath(sett)+"/EE.png")
     plt.close()
 
 
@@ -185,9 +223,19 @@ if __name__=="__main__":
     args      = parser.parse_args()
     setting_names  = args.SETTING_FILES
     
-    #for sett in setting_names:
-    pool_obj = multiprocessing.Pool()
-    _ = pool_obj.map(compare_EE,setting_names)
+    for sett in setting_names:
+        sett = get_setting_module(sett,1)
+        try:
+            svpth  = get_savemcmcpath(sett)
+            aper   = load_whatever(svpth+"/"+aper_name)
+            EE     = load_whatever(svpth+"/"+EE_name)
+            EE_psf = load_whatever(svpth+"/"+EE_psf_name)
+            print("loaded previous data")
+        except:
+            #pool_obj = multiprocessing.Pool()
+            list_EE = compare_EE(sett)#pool_obj.map(compare_EE,sett)
+            aper,EE,EE_psf = list_EE
+        plot_EE(sett,aper,EE,EE_psf)    
     success(sys.argv[0])
  
 

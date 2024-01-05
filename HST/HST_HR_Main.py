@@ -82,7 +82,7 @@ if __name__=="__main__":
     mkdir(savefig_path)
     mkdir(savemcmc_path)
     save_log_command(save_dir=savefig_path)
-    backend_filename = get_backend_filename(setting_name)
+    backend_filename = get_backend_filename(setting_name,backup_path=backup_path)
     setting_path = find_setting_path(setting_name)
     os.system("cp "+setting_path+"/"+setting_name+".py "+savefig_path+".") #we copy the setting file to that directory
     sys.path.append(setting_path)

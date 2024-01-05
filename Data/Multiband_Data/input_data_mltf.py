@@ -87,7 +87,7 @@ def get_kwargs_model_mltf(multifilter_sett):
                     }
     if not multifilter_sett.allWS:
         kwargs_model['source_light_model_list'] = source_model_list
-    
+    # should be by default that all lens model are shared btw fitlers:
     #kwargs_model["index_lens_model_list"]         = get_index_lens_model_list(multifilter_sett.settings)
     kwargs_model["index_lens_light_model_list"]   = get_index_lens_light_model_list(multifilter_sett.settings)
     kwargs_model["index_source_light_model_list"] = get_index_source_light_model_list(multifilter_sett.settings)
@@ -95,7 +95,7 @@ def get_kwargs_model_mltf(multifilter_sett):
     #point_source_frame_list: list of lists mirroring the structure of the image positions.
     # Integers correspond to the i'th list entry of index_lens_model_list indicating in which frame/band the image is
     # appearing
-    kwargs_model['point_source_frame_list']       = get_index_point_source_frame_list(multifilter_sett.settings)
+    #kwargs_model['point_source_frame_list']       = get_index_point_source_frame_list(multifilter_sett.settings)
     return kwargs_model
 
 @check_mltf_setting
@@ -193,7 +193,7 @@ def get_fixed_sources_list_mltf(multifilter_sett):
     return fixed_sources_list
 
 @check_mltf_setting
-def init_multi_band_list_mltf(multifilter_sett,saveplots=False, return_masks=False):
+def init_multi_band_list_mltf(multifilter_sett,saveplots=False,return_masks=False):
     # setting can be the string with the name of the setting or the instance of the relative setting function 
     multi_band_list = []
     masks = []
@@ -210,8 +210,6 @@ def init_multi_band_list_mltf(multifilter_sett,saveplots=False, return_masks=Fal
     if return_masks:
         return multi_band_list,masks
     return multi_band_list
-
-
 
 @check_mltf_setting
 def init_lens_model(multifilter_sett,lens_model_list=None):

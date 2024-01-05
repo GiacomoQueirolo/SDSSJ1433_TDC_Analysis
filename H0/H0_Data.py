@@ -51,7 +51,7 @@ def get_Dt_post(dt_name,PH0_resdir="results/PH0",pycs_path="./my_pycs_scripts/",
         with open(f"{PH0_resdir}/dt_config.dll","wb") as f:
             dill.dump(dt_conf,f)
     print("For time delay using posterior : ",str(dt_name))
-    return Dt_res
+    return dt_conf,Dt_res
 
 def get_Df_post(df_name,PH0_resdir="results/PH0",lenstronomy_path="./lenstronomy/",link=True,overwrite=False):
     combined_setting, Combined_PDF,Combined_bins_or_points = get_combined_Df(df_name,main_dir=lenstronomy_path)
@@ -78,4 +78,11 @@ def write_readme(path,dt_name,df_name,lenstronomy_path="./lenstronomy/",pycs_pat
         f.write(str(df_path)+"\n")
     if log_command:
         save_log_command(path)
+    return 0
+
+def verify_BC(conf_dt,comb_sett):
+    comb_sett_BC = getattr(comb_sett,"BC",True)
+    conf_dt_BC   = getattr(conf_dt,"BC",True)
+    if comb_sett_BC!=conf_dt_BC:
+        raise ValueError(f"BC must be the same for config_Dt (BC={conf_dt_BC}) and combined_setting_Df (BC={comb_sett_BC})")
     return 0

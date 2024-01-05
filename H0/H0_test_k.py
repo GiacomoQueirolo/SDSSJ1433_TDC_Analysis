@@ -27,15 +27,16 @@ import json,copy,time
 import argparse as ap
 import matplotlib.pyplot as plt
 
-from H0_Combined_reworked import get_kwdt,get_PH0
-from astropy.cosmology import Planck18,WMAP9,FlatLambdaCDM
-from astropy.cosmology import FlatLambdaCDM
-from lens_J1433.tools import *
-from lens_J1433.plot_H0 import plot_H0
-from tools_H0 import H0_Res
-from lens_J1433.Dt_from_Df_reworked import *
-from lens_J1433.statistical_tools import quantiles
-from H0_Data import *
+from H0.H0_Combined_reworked import get_kwdt,get_PH0
+from Utils.tools import *
+from H0.plot_H0 import plot_H0
+from H0.tools_H0 import H0_Res
+from Utils.Dt_from_Df_reworked import *
+from Utils.statistical_tools import quantiles
+from H0.H0_Data import *
+# we consider the marginalisation over Omega_m
+from H0.H0_Combined_reworked import get_PH0_marg_OmegaM
+from Posterior_analysis.tools_Post import default_cosmo
 
 if __name__ == '__main__':
         
@@ -66,6 +67,9 @@ if __name__ == '__main__':
     parser.add_argument('-ovw','--overwrite',help=help_overwrite,
                         dest="overwrite", 
                         default=False,action="store_true")
+    parser.add_argument('-pll','--parallel',help="Use parallel computing",
+                        dest="parellel", 
+                        default=False,action="store_true")
     parser.add_argument('-v','--verbose',help="Verbosity",
                         dest="verbose", 
                         default=False,action="store_true")
@@ -76,6 +80,7 @@ if __name__ == '__main__':
     h0max     = args.h0max
     h0min     = args.h0min
     h0step    = args.h0step
+    parallel  = args.parellel  
     verbose   = args.verbose
     overwrite = args.overwrite
 
@@ -95,37 +100,18 @@ if __name__ == '__main__':
     # Computing H0 posterior    
     H0_sampled = np.arange(h0min,h0max,h0step)
     
-    color = ["k","b","r"]
-    EdS_cosmo = FlatLambdaCDM(H0=100,Om0=1,name="EdS")
+    marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo0=default_cosmo,parall=parallel)
+    h0_res,err_min,err_max = quantiles(marg_PH0,H0,q=[0.16,.5,0.84],return_quantiles=False)
+    with open(f"{PH0_resdir}/marg_ph0_results.data","wb") as f:
+        pickle.dump([marg_PH0,H0],f)
+        
+    H0_res = H0_Res(h0_res,[err_min,err_max])
+    print("H0 marginalised over Om ",H0_res)
     f, ax = plt.subplots(1, 1, figsize=(18, 10))
-    for ic,cosmo in enumerate([Planck18,WMAP9,EdS_cosmo]):
-        PH0,H0 = get_PH0(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo=cosmo)
-        h0_res,err_min,err_max = quantiles(PH0,H0,q=[0.16,.5,0.84],return_quantiles=False)
-        H0_res = H0_Res(h0_res,[err_min,err_max])
-        print("Cosmo: ", cosmo.name)
-        print("analytical: ", H0_res)
-        ax = plot_H0(H0,PH0,add_mode=False,color=color[ic],return_plot=True,ax=ax)
-    figname =f"{PH0_resdir}/PH0_dtf_cosmo.pdf"
+    ax = plot_H0(H0,marg_PH0,add_mode=False,return_plot=True,ax=ax)
+    figname =f"{PH0_resdir}/PH0_dtf_cosmo_marg.pdf"
     plt.savefig(figname)
     plt.close()
     print(f"Saved {figname}")
-    
-    Omega_m_smpl = np.linspace(0,1,100)
-    PH0_Om  = []
-    for Om in Omega_m_smpl:
-        cosmo  = FlatLambdaCDM(H0=Planck18.H0,Om0=Om,name=f"Omega_m:{np.round(Om,2)}")
-        PH0,H0 = get_PH0(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo=cosmo)
-        PH0_Om.append(PH0)
-    Om,Ho = np.meshgrid(Omega_m_smpl,H0)
-
-
-    plt.pcolormesh(Om,Ho,np.transpose(PH0_Om))
-    savename = f"{PH0_resdir}/PH0_OmegaM.pdf"
-    plt.savefig(savename)
-    print(f"Saved {savename}")
-    PH0_OM = [Om,Ho,np.transpose(PH0_Om)]
-    with open(f"{PH0_resdir}/PH0_OM.pkl","wb") as f:
-        pickle.dump(PH0_OM,f)
     success(sys.argv[0])
 
-    

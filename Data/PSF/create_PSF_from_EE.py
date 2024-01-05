@@ -17,10 +17,9 @@ import multiprocessing
 
 from Utils.tools import *
 from Data.input_data import init_kwrg_psf
-from MassToLight.grid_class import Circ_Grid,Length
 from Data.conversion import conv_xy_to_radec
-        
-
+from MassToLight.grid_class import Circ_Grid,Length
+    
 from Data.image_manipulation import fits_with_copied_hdr
 
 
@@ -52,13 +51,11 @@ def _get_EE(setting):
     EE   = np.array([float(ee) for ee in EErow_i])
     return aper,EE
 
-"""
-def flux_in_grid(lens_light_pix,flat_grid_degraded): 
+def flux_in_grid(lens_light_pix,grid): 
     # now the problem is, the grid is not discretised in pixels
     # we now have a grid with the coord of the pixels
     flux = np.sum([lens_light_pix[i[0]][i[1]] for i in flat_grid_degraded])
     return flux
-"""
 
 def create_PSF(sett):
     print_setting(sett)
@@ -67,6 +64,7 @@ def create_PSF(sett):
     # PSF_SS: not the best solution, but somewhat alright for now
     if float(sett.pssf)>1.:
         sett.pix_scale = sett.pix_scale/sett.pssf
+        sett.transform_pix2angle = sett.transform_pix2angle / sett.pssf
     ######################
     sett.ra_at_xy0,sett.dec_at_xy0 = [0,0]
 
@@ -76,8 +74,8 @@ def create_PSF(sett):
         radius_pix+=1
     new_psf    = np.zeros([radius_pix,radius_pix])
 
-    grid = Circ_Grid(center=[int(radius_pix/2),int(radius_pix/2)],radius=radius_pix+1,precision=.5,setting=sett,input_type="pixel")
-
+    grid = Grid_Class(center=[int(radius_pix/2),int(radius_pix/2)],radius=radius_pix+1,precision=.5,setting=sett,input_type="pixel")
+    
     for i_aper,r in enumerate(aper):
         print("aperture ",r)
         flux = []
@@ -87,7 +85,10 @@ def create_PSF(sett):
             subgrid_deg_pixel =  grid._get_degraded_pixel_grid_flat(grid._flatten(subgrid))
             _flux = EE[i_aper]
             for i in subgrid_deg_pixel:
-                new_psf[subgrid_deg_pixel[0]][subgrid_deg_pixel[1]] +=_flux
+                try:
+                    new_psf[i[0]][i[1]] +=_flux
+                except IndexError:
+                    print("subgrid larger then psf model, ignoring this point")
     new_psf/=np.sum(new_psf)
     psf_path = sett.data_path+sett.psf_name 
     new_psf_name = sett.data_path+"/test_EE_psf.fits" 
@@ -110,7 +111,7 @@ if __name__=="__main__":
     setting_names  = args.SETTING_FILES
     if len(setting_names)>1:
         pool_obj = multiprocessing.Pool()
-        _ = pool_obj.map(create_PSF,setting_names)  
+        _ = pool_obj.map(create_PSF,setting_names)
     else:
         create_PSF(setting_names[0])
     success(sys.argv[0])

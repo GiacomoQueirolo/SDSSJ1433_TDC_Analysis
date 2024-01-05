@@ -2,7 +2,8 @@
 # coding: utf-8
 
 # # Modelling of the Quad SDSSJ144+6007 with HST image
-# Copy from HST_HR_Main.ipynb,  implement MOD_PLL (see April 3th '23)
+# Copy from HST_HRM_PLL.py
+# used "semigaussian" KDE prior
 
 import os,sys 
 import pickle
@@ -13,18 +14,21 @@ import matplotlib.pyplot as plt
 
 from lenstronomy.Plots.model_plot import ModelPlot 
 
-from Utils.tools import *
 from Utils import get_res
-from Utils import last_commands
-from Data.image_manipulation import *
+from Utils.tools import *
 from Utils import rewrite_read_results
-from Test.mask_source import get_masksource
+from Utils import last_commands
 from Utils.check_success import check_success
 from Posterior_analysis import mag_remastered
-from Posterior_analysis.source_pos import get_source_pos_MCMC
-from Custom_Model.custom_logL import init_kwrg_custom_likelihood
+from Data.image_manipulation import *
+#from custom_logL import logL_ellipticity_aligned as logL_ellipticity # MOD_CUSTOM_LIKE
+#from Custom_Model.custom_logL import logL_ellipticity_qphi as  logL_ellipticity # MOD_CUSTOM_LIKE_II
 from Data.input_data import init_kwrg_data,init_kwrg_psf,init_kwrg_numerics,get_kwargs_model,get_kwargs_constraints
+from Custom_Model.custom_logL import init_kwrg_custom_likelihood
+from Posterior_analysis.source_pos import get_source_pos_MCMC
+from Prior.precompute_prior_KDE import Precomputed_KDE
 
+from Test.mask_source import get_masksource
 
 if __name__=="__main__":
     ############################
@@ -40,6 +44,7 @@ if __name__=="__main__":
         5 = run PSO only PSO_it = 1200*rf  PSO_prt = 400*rf  , MCMCb = 1 MCMCr = 2 (TEST)
        (PSO_it: PSO iterations, PSO_prt: PSO particles, MCMCr: MCMC run steps, MCMCb: MCMC burn in steps)\n""")
     parser.add_argument('-rf','--run_factor',type=float,dest="run_factor",default=2.,help="Run factor to have longer run")
+    parser.add_argument('-lNprs','--log10_N_prior_sample',type=float,dest="log_N_prior_sample",default=4,help="log_10(N_sample) for the prior computed w. KDE")
     parser.add_argument('-tc','--threadCount',type=int,dest="threadCount",default=150,help="Number of CPU threads for the MCMC parallelisation (max=160)")
     parser.add_argument('SETTING_FILE',default="",help="setting file to model")
 
@@ -50,6 +55,7 @@ if __name__=="__main__":
     threadCount  = args.threadCount  
     RND = False #set a random start of the PSO
     n_run_cut = 50  # to re-implement
+    N_prior_sample = int(10**args.log_N_prior_sample)
     #Model PSO/MCMC settings
     append_MC=False
     append_PSO=False
@@ -165,18 +171,20 @@ if __name__=="__main__":
 
     # ### Parameters for the PSO/MCMC runs
      
-    kwargs_likelihood = init_kwrg_custom_likelihood(setting,mask,custom="qphi")
-     
-
-    ######
+    kwargs_likelihood = init_kwrg_custom_likelihood(setting,mask,custom="centered")
+    ############################################################
+    kwrg_qphi_prior = {"type":"Semigaussian",
+                       "q":setting.pll["q"],"phi":setting.pll["phi"],
+                       'phi_degree': True,
+                       'savepath_qsamples':savemcmc_path+"/prior_q_samples.pkl"
+                       }
+    prior_KDE = Precomputed_KDE(setting=setting,kwrg_qphi=kwrg_qphi_prior,nsample=N_prior_sample)
+    kwargs_likelihood["precomputed_prior_kde"] = prior_KDE
+    #punished either way, and this way I don't have to re-implement it
+    kwargs_likelihood["check_bounds"]          = False 
+    ############################################################
+    
     kwargs_model            = get_kwargs_model(setting)
-    """
-    lens_model_list         = kwargs_model['lens_model_list']
-    lens_light_model_list   = kwargs_model['lens_light_model_list']
-    point_source_model_list = kwargs_model['point_source_model_list']
-    if not WS:
-        source_model_list = kwargs_model['source_light_model_list']
-    """
     ######
         
     kwargs_numerics = init_kwrg_numerics(setting)
@@ -214,17 +222,6 @@ if __name__=="__main__":
             mc_init_logL = get_res.load_whatever(mcmc_logL_file_name)
         except:
             mc_init_logL= np.array([])
-    elif append_PSO:
-        _=0
-        """
-        # To implement
-        init_pso_chain = get_res.get_pso_chain(setting_name=setting_name,backup_path=backup_path)
-        kwargs_params  = update_kwargs_params(setting,kwargs_params,init_pso_chain)
-        # we will have to attach the old pso to the one obtained now
-        os.system(f"mv {savemcmc_path}/psobackup.json {savemcmc_path}/tmp_psobackup.json") 
-        pso_file_name = save_json_name(setting_name,savemcmc_path,"pso")
-        os.system(f"mv {pso_file_name} {pso_file_name.replace('pso','tmp_pso')}") 
-        """
     else:
         mc_init_sample = None
         mc_init_logL   = None
@@ -247,7 +244,7 @@ if __name__=="__main__":
         fitting_kwargs_list =[]
         if mc_init_sample is None:
             from Custom_Model.init_mcmc_from_pso import create_mcmc_init
-            mc_init_sample = create_mcmc_init(setting,walkerRatio=walkerRatio,backup_path=backup_path)
+            mc_init_sample = create_mcmc_init(setting,backup_path=backup_path)
             if mc_init_sample is None:
                 n_iterations = int(700*run_fact) #number of iteration of the PSO run PSO_it  = 700*rf
                 n_particles  = int(400*run_fact) #number of particles in the PSO run PSO_prt = 400*rf 
@@ -256,16 +253,12 @@ if __name__=="__main__":
 
                 fitting_kwargs_list = [['MY_PSO', {'sigma_scale': 1., 'n_particles': n_particles, 
                                                'n_iterations': n_iterations,"path":savemcmc_path,"threadCount":threadCount}]]
-        ###################
-        # mv backend file #
-        ###################
-        os.system(f"mv {backend_filename} {backend_filename.replace('backend_mcmc_','old_backend_mcmc_')}")
 
     if RND == False:
         np.random.seed(3)
 
 
-    fitting_kwargs_list.append(['MCMC', {'n_burn': n_burn, 'n_run': n_run, 'walkerRatio': walkerRatio, 'sigma_scale': .1,\
+    fitting_kwargs_list.append(['MCMC', {'n_burn': n_burn, 'n_run': n_run, 'walkerRatio': 10, 'sigma_scale': .1,\
                                          "threadCount":threadCount, 'init_samples':mc_init_sample,"backend_filename":backend_filename}])
     # First chain_list with only the PSO, the burn_in sequence and the first n_run_cut
     chain_list = fitting_seq.fit_sequence(fitting_kwargs_list) 
