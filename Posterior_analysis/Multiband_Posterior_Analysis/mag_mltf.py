@@ -14,7 +14,7 @@ from Utils.tools import *
 from Utils.order_images import image_order_mltf
 from Utils.Multiband_Utils.tools_multifilter import *
 from Utils.Multiband_Utils.get_res_multifilter import *
-from Posterior_analysis.mag_remastered import labels,fr_nms,get_mag_ratio
+from Posterior_analysis.mag_remastered import labels_Rmag_BC,labels_Rmag_AD,labels_Rf_BC,labels_Rf_AD,Warning_BC,gen_mag_ratio_i
 from Data.Multiband_Data.input_data_mltf import init_lens_model_list_mltf
 from Data.Multiband_Data.Param_mltf import conv_mcmc_i_to_kwargs_mltf,get_Param_mltf
 
@@ -69,7 +69,7 @@ def get_mag_mcmc_mltf(multifilter_setting,samples_mcmc):
         kwargs_result_i = conv_mcmc_i_to_kwargs_mltf(multifilter_sett=multifilter_setting,mcmc_i=samples_mcmc[i],Param_class=Param_class)
         kwargs_lens     = kwargs_result_i["kwargs_lens"]        
         kwargs_ps       = kwargs_result_i["kwargs_ps"]
-        mag_ratio       = get_mag_ratio(lens_model_class,kwargs_lens,kwargs_ps)
+        mag_ratio       = gen_mag_ratio_i(lens_model_class,kwargs_lens,kwargs_ps,BC=multifilter_setting.BC)
         mag_mcmc.append(mag_ratio)
     return mag_mcmc
 
@@ -93,10 +93,14 @@ def flux_ratio_mltf(multifilter_setting,kwargs_result,outnames=False):
     ####################
     amp_A = amp_i[0]
     FR    = np.array(amp_i[1:])/amp_A
+    fr_nms = labels_Rf_AD
+    if multifilter_setting.BC:
+        fr_nms = labels_Rf_BC
     if outnames:
         return FR,fr_nms
     else:
         return FR
+
 
  
 
@@ -109,12 +113,15 @@ if __name__=="__main__":
                     help="DO NOT plot the corner plot")
     parser.add_argument("-NFR","--NoFluxRatio", action="store_false", dest="FR", default=True,
                     help="Do NOT compute the expected Flux Ratio (wrt image A)")
+    parser.add_argument("-BC", dest="BC", default=False,action="store_true",
+                        help="Consider BC couple instead of AD (warning: not the standard)")
     parser.add_argument('MULTIFILTER_SETTING',nargs="1",default=[],help="Multifilter_setting file to consider")
     args = parser.parse_args()
     
     multifilter_setting = args.MULTIFILTER_SETTING
     corner_plot         = args.corner_plot
     FR = args.FR
+    BC = args.BC
     if FR:
         from Data.input_data import *
         
@@ -122,6 +129,9 @@ if __name__=="__main__":
     
     mcmc_mag = mag_mltf(multifilter_setting,svpth=True)
     if corner_plot:
+        labels = labels_Rmag_AD
+        if multifilter_setting.BC:
+            labels =labels_Rmag_BC
         plot = corner.corner(np.array(mcmc_mag), labels=labels, show_titles=True)
         plot.savefig(f"{multifilter_setting.savefig_path}/Mag.png")
     if FR:
@@ -130,4 +140,3 @@ if __name__=="__main__":
         kw_fr         = {nm:fr for nm,fr  in zip(fr_nms,fr_i)}
         save_json(kw_fr,f"{multifilter_setting.savefig_path}/FR.json")
     success(sys.argv[0])
-

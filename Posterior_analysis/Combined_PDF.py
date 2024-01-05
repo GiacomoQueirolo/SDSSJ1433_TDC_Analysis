@@ -4,25 +4,17 @@
 # In[6]:
 
 
-import numpy as np
-import json
-from scipy import stats
-import os
-from datetime import datetime
-import time 
-import matplotlib.pyplot as plt
-import pickle
-from corner import quantile
-import sys
-import pathlib as pth
+import os,sys 
 import argparse
+import numpy as np
+from corner import quantile
+import matplotlib.pyplot as plt
+
 from Utils.tools import *
 from Utils.get_res import *
 from Utils.get_param_title import newProfile
 
 if __name__=="__main__":
-
-
     ################################
     present_program(sys.argv[0])
     ################################
@@ -35,105 +27,55 @@ if __name__=="__main__":
                         help="\"inverse cut\": consider only the last <IC> steps of the mcmc")
     parser.add_argument("-n","--name",type=str,dest="dir_name", default=".",
                         help="Directory name where to save the superposed posteriors")
+    parser.add_argument("-BC", dest="BC", default=False,action="store_true",
+                        help="Consider BC couple instead of AD")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
     args = parser.parse_args()
+    BC   = args.BC
+    AD_or_BC     = "BC" if BC else "AD"
+    muAD_or_muBC = "$\mu_C$/$\mu_B$" if BC else "$\mu_D$/$\mu_A$" 
 
-    setting_name = [st.replace(".py","") for st in args.SETTING_FILES]
+    setting_names = [get_setting_name(st) for st in args.SETTING_FILES]
+    if setting_names==[]:
+        raise ValueError("Must at least have one setting file")
+    settings = get_setting_module(setting_names,1)
     cut_mcmc = int(args.cut_mcmc)
     inv_cut  = int(args.inv_cut)
     dir_name = args.dir_name
     backup_path = "backup_results"
 
-    CP = []
-    for st in setting_name:
-        CP.append(check_if_CP(get_setting_module(st).setting()))
-    CP = np.all(CP)
+    CP = np.all([check_if_CP(st) for st in settings])
 
     if CP:
         print("WARNING: Considering the Change Profile -> PEMD")
 
-    filters=[]
-    for i in setting_name:
-        filters.append(i.replace("settings_",""))
-
+    filters=[get_filter(sett_i) for sett_i in settings]
+        
     if not CP:
         save_plot = "PDF_superposition_II"
     else:
         save_plot = "PDF_superposition_CP"
-    save_plot = create_dir_name(setting_name,save_dir=save_plot,dir_name=dir_name,backup_path=backup_path)
-
-    savemcmc_path=[]
-    mcmc_file_name =[]
-    param_file_name =[]
-    for i in setting_name:
-        path_i="./"+backup_path+"/"+i.replace("settings_","mcmc_")+"/"
-        savemcmc_path.append(path_i)
-        mcmc_file_name.append(path_i+i.replace("settings","mcmc_smpl")+".json")
-        param_file_name.append(path_i+i.replace("settings","mcmc_prm")+".dat")
-
-
-    for st in setting_name:
-        setting_dir = find_setting_path(st)
-        os.system("cp "+setting_dir+"/"+str(st)+".py "+str(save_plot)+"/.")
-
-
-    samples = []
-    for i in mcmc_file_name:
-        with open(i, 'r') as mcmc_file_i:
-            samples.append(np.array(json.load(mcmc_file_i)).T)
-
-
-    param_names=[]
-    for p in param_file_name:
-        with open(p,"r") as param_file:
-            pn=(param_file.readlines())
-        for i in range(len(pn)):
-            pn[i]=pn[i].replace(",\n","")
-        param_names.append(pn)
-
-    # for fermat potentials
-    fermat_mcmc=[get_mcmc_fermat(st,backup_path) for st in setting_name]
-
-
-    samples_Df = []
-    for i in fermat_mcmc:
-        with open(i, 'r') as mcmc_file_i:
-            mcmc_i  =np.array(json.load(mcmc_file_i)).T
-        mcmc_Dfi=np.array(mcmc_i[1:]-mcmc_i[0])
-        samples_Df.append(mcmc_Dfi)
-            
-    for i in range(len(samples)):
-        samples[i] = np.array(samples[i].tolist() + samples_Df[i].tolist())
-        param_names[i]= param_names[i]+["$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} AD$"]
-
         
-    # For mag ratio
-
-    samples_mag = []
-    for i in range(len(setting_name)):
-        mag_mcmc_file = savemcmc_path[i]+setting_name[i].replace("settings","mcmc_mag_rt")+".json"
-
-        if not os.path.isfile(mag_mcmc_file):
-            raise FileNotFoundError("Cannot find "+mag_mcmc_file)
-            
-        with open(mag_mcmc_file,"r") as f:
-            mcmc_mag_ratio = json.load(f)
-        samples_mag.append(np.transpose(mcmc_mag_ratio))
-
-        
-    for i in range(len(samples)):
-        samples[i] = np.array(samples[i].tolist() + samples_mag[i].tolist())
-        param_names[i]= param_names[i]+["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_D$/$\mu_A$"]
+    save_plot = create_dir_name(setting_names,save_dir=save_plot,dir_name=dir_name,backup_path=backup_path)
+    
+    samples     = []
+    param_names = []
+    # fermat potentials
+    prm_dfi     = ["$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} "+AD_or_BC+"$"]
+    #  mag ratio
+    prm_mri     = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$",muAD_or_muBC]
+    for sett in settings:
+        smpl_i   = get_mcmc_smpl(sett,backup_path).T.tolist()
+        smpl_dfi = np.transpose(get_mcmc_Df(sett,backup_path,noD=BC)).tolist()
+        smpl_mri = get_mcmc_mag(sett,backup_path).T.tolist()
+        samples.append(smpl_i+smpl_dfi+smpl_mri)
+        prm_i = get_mcmc_prm(sett)
+        param_names.append(prm_i+prm_dfi+prm_mri)
         
     #For the moment we skip the image position -> see old/Combined_PDF.py #1
-
-
-    # In[ ]:
-
-
-    param_to_compare= ['theta_E_lens0', 'e1_lens0', 'e2_lens0','theta_E_lens1', 'gamma_ext_lens2','psi_ext_lens2',\
-                       "$\Delta\phi_{Fermat} AB$", "$\Delta\phi_{Fermat} AC$","$\Delta\phi_{Fermat} AD$",\
-                       "$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_D$/$\mu_A$"]
+    
+    param_to_compare= ['theta_E_lens0', 'e1_lens0', 'e2_lens0','theta_E_lens1', 'gamma_ext_lens2','psi_ext_lens2',*prm_dfi,*prm_mri]
+        
     if CP:
         param_to_compare = [param_to_compare[0],"gamma_lens0",*param_to_compare[1:] ]
 
@@ -147,11 +89,7 @@ if __name__=="__main__":
                     break
         pair.append(pair_i)
         
-
-
-    # In[ ]:
-
-
+        
     if cut_mcmc:
         print("\nCUT: Ignoring the first ",cut_mcmc," steps of the MCMC sample\n")
         samples = [samples[i].T[cut_mcmc:].T for i in range(len(samples))]
@@ -159,19 +97,13 @@ if __name__=="__main__":
         print("\nINVERSE CUT: Considering only the last ",inv_cut," steps of the MCMC sample\n")
         samples = [samples[i].T[-inv_cut:].T for i in range(len(samples))]
         
-
-
-    # In[2]:
-
-
     lf = filters[0]+", "
     for i in filters[1:-1]:
         lf+=i+ ", "
     lf+= "and "+ filters[-1]
 
     col = ["r","b","g","y","k"]
-
-    
+  
 
     for i in range(len(pair)):
         param = param_names[0][pair[i][0]]
@@ -180,7 +112,7 @@ if __name__=="__main__":
         else:
             param_title=param
             if "Fermat" in param: 
-                UOM=r'[\"$^2$]'
+                UOM=r'[arcsec $^2$]'
             else: 
                 UOM="[]"
         sample_comp = []
@@ -196,13 +128,12 @@ if __name__=="__main__":
         min_data = min([min(k) for k in sample_comp])
         small_diff_min_max= (max_data-min_data)*.01
         n_bins= 3*int(round( 1 + 3.322*np.log10(top)))
-        #n_bins = math.ceil((max_data - min_data)/w)
         n_bins = np.linspace(min_data-small_diff_min_max,max_data+small_diff_min_max,n_bins+2)
         for s in range(len(sample_comp)):
             sig_min,mean,sig_max = quantile(sample_comp[s],q=[0.16,0.5,0.84])
             sig_min,sig_max = np.array([mean-sig_min]), np.array([sig_max-mean])
-            sigma = np.mean([sig_min,sig_max])        
-            count, bins, _ = plt.hist(sample_comp[s], bins=n_bins, density=True,alpha=0.2,color=col[s],label=filters[s]+":"+str(round(mean,2))+r"$\pm$"+str(round(sigma,3)) )
+            sigma = np.mean([sig_min,sig_max])
+            count, bins, _ = plt.hist(sample_comp[s], bins=n_bins, density=True,stacked=True,alpha=0.2,color=col[s],label=filters[s]+":"+str(round(mean,2))+r"$\pm$"+str(round(sigma,3)) )
             plt.errorbar(mean,max(count)/2.,yerr=None,xerr=[sig_min,sig_max],fmt=str(col[s]+"+"))
             plt.scatter(mean,max(count)/2.,c=col[s],marker=".")
 
@@ -211,20 +142,10 @@ if __name__=="__main__":
         plt.legend(loc="upper right")
         if "mu" in param:
             param = "mu_"+param.replace("\\","").replace("/","").replace("$","").replace("mu_","")[::-1]
-        plt.savefig(str(save_plot)+"/SPD_"+param+".png")
-        #plt.show()
+        name_fig = str(save_plot)+"/SPD_"+param+".png"
+        print("Saved plot in "+name_fig)
+        plt.savefig(name_fig)
         plt.close() 
 
-    # In[ ]:
-
-
-    # see old/Combined_PDF.py, section 2: obsolete way to combine the PDF
-
-
-    # In[ ]:
-
-
     print("Result directory:", str(save_plot))
-
     success(sys.argv[0])
-

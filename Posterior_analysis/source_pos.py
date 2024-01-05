@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
-
 #### Def.source position from image position
+import pickle
 import argparse
 import numpy as np
 import pathos.multiprocessing as multiprocessing
@@ -15,9 +13,6 @@ from lenstronomy.LensModel.lens_model import LensModel
 from Utils.tools import *
 from Utils.get_res import *
 from Data.input_data import init_lens_model
-
-
-
 
 def pll_get_source_pos(kwargs_result_i,lensModel):
     ra_image   = kwargs_result_i["kwargs_ps"][0]["ra_image"]
@@ -89,19 +84,22 @@ def test_get_source_pos_MCMC(setting,parallelised=True):
     return 0    
         
 
-def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True):
+def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True,samples_mcmc=None,param_mcmc=None,lensModel=None):
     #We implement the source position posterior
     #####################################
-    setting      = get_setting_module(setting).setting()
-    samples_mcmc = get_mcmc_smpl(setting)
-    param_mcmc   = get_mcmc_prm(setting)
+    setting      = get_setting_module(setting,1)
+    if not samples_mcmc:
+        samples_mcmc = get_mcmc_smpl(setting)
+    if not param_mcmc:
+        param_mcmc   = get_mcmc_prm(setting)
     labels_source = ["source position_x"]*4+["source position_y"]*4
     
     if parallelised:
         list_kwargs_results = []
         for i in range(len(samples_mcmc)):
             list_kwargs_results.append(setting.produce_kwargs_result(samples_mcmc,param_mcmc,i))
-        lensModel = init_lens_model(setting)
+        if not lensModel:
+            lensModel = init_lens_model(setting)
         with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
             mcmc_source = p.map(partial(pll_get_source_pos, lensModel=lensModel), list_kwargs_results)
     else:
@@ -202,10 +200,6 @@ def get_source_gen(ra_image,dec_image,kw_lens,setting=None,lensModel=None):
         source_y.append(y_source)
     return source_x,source_y
 
-
-
-
-
 if __name__=="__main__":
     ############################
     present_program(sys.argv[0])
@@ -234,5 +228,8 @@ if __name__=="__main__":
             print("MCMC result:\n",kw_res)
             if pso:
                 print("PSO result:\n",get_source_pos_PSO(sets))
+        with open(get_savefigpath(sets)+"/read_source.data","wb") as f:
+            pickle.dump(kw_res, f)
+
     success(sys.argv[0])
 

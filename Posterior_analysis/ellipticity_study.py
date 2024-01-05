@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
 # Test: i want to check the posterior of q,phi of the ellipticity compared to the one obtained from the luminosity of the lens
 # instead of e1 e2
-
-
-# In[3]:
 
 
 import argparse
@@ -20,9 +14,6 @@ from matplotlib.patches import Patch
 from Utils.tools import *
 from Utils.get_res import *
 from Data.conversion import qphi_from_e1e2
-
-
-# In[4]:
 
 
 def get_qphi_post(smpl,prm):
@@ -51,10 +42,6 @@ def get_ell_prior(sets,npoints=10000):
     e2_prior = np.random.uniform(mn_e2,mx_e2,npoints)
     
     return e1_prior,e2_prior
-
-
-# In[ ]:
-
 
 if __name__=="__main__":
     ############################
@@ -107,19 +94,17 @@ if __name__=="__main__":
         # compare prior and post for q,phi
         legend_elements  = []
         fg,ax = plt.subplots(2,2,figsize=(6,6))
-        truths_qphi = [None,None]
-        if check_if_SUB(sets):
-            setm = get_setting_module(sets,1)
-            truths_qphi = [setm.q_ll,setm.phi_ll]
+        setm = get_setting_module(sets,1)
+        truths_qphi = [setm.lens_prior().pll["q"][0],setm.lens_prior().pll["phi"][0]]
         corner(np.transpose([q_prior,phi_prior]),truths=truths_qphi,labels=["$q^{prior}$",r"$\phi^{prior}$"],show_titles=True,color="b",hist_kwargs= {"density":True},fig=fg)
 
         legend_elements.append(Patch(facecolor="b",label="Prior"))
-        corner(np.transpose([q,phi]), fig=fg,color="g",hist_kwargs= {"density":True})
+        corner(np.transpose([q,phi]),truths=truths_qphi, fig=fg,color="g",hist_kwargs= {"density":True})
         legend_elements.append(Patch(facecolor="g",label="Post. from Lens model"))
         if not check_if_SUB(sets):
-            corner(np.transpose([q_ll,phi_ll]),fig=fg,color="r",hist_kwargs= {"density":True})
+            corner(np.transpose([q_ll,phi_ll]),truths=truths_qphi,fig=fg,color="r",hist_kwargs= {"density":True})
             legend_elements.append(Patch(facecolor="r",label="Post. from Lens Light model"))
-        fg.suptitle(r"Prior of q,$\phi$ vs Post.")
+        fg.suptitle(r"Prior of q,$\phi$ vs Post. comp. to prior pll")
         ax_i = ax[0][1]
         ax_i.legend(handles=legend_elements)
         ax_i.axis("off")
@@ -140,8 +125,8 @@ if __name__=="__main__":
         print("max(phi),min(phi),phi_mcmc")
         print(max(phi),min(phi),phi_mcmc)
         fg = corner(np.transpose([q,phi]),truths=[q_res,phi_res],labels=["$q^{post}$",r"$\phi^{post}$"],color="b",truth_color="r",show_titles=True,hist_kwargs= {"density":True})
-        corner(np.transpose([q,phi]),truths=[q_mcmc,phi_mcmc], color="b",truth_color="g", hist_kwargs= {"density":True},fig=fg)
-        fg.suptitle(r"PSO Res.for q,$\phi$ vs Post.")
+        corner(np.transpose([q,phi]),truths=[q_mcmc,phi_mcmc], color="b",truth_color="g", hist_kwargs= {"density":True},fig=fg) 
+        fg.suptitle(r"PSO Res. for q,$\phi$ vs MCMC Posterior Res.")
         plt.tight_layout()
         fg.savefig(svfg_i+"/qphi_post_vs_res.png")
         print("Created "+svfg_i+"/qphi_post_vs_res.png")
@@ -163,5 +148,5 @@ if __name__=="__main__":
         plt.tight_layout()
         fg.savefig(svfg_i+"/e12_post_vs_res.png")
         print("Created "+svfg_i+"/e12_post_vs_res.png")
-    success(sys.argv[0])
 
+    success(sys.argv[0])

@@ -1,34 +1,17 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
 # MOD_KS: I implement an analysis of the last 1/4 and second-to-last 
 # 1/4 of the chain and do a KS statistic over it to see if it is compatible
 
-
-# In[ ]:
-
-
 # See old/MCMC_posterior.ipynb
 
-
-# In[ ]:
-
-
-import sys
-import numpy as np
-import json
-from scipy import stats
-import os
-from datetime import datetime
-import time 
-import matplotlib.pyplot as plt
-import pickle
-from corner import quantile
+import sys,os 
 import argparse
-import importlib
+import numpy as np
+from corner import quantile
+import matplotlib.pyplot as plt
+
 from Utils.tools import *
 from Utils.get_res import get_mcmc
 
@@ -48,7 +31,7 @@ if __name__=="__main__":
     parser.add_argument('SETTING_FILE', help="setting file to consider")
     args = parser.parse_args()
     setting_name = get_setting_name(args.SETTING_FILE)
-    setting      = get_setting_module(setting_name)
+    setting      = get_setting_module(setting_name,1)
     backup_path  = "backup_results/"
 
     cut_mcmc = args.cut_mcmc
@@ -160,7 +143,7 @@ if __name__=="__main__":
         #MOD_KS
         if ks:
             from scipy.stats import ks_2samp as ks
-            print_ks = open(savefig_path+"KS_lstQrt.rdb","w")
+            print_ks = open(savefig_path+"/KS_lstQrt.rdb","w")
             print_ks.write("# K-S statistic for each parameter between the two lasts 1/4 of the chain\n")
             print_ks.write("##########################################################################\n")
             print_ks.write("Param    KS Statistic      P-Value\n")

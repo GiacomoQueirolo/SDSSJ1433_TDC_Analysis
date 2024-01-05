@@ -17,10 +17,32 @@ from Utils.tools import *
 from Utils.get_res import *
 from Prior.Prior import Prior
 from Utils.statistical_tools import get_bins_volume
-
-
 from Utils.combinedsetting_class import combined_setting
 from Posterior_analysis.fermat_pot_analysis import get_mcmc_Df,labels_Df_AD,labels_Df_BC 
+
+def create_combined_setting(settings,save_dir,cmb_sett_name=None,comment="",filters=None,BC=True):
+    z_lens   = [s.z_lens   for s in settings ]
+    z_source = [s.z_source for s in settings ]
+    if filters is None:
+        filters       = [get_filter(st) for st in settings]
+    if all(zl==z_lens[0] for zl in z_lens) and all(zs==z_source[0] for zs in z_source):
+        z_lens   = z_lens[0]
+        z_source = z_source[0]
+    else:
+        raise RuntimeError("Not all settings have same redshift for lens and source. Something is off")
+   
+    CombSett      = combined_setting(comment,z_source,z_lens,filters,setting_names,savedir=save_dir,BC=BC)
+    cmb_sett_name = CombSett.gen_cmb_sett_name(cmb_sett_name = cmb_sett_name)
+    with open(f"combined_settings/{cmb_sett_name}.dll","wb") as f:
+        dill.dump(CombSett,f)
+    try:
+        os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
+    except FileExistsError:
+        if verbose:
+            print(f"{cmb_sett_name} existed in {save_dir}, overwriting link")
+        os.remove(f"{save_dir}/{cmb_sett_name}.dll")
+        os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
+    return CombSett
 
 
 if __name__=="__main__":
@@ -162,26 +184,9 @@ if __name__=="__main__":
         with open(str(save_dir)+"/Combined_PDF_bins.pkl","wb") as f:
             pickle.dump(Combined_bins,f)
 
+    #####################################################################################
     comment  = "Product of posteriors done by "+str(sys.argv[0])
-    z_lens   = [s.z_lens   for s in settings ]
-    z_source = [s.z_source for s in settings ]
-    if all(zl==z_lens[0] for zl in z_lens) and all(zs==z_source[0] for zs in z_source):
-        z_lens = z_lens[0]
-        z_source = z_source[0]
-    else:
-        raise RuntimeError("Not all settings have same redshift for lens and source. Something is off")
-   
-    CombSett      = combined_setting(comment,z_source,z_lens,filters,setting_names,savedir=save_dir)
-    cmb_sett_name = CombSett.gen_cmb_sett_name(cmb_sett_name = cmb_sett_name)
-    with open(f"combined_settings/{cmb_sett_name}.dll","wb") as f:
-        dill.dump(CombSett,f)
-    try:
-        os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
-    except FileExistsError:
-        if verbose:
-            print(f"{cmb_sett_name} existed in {save_dir}, overwriting link")
-        os.remove(f"{save_dir}/{cmb_sett_name}.dll")
-        os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
+    CombSett  = create_combined_setting(settings=settings,cmb_sett_name=cmb_sett_name,comment=comment,filters=filters,save_dir=save_dir,BC=BC)
     #####################################################################################
 
     # We need to sample it for the plot 
@@ -210,14 +215,14 @@ if __name__=="__main__":
             json.dump(np.array(mcmc_chain).tolist(),f)
         plot = corner(mcmc_chain,bins=nbins,labels=[ p+" [\"]" for p in param_names], show_titles=True)
         plot.savefig(str(save_dir)+"/MCMC_multiplication_Df.png")
-
+    title_plot = r"Combined $\Delta\phi$ from SDSSJ1433 lens mass model"
     if  KDE:
         from Plots.plotting_tools import plot_probability3D_KDE
-        plot = plot_probability3D_KDE(Combined_PDF,Positions_KDE,labels=param_names,udm="\"")
+        plot = plot_probability3D_KDE(Combined_PDF,Positions_KDE,labels=param_names,udm="arcsec^2",title=title_plot)
         plot.savefig(str(save_dir)+"/CombinedProbability_KDE.pdf") 
     else:
         from Plots.plotting_tools import plot_probability3D
-        plot = plot_probability3D(Combined_PDF,Combined_bins,labels=param_names,udm="\"")
+        plot = plot_probability3D(Combined_PDF,Combined_bins,labels=param_names,udm="arcsec^2",title=title_plot)
         plot.savefig(str(save_dir)+"/CombinedProbability.pdf")
 
     print("Result directory:", str(save_dir))
