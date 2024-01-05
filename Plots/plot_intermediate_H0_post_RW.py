@@ -48,6 +48,11 @@ if __name__=="__main__":
                     help="Dataset name for the time delay (default: J1433_forcen)")
     parser.add_argument("-nb","--number_bins",type=int, dest="nbins", default=100,
                     help="Number of bins per dimension for the histog. sampling of the Df (be careful with it! too many bins can be catastrophic)")
+    parser.add_argument("-dir","--directory",type=str, dest="dir", default=".",
+                    help="In which directory to save it")
+    parser.add_argument("-sl","--simple_legend",dest="simple_legend", default=False,action="store_true",
+                        help="Draw a simplified legend with only the name of the filters")
+
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
     args  = parser.parse_args()
     # bins for the fermat pot
@@ -61,7 +66,7 @@ if __name__=="__main__":
     dt_comb_res = pycs_get_res.get_combined_res(dt_dataset,main_dir_path=pycs_path)
     kwargs_dt   = get_kwdt(dt_comb_res)
     backup_res_lnstr = "./backup_results/"
-    savefig_path     = backup_res_lnstr+"/Post_H0/"
+    savefig_path     = backup_res_lnstr+"/Post_H0/"+dir
     mkdir(savefig_path)
     
     H0s  = []
@@ -80,15 +85,14 @@ if __name__=="__main__":
         PH0,H0 = get_PH0(Df_dens=Post_Df,Df_dens_bins=Post_Df_bins,Dt_kw=kwargs_dt,setting=get_setting_module(sets,1))
         PH0s.append(PH0)
         H0s.append(H0)
-        ax.scatter(H0,PH0,c=base_colors[i],label=strip_setting_name(sets))
+        ax.scatter(H0,PH0,c=base_colors[i],label=strip_setting_name(sets,filter=simple_legend))
         h0_res,err_min,err_max= quantiles(PH0,H0,return_quantiles=False)
         yh0 = max(PH0)/2
         ax.errorbar(h0_res,yh0,yerr=None,xerr=[[err_min],[err_max]],fmt="r",capsize=4,c=base_colors[i])
 
-
     y_max = max([max(ph0) for ph0 in PH0s])
-    ax.axvline(h0planck,label="Planck",c="r",ls="--")
-    ax.axvline(h0licow,label="H0LiCOW",c="g",ls="--")
+    ax.axvline(h0planck.H0,label="Planck",c="r",ls="--")
+    ax.axvline(h0licow.H0,label="H0LiCOW",c="g",ls="--")
     ax.fill_between(np.linspace(h0planck-h0planck.sigma_min,h0planck+h0planck.sigma_max ) , -10, 10, color='red', alpha=0.2)
     ax.fill_between(np.linspace(h0licow-h0licow.sigma_min ,h0licow+h0licow.sigma_max) , -10, 10, color='green', alpha=0.2)
     plt.ylim(0,y_max*1.1)

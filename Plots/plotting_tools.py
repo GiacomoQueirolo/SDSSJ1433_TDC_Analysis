@@ -1,26 +1,46 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[ ]:
-
 import numpy as np
+import matplotlib
+matplotlib.rcParams['mathtext.fontset'] = 'custom'
+matplotlib.rcParams['mathtext.rm'] = 'Bitstream Vera Sans'
+matplotlib.rcParams['mathtext.it'] = 'Bitstream Vera Sans:italic'
+matplotlib.rcParams['mathtext.bf'] = 'Bitstream Vera Sans:bold'
 import matplotlib.pyplot as plt
 
 from Utils.tools import *
-from Utils.statistical_tools import marginalise_prob,estimate_sigma, estimate_median
+from Utils.statistical_tools import marginalise_prob
 base_colors = ["r","b","g","y","k","m","c","darkorange","darkviolet","lawngreen","violet"] 
 
-def plot_probability3D(prob3D,bins,labels=None,udm=None,figsize=(12,12),contour_levels=30,colors=base_colors,alpha=1):
+def plot_probability3D(prob3D,bins,labels=None,udm=None,figsize=(16,16),num_contour_levels=6,colors=base_colors,alpha=1,title="",fnt = 20,cont_sig=True):
+    plt.rcParams['xtick.labelsize'] = fnt
+    plt.rcParams['ytick.labelsize'] = fnt 
+    plt.rcParams['font.size'] = fnt
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('font', size=fnt)          # controls default text sizes
+    plt.rc('axes', titlesize=fnt)     # fontsize of the axes title
+    plt.rc('axes', labelsize=fnt)     # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=fnt)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=fnt)    # legend fontsize
+    
     fg,ax= plt.subplots(3,3,figsize=figsize) 
     bin_coord = [[(bins[j][i]+bins[j][i+1])/2. for i in range(0,len(bins[j])-1)]for j in range(len(bins))]
     bin_densities = marginalise_prob(prob3D,bins) 
     ticks = []
     for i in range(len(bins)):
+        rng = bins[i][-1]- bins[i][0]
         stp = bins[i][1] - bins[i][0]
+        #for j in range(0,len(bins[i]),):
+        #    ticks_i.append(np.round(bins[i][0]+j*stp,1))
+        #ticks_i =np.arange(min(ticks_i),max(ticks_i),.1)
+        n_ticks = 4
+        ln_stp  = rng/n_ticks 
+        int_rnd = int(abs(np.floor(np.log10(abs(ln_stp)))))
         ticks_i=[]
-        for j in range(len(bins[i])):
-            ticks_i.append(np.round(bins[i][0]+j*stp,1))
-        ticks.append(ticks_i)
+        for j in range(n_ticks+1):
+            ticks_i.append(np.round(bins[i][0]+j*(ln_stp),int_rnd+1))
+        ticks.append(ticks_i) 
         
     for i in range(3):
         for j in range(3):
@@ -28,23 +48,24 @@ def plot_probability3D(prob3D,bins,labels=None,udm=None,figsize=(12,12),contour_
             if [i,j]!=[0,1] and [i,j]!=[0,2] and [i,j]!=[1,2]:
                 if i==j:
                     if labels is not None:
-                        if i==0:
-                            ax_ij.set_ylabel(labels[i])
-                        elif i==2:
+                        if i==2:
                             ax_ij.set_xlabel(labels[i])
                     cnt = bin_densities[i]
                     bn  = bins[i]
                     for k in range(len(cnt)):
                         ax_ij.fill_between([bn[k],bn[k+1]],[0],cnt[k],color=colors[i],alpha=alpha)
-                    ax_ij.set_xticks(ticks[j])
+
                     ax_ij.set_ylim(0,max(cnt)+.2*max(cnt))
-                    mx = np.where(cnt==max(cnt))[0][0]
-                    #res = str(np.round((bn[mx]+bn[mx+1])/2,2))
                     res = get_median_with_error(cnt,bn)
+                    ax_ij.set_xticks(ticks[j])
+                    if j!=2:
+                        ax_ij.set_xticklabels([""]*len(ticks[j]))
+                    else:
+                        ax_ij.set_xticklabels(ticks[j],rotation=45)
                     ax_ij.set_yticks([])
                     if labels is not None:
                         if udm is None:
-                            udm = ["\"" for i in range(len(labels))]
+                            udm = [r"$arcsec^2$" for i in range(len(labels))]
                         elif type(udm)==str:
                             udm = [udm for i in range(len(labels))]
                         ax_ij.set_title("$"+labels[i].replace("$","")+"$" +" = "+ res+" "+udm[i])
@@ -61,16 +82,36 @@ def plot_probability3D(prob3D,bins,labels=None,udm=None,figsize=(12,12),contour_
                             ax_ij.set_ylabel(labels[2])
                     elif [i,j]==[2,1]:
                         mat = prob3D.sum(axis=0)#/np.sum(Combined_PDF.sum(axis=0) )
-                        ax_ij.set_xlabel(labels[1])
-                    ax_ij.contour(bin_coord[j],bin_coord[i],mat.T,levels=contour_levels,alpha=alpha)#**contourf_kwargs) #or ax_ij.contourf(bin_coord[j],bin_coord[i],mat.T)
-                    #ax_ij.pcolormesh(bin_coord[j],bin_coord[i],mat.T,shading='gouraud',)
-                    ax_ij.set_xticks(ticks[j])
-                    ax_ij.set_yticks(ticks[i])
+                        if labels is not None:
+                            ax_ij.set_xlabel(labels[1])
+                    if not cont_sig:
+                        contour_levels = [((i+1)*mat.max()/float(num_contour_levels))  for i in range(num_contour_levels)]
+                        #lab_cnt = None
+                    else:
+                        contour_levels = [(100-n)*mat.max()/100  for n in [99.7,95,68] ]
+                        #lab_cnt = r"1,2 and 3 $\sigma$ confidence regions"
+                    ax_ij.contour(bin_coord[j],bin_coord[i],mat.T,levels=contour_levels,alpha=alpha)
+                    ax_ij.set_xticks(ticks[j]) 
+                    ax_ij.set_yticks(ticks[i])  
+                    if [i,j]==[1,0]:
+                        ax_ij.set_xticklabels([""]*len(ticks[j]))
+                        ax_ij.set_yticklabels(ticks[i],rotation=45)
+                    elif [i,j]==[2,1]:
+                        ax_ij.set_yticklabels([""]*len(ticks[i]))
+                        ax_ij.set_xticklabels(ticks[j],rotation=45)
+                    else:
+                        ax_ij.set_yticklabels(ticks[i],rotation=45)
+                        ax_ij.set_xticklabels(ticks[j],rotation=45)
+                    
+
+   
             else:
                 ax_ij.axis("off")
-    
-    plt.tight_layout()
-
+    if title:
+        fg.suptitle(title)
+    plt.tight_layout(pad=1.3)
+    plt.subplots_adjust(wspace=0.1,
+                    hspace=0.1)
     return plt
 
 
@@ -106,7 +147,8 @@ def plot_probability3D_KDE(KDE,Positions,labels=None,udm=None,figsize=(12,12),co
 
                     #ax_ij.set_xticks(ticks[j])
                     #ax_ij.set_ylim(0,max(cnt)+.2*max(cnt))
-                    mx = np.where(y==max(y))[0][0]
+                    
+                    #mx = np.where(y==max(y))[0][0]
                     #res = str(np.round((bn[mx]+bn[mx+1])/2,2))
                     #res = get_median_with_error(cnt,bn)
                     ax_ij.set_yticks([])
@@ -146,10 +188,7 @@ def plot_probability3D_KDE(KDE,Positions,labels=None,udm=None,figsize=(12,12),co
     plt.tight_layout()
 
     return plt
-
-
-
-
+ 
 def plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,""),verbose=True):
     band_index,filter = band
     if filter!="":
@@ -158,15 +197,19 @@ def plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,"")
     modelPlot.data_plot(ax=axes[0], band_index=band_index,v_min=v_min, v_max=v_max)
     modelPlot.model_plot(ax=axes[1], band_index=band_index, v_min=v_min, v_max=v_max)
     modelPlot.normalized_residual_plot(ax=axes[2], band_index=band_index,v_min=res_min, v_max=res_max)
-    plt.savefig(savefig_path+"/results_Model.png")
+    savename= f"{savefig_path}/results_Model{filter}.png"
+    if verbose:
+        print(f"Saved model plot {savename}") 
+    plt.savefig(savename)
+    
     f, axes = plt.subplots(1, 2, figsize=(10, 8), sharex=False, sharey=False)
     modelPlot.convergence_plot(ax=axes[0], band_index=band_index, v_max=1)
     modelPlot.magnification_plot(ax=axes[ 1], band_index=band_index)
     f.tight_layout()
     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=0.05)
-    savename= f"{savefig_path}/results_Model{filter}.png"
+    savename = f"{savefig_path}/results_MassModel{filter}.png"
     if verbose:
-        print(f"Saved model plot {savename}") 
+        print(f"Saved mass model plot {savename}") 
     plt.savefig(savename)
     plt.close()
 
@@ -181,9 +224,9 @@ def plot_model_WS(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,"")
     f.tight_layout()
     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
 
-    savename = f"{savefig_path}/results_MassModel{filter}.png"
+    savename = f"{savefig_path}/results_LightComponents{filter}.png"
     if verbose:
-        print(f"Saved mass model plot {savename}") 
+        print(f"Saved light model plot {savename}") 
     plt.savefig(savename)
     plt.close()
 
@@ -228,6 +271,7 @@ def plot_model(modelPlot,savefig_path,v_min,v_max,res_min,res_max,band=(0,""),ve
 
 
 
+from Utils.statistical_tools import estimate_sigma, estimate_median
 def get_median_with_error(prob,bins,ret_str=True):
     median = estimate_median([prob],[bins])[0]
     sigmas = estimate_sigma([prob],[bins],median=[median],averaged=False)[0]
@@ -240,13 +284,21 @@ def get_median_with_error(prob,bins,ret_str=True):
     else:
         return median,sigmas
 
+def _print_3Dmarg_res(Combined_PDF,Combined_bins):
+    bin_densities = marginalise_prob(Combined_PDF,Combined_bins) 
+    for i in range(3):
+        bn  =  Combined_bins[i]
+        cnt = bin_densities[i]
+        res = get_median_with_error(cnt,bn)
+        print(res)
+    return 0
 
 import scipy.stats as st
-# Discontinued
-"""
-#from corner import quantile
+""" # Discontinued
+from corner import quantile
 
-def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),contour_levels=4,colors=base_colors,alpha=.3):
+
+#def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),contour_levels=4,colors=base_colors,alpha=.3):
     
     if samples_names is None or len(samples_names)<len(samples):
         samples_names = ["" for i in samples]
@@ -258,6 +310,7 @@ def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),co
     ticks  = []
     for i in range(len(samples[0])):
         sT    = np.array(samples,dtype=object)[:,i] 
+        
         top_i = min([len(k) for k in sT])
         n_bins_i = 3*int(round( 1 + 3.322*np.log10(top_i)))+2
         n_bins.append(n_bins_i)
@@ -266,9 +319,9 @@ def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),co
         min_data_i = min([min(k) for k in sT])
         diff_min_max = (max_data_i-min_data_i)
         dbin_i = diff_min_max/n_bins_i
-        ticks_i=[np.round(min_data_i,2)]
+        ticks_i=[np.round(min_data_i,1)]
         for nb in range(n_bins_i-1):
-            ticks_i.append(np.round(ticks_i[-1]+dbin_i,2))
+            ticks_i.append(np.round(ticks_i[-1]+dbin_i,1))
         ticks.append(ticks_i)
         
         
@@ -289,7 +342,7 @@ def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),co
                                 ax_ij.set_xlabel(labels[i])
                         #if type(bins) is int:
                         #    bins=[bins for j in range(3)]
-                        ax_ij.hist(MCMC[i],bins=n_bins[i],color=col,alpha=alpha,density=True)
+                        ax_ij.hist(MCMC[i],bins=n_bins[i],color=col,alpha=alpha,density=True,stacked=True)
                         vmin,res,vmax = quantile(MCMC[i],q=[0.16, 0.5, 0.84])
                         err_min = res-vmin
                         err_max = vmax-res
@@ -304,7 +357,8 @@ def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),co
                                 udm = ["\"" for i in range(len(labels))]
                             elif type(udm)==str:
                                 udm = [udm for i in range(len(labels))]
-                            ax_ij.set_title("$"+labels[i].replace("$","")+"$" +" = "+ res_str)
+                            ax_ij.set_title(labels[i])
+
                     else:
                         if [i,j]==[1,0]:
                             mat = MCMC[:3] 
@@ -344,13 +398,14 @@ def my_corner(samples,samples_names=None,labels=None,udm=None,figsize=(12,12),co
 
     plt.tight_layout()
     return plt
+
 """
 
+#samples shape = setting, param, steps
 
 def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=None,contour_levels=4,
-                      colors=base_colors,alpha=.3,vaxes=None,fnt=30):
-    # vaxes: list of list of dict. lenght0=N* params, ordered as samples_name, lenght1=N* of values
-    #   keys: "value", "label" (optional) , "color" (optional)
+                      colors=base_colors,alpha=.3):
+    fnt = 30
     plt.rcParams['xtick.labelsize'] = fnt
     plt.rcParams['ytick.labelsize'] = fnt 
     plt.rcParams['font.size'] = fnt
@@ -361,7 +416,7 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
     plt.rc('xtick', labelsize=fnt)    # fontsize of the tick labels
     plt.rc('ytick', labelsize=fnt)    # fontsize of the tick labels
     plt.rc('legend', fontsize=fnt)    # legend fontsize
-     
+    
     if figsize is None:
         figsize= (3*len(samples[0]),3*len(samples[0]))
     if samples_names is None or len(samples_names)<len(samples):
@@ -402,7 +457,6 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
         ticks.append(ticks_i)
 
         
-        
     for k,smpl in enumerate(samples): # stg
         col= colors[k]
 
@@ -414,7 +468,7 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
                 ax_ij = ax[i][j]
                 if j<=i:
                     if i==j:
-                        ax_ij.hist(MCMC[i],bins=n_bins[i],color=col,alpha=alpha,density=True)
+                        ax_ij.hist(MCMC[i],bins=n_bins[i],color=col,alpha=alpha,density=True,stacked=True)
                         #if k==0:
                         ax_ij.set_xticks(ticks[i])
                         ax_ij.set_yticks([])
@@ -422,9 +476,6 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
                             ax_ij.set_title(labels[i])
                             if i==len(samples[0])-1 :
                                 ax_ij.set_xlabel(labels[i])
-                        if vaxes is not None:
-                            for v in vaxes[i]:
-                                ax_ij.axvline(v["value"],labels=v.get("label",None),color=v.get("color",col))
                     else:
                         mat = [MCMC[j],MCMC[i]]
                         if labels is not None and k==0:
@@ -443,10 +494,6 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
                         kernel = st.gaussian_kde(values)
                         f = np.reshape(kernel(positions).T, xx.shape)
                         ax_ij.contour(xx, yy, f, levels=contour_levels,alpha=alpha,colors=col)
-                        if vaxes is not None:
-                            for vi,vj in zip(vaxes[i],vaxes[j]):
-                                ax_ij.axhline(vi["value"],labels=vi.get("label",None),color=vi.get("color",col))
-                                ax_ij.axvline(vj["value"],labels=vj.get("label",None),color=vj.get("color",col))
                         #if k==0:
                         ax_ij.set_yticks(ticks[i])
                         ax_ij.set_xticks(ticks[j])
@@ -466,6 +513,9 @@ def my_corner_general(samples,samples_names=None,labels=None,udm=None,figsize=No
     plt.subplots_adjust(wspace=.06, hspace=.06)
 
     return plt
+
+
+
 
 def overplot_probability3D(prob3D_list,bins_list,labels=None,labels_list=None,udm=None,figsize=(12,12),contour_levels=30,colors=[["r","darkorange"],["b","royalblue"],["g","lime"]]):
     fg,ax= plt.subplots(3,3,figsize=figsize) 
@@ -535,8 +585,6 @@ def overplot_probability3D(prob3D_list,bins_list,labels=None,labels_list=None,ud
 
     return plt
 
-
-
 def averaged_plot(ax,prm_steps,col="b", num_average=100,plot_scatter=False,param_name=None,renorm=False):
     # general plot for the behaviour of non-linear solver for 1 param
     """
@@ -583,11 +631,11 @@ def averaged_plot(ax,prm_steps,col="b", num_average=100,plot_scatter=False,param
         ax.fill_between(x,sigma_up_ren,sigma_down_ren,alpha=0.3,color=col,label=r"1-$\sigma$ scatter")            
     ax.legend()
     return ax
-
-
+"""
 from Data.input_data import *
 from Utils.get_res import get_kwres 
 from lenstronomy.Plots.model_plot import ModelPlot
+
 
 def get_ModelPlot(setting,kwargs_data=None, kwargs_psf=None, kwargs_numerics=None,kwargs_model=None,\
                   kwargs_results=None,image_likelihood_mask_list=None,arrow_size=0.02, cmap_string="gist_heat",withmask=True):
@@ -609,6 +657,13 @@ def get_ModelPlot(setting,kwargs_data=None, kwargs_psf=None, kwargs_numerics=Non
             image_likelihood_mask_list = [np.array(mask).tolist()]
     else:
         image_likelihood_mask_list = []
+    multi_band = [[kwargs_data,kwargs_psf,kwargs_numerics]]
+    modelplot = ModelPlot(multi_band,kwargs_model,kwargs_results,\
+                image_likelihood_mask_list=image_likelihood_mask_list,arrow_size=arrow_size,cmap_string=cmap_string)
+    return modelplot
+"""
+def _get_ModelPlot(kwargs_data, kwargs_psf, kwargs_numerics,kwargs_model,\
+                  kwargs_results,image_likelihood_mask_list,arrow_size=0.02, cmap_string="gist_heat"):
     multi_band = [[kwargs_data,kwargs_psf,kwargs_numerics]]
     modelplot = ModelPlot(multi_band,kwargs_model,kwargs_results,\
                 image_likelihood_mask_list=image_likelihood_mask_list,arrow_size=arrow_size,cmap_string=cmap_string)

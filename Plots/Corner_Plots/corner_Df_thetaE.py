@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-import numpy as np
-import importlib
-import os,sys
-import json
-import argparse
+import sys
 import corner
+import argparse
+import numpy as np
 from copy import copy
 
 from Utils.tools import *

@@ -1,28 +1,22 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-import numpy as np
-import json
-import os 
-import pickle 
-import sys
-import pathlib as pth
-import argparse
 import copy
+import json
+import os,sys 
+import argparse
+import numpy as np
 
-#my libs
-from Prior.Prior import Df_prior, Df_prior_ABC
 from Utils.tools import *
+from Utils.get_res import load_whatever
+from Prior.Prior import Df_prior, Df_prior_ABC
+from Plots.plotting_tools import plot_probability3D
 from Utils.statistical_tools import get_bins_volume
 
 def get_minmax(samples,dim):
     # We get the min and maximum for each dimension relatively to all the datasets togheter
     return np.min([min(par_i) for par_i in np.array(samples,dtype=object)[:,dim]]),\
             np.max([max(par_i) for par_i in np.array(samples,dtype=object)[:,dim]])
-    
 
 def KDE_prior(Priors,d_bins):
     # Priors shape must be (filter_i, point_i, dimensions), eg: (1,1000,3)
@@ -185,7 +179,7 @@ if __name__=="__main__":
     check_combined(Combined_Prior)
 
 
-    save_dir=pth.Path(str("./backup_results/PDF_multiplication_ABC"))
+    save_dir= "./backup_results/PDF_multiplication_ABC"
     mkdir(save_dir)
 
 
@@ -203,12 +197,11 @@ if __name__=="__main__":
         save_dir=save_dir/dir_name
     mkdir(save_dir)
 
-
-    with open(save_dir/str("Combined_PDF_bins.pkl"),"rb") as f:
-        Combined_bins = pickle.load(f)
+    Combined_bins = load_whatever(save_dir/str("Combined_PDF_bins.pkl") )
+    
     ########
     print("WARNING: This is a test in ",sys.argv[0]," to see if the Combined_prior and the original prior are similar enough")
-    from Plots.plotting_tools import plot_probability3D
+
 
     # not sure this is legit:
     Combined_Prior/= np.sum(Combined_Prior*get_bins_volume(Combined_bins))
@@ -219,6 +212,4 @@ if __name__=="__main__":
     plot.savefig(str(save_dir)+"/Compare_prior_1.png")
     print("WARNING: checkout "+str(save_dir)+"/tmp_Compare_prior.png\n")
 
-    ########
-
-
+    success(sys.argv[0])

@@ -224,7 +224,7 @@ if __name__=="__main__":
                     canvas2[y_cs][x_cs] = 1
                     
             # add cross at images pos and source pos 
-            images = [newpixel_grid.map_coord2pix(*radec_i) for radec_i in radec_images]
+            images = [newpixel_grid.map_coord2pix(radec_i[0],radec_i[1]) for radec_i in radec_images]
             source = newpixel_grid.map_coord2pix(*radec_source)
             for i in range(len(images)):
                 canvas = plot_cross(canvas,images[i])

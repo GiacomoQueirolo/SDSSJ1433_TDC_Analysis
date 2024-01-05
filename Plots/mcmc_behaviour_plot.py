@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 from Utils.tools import *
 from Utils.get_res import *
-from Plots.plotting_tools import base_colors,averaged_plot
+from Plots.plotting_tools import base_colors
 
 def my_plot_mcmc_behaviour(ax, samples_mcmc, param_mcmc, col="b", num_average=100):
     """

@@ -11,11 +11,7 @@ import numpy as np
 
 from H0.tools_H0 import *
 from Utils.statistical_tools import quantiles
-
-
-# In[2]:
-
-
+ 
 font = {'family' : 'DejaVu Sans',
         'weight' : 'normal',
         'size'   : 16}
@@ -24,11 +20,7 @@ matplotlib.rc('figure',**{'figsize':(12,9)})
 plt.rc('xtick', labelsize=16)
 plt.rc('ytick', labelsize=16)
 
-
-# In[4]:
-
-
-def plot_H0(H0,PH0,figname=False,title=r"$P(H_0)$",return_plot=False,add_mode=True,confront=True,figsize=(12,12),color="b",ax=None):
+def plot_H0(H0,PH0,figname=False,title=r"$P(H_0)$",return_plot=False,add_mode=True,confront=True,figsize=(12,12),color="b",ax=None,c_str="k"):
     """
     # Plot H0 posterior compared to the two main results and 1-sigma regions of the litterature (H0LiCOW and Planck)
     # Input:
@@ -49,7 +41,7 @@ def plot_H0(H0,PH0,figname=False,title=r"$P(H_0)$",return_plot=False,add_mode=Tr
     ax.errorbar(h0_res,yh0,yerr=None,xerr=[[err_min],[err_max]],fmt=color,capsize=4)
     ax.scatter(h0_res ,yh0, c=color,marker="*",s=100)#,label="$H_0$"
     string_s=str(np.round(h0_res,2))+"$_{-"+str(np.round(err_min,2))+"}^{+"+str(np.round(err_max,2))+"}$"
-    ax.text(h0_res-.5*len(str(np.round(h0_res,3))),yh0*1.05,s=string_s,c="k",fontsize=16)
+    ax.text(h0_res-.5*len(str(np.round(h0_res,3))),yh0*1.05,s=string_s,c=c_str,fontsize=16)
     ax.set_title(title)
     ax.set_ylabel("Probability")
     ax.set_xlabel(r"$H_0\ [km/s/Mpc]$")
