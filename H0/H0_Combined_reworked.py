@@ -9,6 +9,8 @@ The idea is to convert the 3D Dt distribution
 using some given test values of H0 into Df distr.
 and see how well it agrees with the 3D df distribution
 
+
+add the normalisation wrt Omega_M
 """;
 
 
@@ -26,26 +28,19 @@ import argparse as ap
 import multiprocess
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-from astropy.cosmology import Planck18
 from astropy.cosmology import FlatLambdaCDM
 from scipy.stats import multivariate_normal
 
-from Utils.tools import *
-from Plots.plot_H0 import plot_H0
+from H0.H0_Data import *
 from H0.tools_H0 import H0_Res
+from Plots.plot_H0 import plot_H0
+from H0.error_budget import get_error_budget
+
+from Utils.tools import *
 from Utils.Dt_from_Df_reworked import *
 from Utils.statistical_tools import quantiles
 from Utils.combinedsetting_class import combined_setting
-from H0_Data import get_Df_post,get_Dt_post,create_PH0resdir,write_readme
-
-def get_kwdt(Dt_res):
-    #MOD_MULTIVAR
-    # we want to consider the error correlation, see notes 12th Nov.
-    cov_rnd   = np.cov(Dt_res.err_distr)
-    cov_sys   = (np.array(Dt_res.error.sys)**2)*np.identity(len(Dt_res.error.sys))
-    cov_dt    = cov_sys + cov_rnd
-    kwargs_dt = {"mean":Dt_res.results,"cov":cov_dt}
-    return kwargs_dt
+from Posterior_analysis.tools_Post import default_cosmo
 
 def get_bin_center(bins):
     bins_centers = []
@@ -63,7 +58,7 @@ def get_analytic_density(mean,cov,bins,norm=1):
     density        = multivariate_normal.pdf(grid_of_points,mean,cov)*norm
     return density
 
-def get_PH0(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1),cosmo=Planck18):
+def get_PH0(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1),cosmo=default_cosmo):
     PH0     = []
     k       = k_analytical(setting,cosmo=cosmo) 
     for h0 in H0:
@@ -89,9 +84,6 @@ def get_PH0(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1),cosmo=Pla
         print("WARNING: sum of PH0 == 0")
     return np.array(PH0),H0
 
-def _pll_PH0i_OmegaM(args):
-    return _PH0i_OmegaM(*args)
-
 def _PH0i_OmegaM(Omi,Dt_kw,Df_dens,Df_dens_bins,setting,H0,cosmo0):
     cosmoi  = FlatLambdaCDM(Om0=Omi,H0=cosmo0.H0,Tcmb0=cosmo0.Tcmb0)
     PH0i,H0 = get_PH0(Dt_kw=Dt_kw,Df_dens=Df_dens,Df_dens_bins=Df_dens_bins,setting=setting,H0=H0,cosmo=cosmoi)
@@ -99,7 +91,7 @@ def _PH0i_OmegaM(Omi,Dt_kw,Df_dens,Df_dens_bins,setting,H0,cosmo0):
     #                           z_lens=setting.z_lens,z_source=setting.z_source,H0=H0,cosmo=cosmoi)
     return PH0i,H0
     
-def get_PH0_marg_OmegaM(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1),cosmo0 = Planck18,Omega_M=np.arange(0,1.002,.002),parall=False):
+def get_PH0_marg_OmegaM(Dt_kw,Df_dens,Df_dens_bins,setting,H0=np.arange(50,100,.1),cosmo0 = default_cosmo,Omega_M=np.arange(0,1.002,.002),parall=False):
     if parall:
         def _get_PH0_marg_OmegaM(Omi):
             cosmoi  = FlatLambdaCDM(Om0=Omi,H0=cosmo0.H0,Tcmb0=cosmo0.Tcmb0)
@@ -187,8 +179,9 @@ if __name__ == '__main__':
     PH0_resdir = create_PH0resdir(res_dir=res_dir,dir_ph0=dir_ph0,verbose=verbose,overwrite=overwrite)
 
     # loading data
-    Dt_res = get_Dt_post(dt_name=dt_name,PH0_resdir=PH0_resdir,overwrite=overwrite,**kwpycs)
+    conf_dt,Dt_res = get_Dt_post(dt_name=dt_name,PH0_resdir=PH0_resdir,overwrite=overwrite,**kwpycs)
     combined_setting,PDF_Df,PDF_Df_bins = get_Df_post(df_name=df_name,PH0_resdir=PH0_resdir,overwrite=overwrite,**kwlnst)
+    verify_BC(conf_dt=conf_dt,comb_sett=combined_setting)
     write_readme(path=PH0_resdir,dt_name=dt_name,df_name=df_name,log_command=True,**kwpycs,**kwlnst)
     # converting dt into kwargs
     kwargs_dt = get_kwdt(Dt_res)    
@@ -199,7 +192,7 @@ if __name__ == '__main__':
     H0_sampled = np.arange(h0min,h0max,h0step)
     if verbose:
         begin = time.time()
-    PH0,H0 = get_PH0(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo=Planck18)
+    PH0,H0 = get_PH0(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo=default_cosmo)
     if verbose:
         print("Time passed: ",time.time()-begin)
     
@@ -211,38 +204,47 @@ if __name__ == '__main__':
     H0_res = H0_Res(h0_res,[err_min,err_max])
     print("analytical: ", H0_res)
     plot_H0(H0,PH0,figname=PH0_resdir+"/PH0_dtf.pdf",add_mode=False)
-    
+
+    kw_err_bdg={"PH0_resdir":PH0_resdir,"kwargs_dt":kwargs_dt,"PDF_Df":PDF_Df,"PDF_Df_bins":PDF_Df_bins}
+    get_error_budget(**kw_err_bdg)
+
     if marg_Om:
-        f, ax = plt.subplots(1, 1, figsize=(18, 10))
+        f, ax = plt.subplots(1, 1, figsize=(12,12))
         ax = plot_H0(H0,PH0,add_mode=False,color="blue",return_plot=True,ax=ax)
-        handles = [Patch(facecolor="blue",label=r"$\Omega_{m,0}$"+f"={np.round(Planck18.Om0,3)}")]
+        handles = [Patch(facecolor="blue",label=r"$\Omega_{m,0}$"+f"={np.round(default_cosmo.Om0,3)}")]
         # uniform Om = U[0,1]
-        marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo0=Planck18,parall=parallel)
+        marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,setting=combined_setting,cosmo0=default_cosmo,parall=parallel)
         with open(f"{PH0_resdir}/marg_ph0_results.data","wb") as f:
             pickle.dump([marg_PH0,H0],f)    
+            
         ax = plot_H0(H0,marg_PH0,ax=ax,return_plot=True,color="cyan",add_mode=False)
         handles.append(Patch(facecolor="cyan",label=r"$\Omega_{m,0}$= $\mathcal{U}$(0.,1.)"))
         # the followings are inspired by TDCOSMO XIII, Section 6
         # uniform Om = U[0.05,.5]
         marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,\
-                            Omega_M=np.arange(0.05,0.502,0.001),setting=combined_setting,cosmo0=Planck18,parall=parallel)
+                            Omega_M=np.arange(0.05,0.502,0.001),setting=combined_setting,cosmo0=default_cosmo,parall=parallel)
+        marg_PH0_sel,H0_sel = copy.copy(marg_PH0),copy.copy(H0) 
         with open(f"{PH0_resdir}/marg_ph0_results_OmU005_05.data","wb") as f:
-            pickle.dump([marg_PH0,H0],f)    
+            pickle.dump([marg_PH0,H0],f)   
+            
         ax = plot_H0(H0,marg_PH0,ax=ax,return_plot=True,color="darkorange",add_mode=False)
         handles.append(Patch(facecolor="darkorange",label=r"$\Omega_{m,0}$= $\mathcal{U}$(0.05,0.5)"))
-        # uniform Om = N[0.334, 0.018]
+        # normal Om = N[0.334, 0.018]
         marg_PH0,H0,PH0_2D = get_PH0_marg_OmegaM(Dt_kw=kwargs_dt,Df_dens=PDF_Df,Df_dens_bins=PDF_Df_bins,H0=H0_sampled,\
-                            Omega_M=np.random.normal(0.334,0.018,1000),setting=combined_setting,cosmo0=Planck18,parall=parallel)
+                            Omega_M=np.random.normal(0.334,0.018,1000),setting=combined_setting,cosmo0=default_cosmo,parall=parallel)
         with open(f"{PH0_resdir}/marg_ph0_results_OmN0334_0018.data","wb") as f:
             pickle.dump([marg_PH0,H0],f)    
         ax = plot_H0(H0,marg_PH0,ax=ax,return_plot=True,color="yellow",add_mode=False)
-        handles.append(Patch(facecolor="yellow",label=r"$\Omega_{m,0}$= $\mathcal{U}$(0.05,0.5)"))
+        handles.append(Patch(facecolor="yellow",label=r"$\Omega_{m,0}$= $\mathcal{N}$(0.334,0.018)"))
         
         ax.legend(handles=handles)
         figname =f"{PH0_resdir}/PH0_dtf_cosmo_marg_extended.pdf"
         plt.savefig(figname)
         plt.close()
         print(f"Saved {figname}")
-    
-        
+        with open(PH0_resdir+"/ph0_results_marg.data","wb") as f:
+          pickle.dump([PH0,H0],f)
+          
+        plot_H0(H0_sel,marg_PH0_sel,figname=PH0_resdir+"/PH0_dtf_marg_OmU005_05.pdf",add_mode=False)
+
     success(sys.argv[0])
