@@ -218,17 +218,12 @@ def plot_projection(data,savefigpath=None,udm="<e-/sec>",title="PSF profile",\
     cnt_data_x,cnt_data_y = int(cnt_data_x[0]), int(cnt_data_y[0])
     rad = np.min([cnt_data_x,cnt_data_y,len(data[0])-cnt_data_x,len(data[1])-cnt_data_y])
     radii = np.arange(-rad,rad+1)
-    #projection_profile = np.zeros(len(data[1]))
     projection_profile = np.zeros(len(radii))
     for angle in np.linspace(0, 360, 360, endpoint=False): 
         angle_rad = np.radians(angle)
-        #x_projection = cnt_data_x + np.cos(angle_rad) * np.arange(-cnt_data_x,+cnt_data_x+1)
-        #y_projection = cnt_data_y + np.sin(angle_rad) * np.arange(-cnt_data_y,+cnt_data_y+1)
-        x_projection = cnt_data_x + np.cos(angle_rad) * radii
-        y_projection = cnt_data_y + np.sin(angle_rad) * radii
-        x_projection_rnd = np.array([int(np.round(xi,0)) for xi in x_projection])
-        y_projection_rnd = np.array([int(np.round(yi,0)) for yi in y_projection])
-        prjprofrndi = [data[xi][yi] for xi,yi in zip(x_projection_rnd,y_projection_rnd)]
+        x_projection = np.rint(cnt_data_x + np.cos(angle_rad) * radii).astype(int)
+        y_projection = np.rint(cnt_data_y + np.sin(angle_rad) * radii).astype(int)
+        prjprofrndi = [data[xi][yi] for xi,yi in zip(x_projection,y_projection)]
         projection_profile+=prjprofrndi
     proj_data =projection_profile/360
     if not scale_to_max:
@@ -300,17 +295,17 @@ def plot_projection(data,savefigpath=None,udm="<e-/sec>",title="PSF profile",\
         else:
             ax.plot([x_projdata_arcsec[int(res_lft_i)],x_projdata_arcsec[int(res_rgt_i)]],\
                     [half_max,half_max],c=color,label="FWHM="+fwhm_simp+r'" '+label,ls="--")
-        #print("FWHM:",simp_wo_sig(sig_arc,3))
+        #print("FWHM:",simp_wo_sig(fwhm_arc,3))
         ax.legend()
     if not savefigpath is None:
         plt.tight_layout()
         plt.savefig(savefigpath+"/"+filename.replace(".pdf","")+".pdf")
-        return sig_arc
+        return fwhm_arc
     else:
         if not _return_fwhm:
             return fig 
         else:
-            return fig,sig_arc
+            return fig,fwhm_arc
     
 def crop_egdes(image,setting):
     setting  = get_setting_module(setting).setting()
