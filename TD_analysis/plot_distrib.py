@@ -1,4 +1,4 @@
-import copy
+
 import pycs3
 import pickle
 import sys,os
@@ -7,10 +7,11 @@ import pathlib as pth
 import argparse as ap
 from corner import quantile
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 from Utils.tools import *    
 from stnd_handling_data import Error,Error_mag
-from stnd_plot import print_res_w_err
+from Plots.stnd_plot import print_res_w_err,rename_label
  
 fntsz = 20
 plt.rcParams['xtick.labelsize'] = fntsz
@@ -41,14 +42,14 @@ def plot_result(config,overplot=False,verbose=False,rdb_lbl=True):
         mkdir(savefig_path)        
         for mlt_i, mltype_i in enumerate(config.mltype): #ml type
             for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):
-                mllist_name,mlfp = ml_config 
+                """mllist_name,mlfp = ml_config 
                 if mltype_i=="polyml":
                     mlfp_str="_mlfp_"+str(mlfp)
                 elif mltype_i=="splml":
                     if config.forcen:
                         mlfp_str="_nmlspl_"+str(mlfp)
                     else:
-                        mlfp_str="_knstml_"+str(mlfp)
+                        mlfp_str="_knstml_"+str(mlfp)"""
                         
                 saveml_path = saveknt_path/config.get_savemlpath(mltype_i,ml_config)# saveknt_path/str("ml"+mltype_i[:-2]+mllist_name+mlfp_str) 
 
@@ -123,7 +124,7 @@ def overplot_result_single(distr,name,save_path,ax,labels=["AB","AC","BC"],alpha
 
 
 
-def plot_result_single(distr,name,save_path,labels=["AB","AC","BC"],mag=False,readable_labels=True,verbose=False):
+def plot_result_single(distr,name,save_path,labels=["AB","AC","BC"],mag=False,readable_labels=True,rgd_set=None,verbose=False):
     # Plot the resulting time delay distribution
     fg,ax= plt.subplots(2,2,figsize=(12,12))
     if not mag:
@@ -136,7 +137,10 @@ def plot_result_single(distr,name,save_path,labels=["AB","AC","BC"],mag=False,re
     if verbose:
         print("Plotting "+lbl)
     if readable_labels:
-        lbl = rename_label(name)
+        if rgd_set:
+            lbl = rename_label(rgd_set)
+        else:
+            lbl = rename_label(name)
     plt.suptitle("Resulting $"+Dunit+"$ Distribution for "+lbl)
     for i in range(len(distr)): #ABCD
         let = labels[i]
@@ -176,18 +180,18 @@ def plot_result_single(distr,name,save_path,labels=["AB","AC","BC"],mag=False,re
     plt.close()
 
 def plot_err(config,verbose=False,rdb_lbl=True):
-    output_dir = config.lens_directory 
+    #output_dir = config.lens_directory 
     opt = config.optset[0]
-    base_lcs = config.get_lcs() 
+    #base_lcs = config.get_lcs() 
     plot_path = config.figure_directory
     savefig_path=pth.Path(config.simu_directory)
     for knt_i, knt in enumerate(config.knotstep_marg): #knotstep of the intr.spline
         saveknt_path = savefig_path/str("simulation_kn"+str(knt))
         for mlt_i, mltype_i in enumerate(config.mltype): #ml type
             for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):  
+                """
                 lcs = copy.deepcopy(base_lcs)
                 mllist_name,mlfp = ml_config 
-                """
                 kwargs_ml = {"mltype":mltype_i,"mllist_name":mllist_name}
                 if mltype_i=="polyml":
                     mlfp_str="_mlfp_"+str(mlfp)
@@ -316,7 +320,7 @@ def plot_fitted_lcs(config):
         saveknt_path = savefig_path/str("analysis_kn"+str(knt))
         for mlt_i, mltype_i in enumerate(config.mltype): #ml type
             for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):
-                mllist_name,mlfp = ml_config 
+                """mllist_name,mlfp = ml_config 
                 if mltype_i=="polyml":
                     mlfp_str="_mlfp_"+str(mlfp)
                 elif mltype_i=="splml":
@@ -324,7 +328,7 @@ def plot_fitted_lcs(config):
                         mlfp_str="_nmlspl_"+str(mlfp)
                     else:
                         mlfp_str="_knstml_"+str(mlfp)
-                        
+                """
                 saveml_path = saveknt_path/config.get_savemlpath(mltype_i,ml_config)
                 
                 with open(str(saveml_path)+"/splines.data", 'rb') as f:
@@ -340,10 +344,54 @@ def plot_fitted_lcs(config):
                 if not lcfound:
                     print("No lcs found, use instead recreate_splineplot.py")
                     break
-                plot_single_fitted_lc(lcs,spline,path=saveml_path+"/splines/")
+                plot_single_fitted_lc(lcs,splines,path=saveml_path+"/splines/")
 
 
 
+def plot_regdiff_fit(lcs,rslcs,rslcs_residuals=None,name=None):
+    #prepare the figure pannel : 
+    fig1 = plt.figure(figsize=(15, 10))
+    gs1 = gridspec.GridSpec(11, 2)
+    gs1.update(left=0.08, right=0.96, top=0.98, bottom=0.05, wspace=0.05, hspace=0.09)
+    ax1 = plt.subplot(gs1[:8, :])
+    ax2 = plt.subplot(gs1[8:9, :],sharex=ax1)
+    ax3 = plt.subplot(gs1[9:10, :],sharex=ax1)
+    ax4 = plt.subplot(gs1[10:11, :],sharex=ax1)
+
+    #colorize the residuals curves : 
+    for j,lc in enumerate(rslcs_residuals):
+        lc.plotcolour = lcs[j+1].plotcolour
+
+    #prepare the legend for the difference curves
+    disptext = []
+    for j,lc in enumerate(rslcs_residuals) :
+        ycoord = 0.5
+        xcoord = 0.03
+        kwargs = {"fontsize": 14, "color": lcs[j+1].plotcolour}
+        txt = "A - %s"%lcs[j+1].object
+        disptext.append((xcoord, ycoord, txt, kwargs))
+
+    #plot the curves, regression, and difference curves : 
+    pycs3.gen.lc_func.display(lcs, rslcs, showdelays=False, showlegend=False,
+                        title=r"$\mathrm{Regression\ Difference }$", filename = "screen", ax=ax1,  style="cosmograil_dr1")
+    pycs3.gen.lc_func.display([],[rslcs_residuals[0]], showdelays=False, showlegend=False, filename = "screen", ax=ax2, style="cosmograil_dr1", text = [disptext[0]])
+    pycs3.gen.lc_func.display([],[rslcs_residuals[1]], showdelays=False, showlegend=False, filename = "screen", ax=ax3, style="cosmograil_dr1", text = [disptext[1]])
+    pycs3.gen.lc_func.display([],[rslcs_residuals[2]], showdelays=False, showlegend=False, filename = "screen", ax=ax4, style="cosmograil_dr1", text = [disptext[2]])
+
+    #adjust the axis
+    ax1.get_xaxis().set_visible(False)
+    ax2.get_xaxis().set_visible(False)
+    ax2.set_ylabel('$m_{%s} - m_{%s}$ \n $\mathrm{(mag)}$'%(lcs[0].object[0], lcs[1].object[-1]), fontsize = 12)
+    ax3.get_xaxis().set_visible(False)
+    ax3.set_ylabel('$m_{%s} - m_{%s}$ \n $\mathrm{(mag)}$'%(lcs[0].object[0], lcs[2].object[-1]), fontsize = 12)
+    ax4.set_ylabel("Regression Difference \n Residuals (mag)", fontsize = 9)
+    ax4.set_ylabel('$m_{%s} - m_{%s}$ \n $\mathrm{(mag)}$'%(lcs[0].object[0], lcs[3].object[-1]), fontsize = 12)
+    if name:
+        print("Saving plot ",name)
+        fig1.savefig(name)
+    else:
+        return fig1
+    
 if __name__ == '__main__':
     parser = ap.ArgumentParser(prog="python {}".format(os.path.basename(__file__)),
                                description="Plot distribution of time delay and Dmag analysis's result and/or error",

@@ -286,13 +286,19 @@ class Error_mag():
 
 
 class Group():
-    def __init__(self,error=None,data_distr=None,labels=["AB","AC","BC"],name="", color="royalblue"):
+    def __init__(self,error=None,data_distr=None,labels=["AB","AC","BC"],name="", color="royalblue",\
+                 config=None,knt=None,mltype=None,ml_config=None):
         
-        self.data   = data_distr
-        self.labels = labels
-        self.name   = name
-        self.color  = color
-        self.wD     = False if "BC" in self.labels else True
+        self.data      = data_distr
+        self.labels    = labels
+        self.name      = name
+        self.color     = color
+        self.wD        = False if "BC" in self.labels else True
+        self.config    = config
+        self.knt       = knt
+        self.mltype    = mltype
+        self.ml_config = ml_config
+
         if self.data is not None:
             self.results = np.mean(data_distr,axis=1)  # as usual median or mean? 
         else:

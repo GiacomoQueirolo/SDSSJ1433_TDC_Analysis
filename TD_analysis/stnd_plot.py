@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
+from RegDiff_Set import regdiff_set
+
 comb_label = "Combined result"
 
 matplotlib.rcParams['mathtext.fontset'] = 'custom'
@@ -25,7 +27,32 @@ def print_res_w_err(res,err,outstr=True):
     else:
         print(str_res)
         
+
 def rename_label(group_name):
+    if type(group_name)==str:
+        return rename_label_spline(group_name=group_name)
+    elif isinstance(group_name,regdiff_set):
+        return rename_label_regdiff(rgd_set=group_name)
+    else:
+        raise ValueError(str(group_name)+" not recognised neither as spline nor as reg.diff. fitting.")
+
+def rename_label_regdiff(rgd_set):
+    readable_label = r"" 
+    readable_label+=rgd_set.set_name.replace("set_","Set ")
+    readable_label+=","
+    readable_label+=" "+str(rgd_set.method)
+    readable_label+=","
+    readable_label+="Cov. Kernel "+str(rgd_set.covkernel).capitalize()
+    readable_label+=","
+    readable_label+="Pow "+str(rgd_set.pow)
+    readable_label+=","
+    readable_label+="Err.Scale "+str(rgd_set.errscale)
+    readable_label+=","
+    readable_label+="Amp "+str(rgd_set.amp)
+    return readable_label
+
+
+def rename_label_spline(group_name):
     readable_label = r""
     group_name = str(group_name).replace("_"," ")
     kntstp = group_name.split("ks")[1].split(" ")[0]

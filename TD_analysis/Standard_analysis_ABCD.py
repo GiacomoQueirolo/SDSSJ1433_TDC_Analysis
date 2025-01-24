@@ -81,7 +81,6 @@ def standard_analysis(config,verbose=False):
         print ( "Lenght of observation campaign: ",(max(lc_i.getjds())-min(lc_i.getjds()))," days")
         print ( "N* of nights of observation campaign: ",len(lc_i.getjds()) ," days")
     
-    orig_shift_time = config.timeshifts
     orig_shift_mag  = set_orig_magshift(lcs)
     
     savefig_path=pth.Path(config.analysis_directory)

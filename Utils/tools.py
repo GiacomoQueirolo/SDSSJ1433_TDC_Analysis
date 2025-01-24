@@ -294,6 +294,11 @@ bckp_def = "backup_results"
 
 @check_setting
 def find_backup_path(setting,strict=True):
+    try:
+        return setting.lens_prior.backup_dir
+    except AttributeError:
+        pass
+    
     setting_name = get_setting_name(setting)
     bckp = getattr(setting,"backup_path",None)
     if bckp:
@@ -367,14 +372,14 @@ def check_if_SUB(setting):
 
 
 def get_savefigpath(setting,backup_path=bckp_def):
-    backup_path  = _check_backup_path(setting_name,backup_path)
+    backup_path  = _check_backup_path(setting,backup_path)
     setting_name = get_setting_name(setting)
     setting_name = setting_name.replace(".py","") 
     savefig_path = "./"+backup_path+"/"+setting_name.replace("settings_","")+"/"
     return savefig_path
 
 def get_savemcmcpath(setting,backup_path=bckp_def):
-    backup_path  = _check_backup_path(setting_name,backup_path)
+    backup_path  = _check_backup_path(setting,backup_path)
     setting_name  = get_setting_name(setting)
     setting_name  = setting_name.replace(".py","")  
     savemcmc_path = "./"+backup_path+"/"+setting_name.replace("settings_","mcmc_")+"/"
@@ -412,7 +417,7 @@ def print_kwargs(setting_name):
 
         
 def get_backend_filename(setting,backup_path=bckp_def):
-    backup_path  = _check_backup_path(setting_name,backup_path)
+    backup_path  = _check_backup_path(setting,backup_path)
     setting_name  = get_setting_name(setting)
     savemcmc_path = get_savemcmcpath(setting,backup_path=backup_path)
     backend_name  = create_path_from_list([savemcmc_path,
@@ -439,6 +444,14 @@ def print_setting(setting):
 
 def get_filter(setting):
     return strip_setting_name(setting,filter=True)
+    
+    
+def get_wavelength(setting):
+    wv = int(get_filter(setting).lower().split("_")[0].replace("f","").replace("w","").replace("x",""))
+    if wv>300:
+        return wv
+    else:
+        return wv*10
 
 def create_path_from_list(ordered_list):
     # we asume an ordered list of directories and subdirectories (and maybe a file in the end)
@@ -467,15 +480,21 @@ def save_json_name(setting,path,filename):
 
 
 def save_mcmc_json(setting,data,filename,backup_path=bckp_def):
-    backup_path  = _check_backup_path(setting_name,backup_path)
+    backup_path  = _check_backup_path(setting,backup_path)
     setting_name  = get_setting_name(setting)
     savemcmc_path = get_savemcmcpath(setting_name,backup_path)
     name = save_json_name(setting,savemcmc_path,filename)
     save_json(data,name)
     
-def create_dir_name(settings,save_dir=".",dir_name=None,backup_path=bckp_def,copy_settings=True):
-    backup_path = _check_backup_path(settings,backup_path)
-    save_dir    = str(backup_path)+"/"+str(save_dir)+"/"
+def create_dir_name(settings,save_dir=".",dir_name=None,backup_path=bckp_def,copy_settings=True):    
+    backup_paths = []
+    for st in settings:
+        backup_paths.append(_check_backup_path(st,backup_path))
+    if len(set(backup_paths))==1:
+        save_dir    = str(backup_path)+"/"+str(save_dir)+"/"
+    else:
+        stng_str = ",".join([str(s) for s in settings])
+        raise RuntimeError("Multiple possible backup_paths found for sett. "+stng_str+" :"+str(backup_paths))
     if type(settings) is not list:
         settings=[settings]
     if dir_name is None:
@@ -569,7 +588,7 @@ def general__eq__(obj_self,other_obj):
     for attr in dir(obj_self):
         if not attr.startswith('__'):
             try:
-                if getattr(obj_self,attr)!=getattr(other_obj,attr):
+                 if np.any(getattr(obj_self,attr)!=getattr(other_obj,attr)):
                     return False
             except AttributeError:
                 return False
@@ -614,5 +633,6 @@ def check_success_analysis(path):
     success = pickle.load(open(path+"/success.data","rb"))
     return success["success"]
 ##########################################
+
 
 

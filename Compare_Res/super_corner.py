@@ -417,7 +417,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Plot the superposed corner plot of the posterior distribution of the Fermat potential difference and the other lens parameters from the given settings ")
     parser.add_argument("-c", "--cut_mcmc", type=int, dest="cut_mcmc", default=0,
                         help="Cut the first <c> %% of steps of the mcmc to ignore them")
-    parser.add_argument("-n","--name",type=str,dest="dir_name", default=".",
+    parser.add_argument("-n","--name",type=str,dest="dir_name", default=None,
                         help="Directory name where to save the plot")
     parser.add_argument("-if","--ignore_fermat",dest="ignore_fermat", default=False,action="store_true",
                         help="Ignore superposition of corner plot of fermat potential differences")

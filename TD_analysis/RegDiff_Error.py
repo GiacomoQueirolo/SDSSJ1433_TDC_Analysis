@@ -603,11 +603,6 @@ def get_res_Group_i(config,knt,mltype,ml_config):
     res_Group.data_path = data_path
     res_Group.sim_path  = sim_path
     
-    res_Group.config    = config
-    res_Group.knt       = knt
-    res_Group.mltype    = mltype
-    res_Group.ml_config = ml_config
-    
     return res_Group
 
 

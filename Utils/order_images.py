@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# In[ ]:
+
 
 # A general way to order the images in a standardised order
 
+
+# In[38]:
+
 import pickle
 import numpy as np
-from Utils.tools import get_savemcmcpath,check_setting
+from Data.Param import get_Param
+
 from Utils.get_res import get_mcmc_smpl,load_whatever
-from Data.Param import get_prm_list
+from Utils.tools import get_savemcmcpath,check_setting
 
 #wo A order   x    B       ,     C      ,    D
 ra_ordered  = [-0.00221745, -0.76000637, 2.04098104 ] 
@@ -43,7 +49,7 @@ def image_order(ra,dec,ret_order=True,verbose=True):
 
 
 @check_setting
-def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results",check_prev=False,verbose=True):
+def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="backup_results",check_prev=False,param_class=None,verbose=True):
     savepath = f"{get_savemcmcpath(setting,backup_path)}/new_order.pkl"
     if check_prev:
         try:
@@ -51,8 +57,9 @@ def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="back
         except FileNotFoundError:
             if verbose:
                 print(f"File {savepath} not found, creating now...")
-            
-    param_mcmc   = get_prm_list(setting,backup_path)
+    if param_class is None:
+        param_class = get_Param(setting)
+    param_mcmc   = param_class.list_param #get_prm_list(setting,backup_path)
     if mcmc is None:
         mcmc = get_mcmc_smpl(setting,backup_path)
     len_radec = min([300,len(mcmc)])
@@ -61,7 +68,8 @@ def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="back
                      I hope you know what you are doing")
     ra_ord,dec_ord = [],[]    
     for i in range(len_radec):
-        kwargs_result_i = setting.produce_kwargs_result(mcmc,param_mcmc,i)
+        kwargs_result_i = param_class.args2kwargs(mcmc[i], bijective=True)
+        #kwargs_result_i = setting.produce_kwargs_result(mcmc,param_mcmc,i)
         x_image         = kwargs_result_i["kwargs_ps"][0]["ra_image"]
         y_image         = kwargs_result_i["kwargs_ps"][0]["dec_image"]
         ra_ord.append(x_image)
@@ -75,6 +83,8 @@ def get_new_image_order(setting,mcmc=None,starting_from_A=True,backup_path="back
     with open(savepath,"wb") as f:
         pickle.dump(new_order,f)
     return new_order
+
+# In[45]:
 
 
 # test:
@@ -90,7 +100,8 @@ order= [0,*order]
 ra_names[order]
 """
 
-from Utils.Multiband_Utils.tools_multifilter import get_multifilter_setting_module
+
+from Multiband_Utils.tools_multifilter import get_multifilter_setting_module
 
 def image_order_mltf(multifilter_setting,mcmc,verbose=False):
     multifilter_setting = get_multifilter_setting_module(multifilter_setting)
