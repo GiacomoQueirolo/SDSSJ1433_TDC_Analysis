@@ -42,13 +42,13 @@ import pycs3.pipe.pipe_utils as ut
 
 ####################
 from Utils.tools import *
-from Plots.stnd_plot import delayplot,dmagplot
-from TD_analysis.stnd_handling_data import combine_series_methodB
 from Plots.plot_distrib import plot_err
+from Plots.stnd_plot import delayplot,dmagplot
 from TD_analysis.stnd_red_chi import get_chi_red
 from TD_analysis.pycs3_mod.sim.run import multirun
 from TD_analysis.pycs3_mod.sim.draw import multidraw
-from TD_analysis.inspect_results import plt_intr_err
+from TD_analysis.stnd_handling_data import combine_series_methodB
+from TD_analysis.inspect_results import plt_err, plt_err_tot, plt_intr_err
 ####################
 
 
@@ -259,7 +259,7 @@ def set_param_intrinsic(config):
                 
                 #MOD_ROB
                 if not check_success_analysis(get_analdir(combdir)):
-                    print("Analysis from "+get_analdir(saveml_path)+" was not sufficiently precise. Ignored.")
+                    print("Analysis from "+get_analdir(combdir)+" was not sufficiently precise. Ignored.")
                     continue
                     
                 mkdir(combdir)
@@ -699,7 +699,7 @@ def combine_models(config,sigmathresh):
     savefig = indiv_marg_dir + config.name_marg_spline + "_sigma_%2.2f_myplot.pdf" % sigmathresh
     
     #create plot
-    delayplot(group_list,savefig,colors=colors,refgroup=combined,selected_groups_indexes=combined_indexes)
+    delayplot(group_list,savefig,colors=colors,refgroup=combined,selected_groups_indexes=combined_indexes,readable_labels=True)
     
     print("Saved group_list as ",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_groups.pkl'),\
         "and combined result as ",str(marginalisation_dir + config.name_marg_spline + "_sigma_%2.2f" % sigmathresh + '_combined.pkl') )
@@ -743,7 +743,7 @@ def combine_models(config,sigmathresh):
         """
         lst_str  = name_to_comb.split(" ")[1:]
         knt      = int(lst_str[0].replace("ks",""))
-        mltype   = lst_str[1]
+        mltype   = lst_str[1].split("ml")[0]+"ml"
         mlconfig = lst_str[2:]
 
         ml_dir      = config.get_savemlpath(mltype,mlconfig)

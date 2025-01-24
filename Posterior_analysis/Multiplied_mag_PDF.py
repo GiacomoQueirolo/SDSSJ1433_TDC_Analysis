@@ -17,7 +17,7 @@ from Utils.get_res import *
 from Prior.Prior import Prior
 from Utils.statistical_tools import get_bins_volume
 from Utils.combinedsetting_class import combined_setting
-from Posterior_analysis.mag_remastered import gen_mag_ratio_mcmc,labels_mr_AD,labels_mr_BC,Warning_BC 
+from Posterior_analysis.mag_remastered import gen_mag_ratio,labels_Rmag_AD,labels_Rmag_BC,Warning_BC 
 
 
 if __name__=="__main__":
@@ -31,9 +31,9 @@ if __name__=="__main__":
     parser.add_argument("-n","--name",type=str,dest="dir_name", default=".",
                         help="Directory name where to save the multiplied posteriors")
     parser.add_argument("-cmbn","--combined_setting_name",type=str,dest="cmb_sett_name", default=None,
-                        help="Name for the combined setting file")
+                        help="Name for the combined setting file - if it already exists, take that and ignore SETTINGS")
     parser.add_argument("-nb","--number_bins",type=int, dest="nbins", default=40,
-                        help="Number of bins per dimension (be careful with it! too many bins can be catastrophic)")
+                        help="Number of bins per dimension (Careful with it! too many bins can be catastrophic)")
     parser.add_argument("-ms","--mcmc_steps",type=int, dest="mcmc_steps", default=1000,
                         help="Number of steps for the MCMC sampling and plot")
     parser.add_argument("-mp","--mcmc_prior",type=int, dest="mcmc_prior", default=1000,
@@ -50,7 +50,7 @@ if __name__=="__main__":
                         help="Consider BC couple instead of AD")
     parser.add_argument("-v","--verbose", action="store_true", dest="verbose", default=False,
                         help="Verbose")
-    parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
+    parser.add_argument('SETTING_FILES',nargs="*",default=[],help="Setting file(s) to consider (ignored if combined_setting file is given and already exists)")
 
     args = parser.parse_args()
     cut_mcmc = int(args.cut_mcmc)
@@ -62,8 +62,6 @@ if __name__=="__main__":
     mcmc_prior  = int(args.mcmc_prior) 
     verbose     = bool(args.verbose)
     factNprior  = int(args.factNprior)
-    setting_names =  args.SETTING_FILES  
-    settings      = get_setting_module(setting_names,True)
     cmb_sett_name = str(args.cmb_sett_name)
     overwrite_Prior = bool(args.overwrite_Prior)
     BC              = bool(args.BC)
@@ -75,22 +73,41 @@ if __name__=="__main__":
     main_savedir = "PDF_multiplication_ABC"
     if not BC:
         main_savedir+="D"
+
+    try:
+        CombSett      = get_combined_setting_module(cmb_sett_name)
+        setting_names = CombSett.setting_names
+        if CombSett.BC!=BC:
+            raise RuntimeError(f"Previously considered combined_setting has difference 'BC' choice: {CombSett.BC}")
+        if not getattr(CombSett,"labels_Rmag",False):
+            if BC:
+                from mag_remastered import labels_Rmag_BC as labels_Rmag
+                Warning_BC()
+            else:
+                from mag_remastered import labels_Rmag_AD as labels_Rmag
+            CombSett.labels_Rmag = labels_Rmag  
+            print("Updating combined_setting with the correct labels_Rmag")
+            with open(f"combined_settings/{cmb_sett_name}.dll","wb") as f:
+                dill.dump(CombSett,f)
+    except FileNotFoundError:
+        setting_names =  args.SETTING_FILES
+    settings      = get_setting_module(setting_names,True)
     filters       = [get_filter(st) for st in settings]
     savemcmc_path = [get_savemcmcpath(st) for st in  settings]
     
-    save_dir  = create_dir_name(setting_names,save_dir=main_savedir,dir_name="Mag",backup_path=backup_path,copy_settings=False)
-    save_dir  = create_dir_name(setting_names,save_dir=save_dir.replace(backup_path,""),dir_name=dir_name,backup_path=backup_path,copy_settings=True)
+    save_dir  = create_dir_name(setting_names,save_dir=main_savedir,dir_name=dir_name,backup_path=backup_path,copy_settings=False)
+    save_dir  = create_dir_name(setting_names,save_dir=save_dir.replace(backup_path,""),dir_name="Mag",backup_path=backup_path,copy_settings=True)
 
     save_log_command(save_dir)
     # for fermat potentials    
     samples = []
-    param_names = labels_mr_AD
+    param_names = labels_Rmag_AD
     if BC:
         print(Warning_BC)
-        param_names = labels_mr_BC
+        param_names = labels_Rmag_BC
         
     for st in settings:
-        mgr_i = gen_mag_ratio_mcmc(setting=st,BC=BC)
+        mgr_i = gen_mag_ratio(setting=st,backup_path=backup_path,BC=BC)
         cut_mcmc_scaled = int(len(mgr_i)*cut_mcmc/1000)
         mgr_iT = np.transpose(mgr_i[cut_mcmc_scaled:])
         samples.append(mgr_iT) #shape: 3, len(mcmc)
@@ -129,14 +146,14 @@ if __name__=="__main__":
 
 
     if KDE:
-        from Multiply_PDF import Multiply_PDF_KDE
+        from Posterior_analysis.Multiply_PDF import Multiply_PDF_KDE
         npoints = nbins  # To TEST
         #Combined_PDF,Positions_KDE = Multiply_PDF_KDE(samples,npoints,Priors=Priors_Df,savedir=save_dir)
         #Combined_PDF,Positions_KDE = Multiply_PDF_KDE(samples,npoints,Prior_LR=Prior_Df_LRes,Prior_HR=Prior_Df_HRes,savedir=save_dir)
         raise RuntimeWarning("Not implemented yet")
         Combined_PDF,Positions_KDE = Multiply_PDF_KDE(samples,npoints,Prior=Prior,savedir=save_dir)
     else:
-        from Multiply_PDF import Multiply_PDF_HIST_fitPrior
+        from Posterior_analysis.Multiply_PDF import Multiply_PDF_HIST_fitPrior
         #Combined_PDF,Combined_bins = Multiply_PDF_HIST(samples,nbins,Priors=Priors_Df,savedir=save_dir)
         #Combined_PDF,Combined_bins = Multiply_PDF_HIST(samples,nbins,Prior_LR=Prior_Df_LRes,Prior_HR=Prior_Df_HRes,savedir=save_dir)
         Combined_PDF,Combined_bins = Multiply_PDF_HIST_fitPrior(samples,nbins,Prior=prior,savedir=save_dir,labels=param_names,verbose=verbose)
@@ -159,20 +176,24 @@ if __name__=="__main__":
     else:
         with open(str(save_dir)+"/Combined_mag_PDF_bins.pkl","wb") as f:
             pickle.dump(Combined_bins,f)
-
-    comment  = "Product of posteriors done by "+str(sys.argv[0])
-    z_lens   = [s.z_lens   for s in settings ]
-    z_source = [s.z_source for s in settings ]
-    if all(zl==z_lens[0] for zl in z_lens) and all(zs==z_source[0] for zs in z_source):
-        z_lens = z_lens[0]
-        z_source = z_source[0]
-    else:
-        raise RuntimeError("Not all settings have same redshift for lens and source. Something is off")
-   
-    CombSett      = combined_setting(comment,z_source,z_lens,filters,setting_names,savedir=save_dir)
-    cmb_sett_name = CombSett.gen_cmb_sett_name(cmb_sett_name = cmb_sett_name)
-    with open(f"combined_settings/{cmb_sett_name}.dll","wb") as f:
-        dill.dump(CombSett,f)
+ 
+    try:
+        # check if the combined setting already exists
+        CombSett
+    except NameError:
+        comment  = "Product of posteriors done by "+str(sys.argv[0])
+        z_lens   = [s.z_lens   for s in settings ]
+        z_source = [s.z_source for s in settings ]
+        if all(zl==z_lens[0] for zl in z_lens) and all(zs==z_source[0] for zs in z_source):
+            z_lens = z_lens[0]
+            z_source = z_source[0]
+        else:
+            raise RuntimeError("Not all settings have same redshift for lens and source. Something is off")
+    
+        CombSett      = combined_setting(comment,z_source,z_lens,filters,setting_names,savedir=save_dir)
+        cmb_sett_name = CombSett.gen_cmb_sett_name(cmb_sett_name = cmb_sett_name)
+        with open(f"combined_settings/{cmb_sett_name}.dll","wb") as f:
+            dill.dump(CombSett,f)
     try:
         os.symlink(f"combined_settings/{cmb_sett_name}.dll",f"{save_dir}/{cmb_sett_name}.dll")
     except FileExistsError:
@@ -211,11 +232,11 @@ if __name__=="__main__":
 
     if  KDE:
         from Plots.plotting_tools import plot_probability3D_KDE
-        plot = plot_probability3D_KDE(Combined_PDF,Positions_KDE,labels=param_names,udm="\"")
+        plot = plot_probability3D_KDE(Combined_PDF,Positions_KDE,labels=param_names,udm="")
         plot.savefig(str(save_dir)+"/CombinedProbability_KDE_mag.pdf") 
     else:
         from Plots.plotting_tools import plot_probability3D
-        plot = plot_probability3D(Combined_PDF,Combined_bins,labels=param_names,udm="\"")
+        plot = plot_probability3D(Combined_PDF,Combined_bins,labels=param_names,udm="")
         plot.savefig(str(save_dir)+"/CombinedProbability_mag.pdf")
 
     print("Result directory:", str(save_dir))

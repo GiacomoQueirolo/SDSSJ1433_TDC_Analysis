@@ -1,24 +1,33 @@
+
+import pycs3
 import pickle
-import numpy as np
-import matplotlib.pyplot as plt
-import pathlib as pth
 import sys,os
-from corner import quantile
-import importlib
+import numpy as np
+import pathlib as pth
 import argparse as ap
-import copy
+from corner import quantile
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 from Utils.tools import *    
 from stnd_handling_data import Error,Error_mag
-from stnd_plot import print_res_w_err
+from Plots.stnd_plot import print_res_w_err,rename_label
+ 
+fntsz = 20
+plt.rcParams['xtick.labelsize'] = fntsz
+plt.rcParams['ytick.labelsize'] = fntsz 
+plt.rcParams['font.size'] = fntsz
+plt.rc('axes', labelsize=fntsz)     # fontsize of the x and y labels
+plt.rc('font', size=fntsz)          # controls default text sizes
+plt.rc('axes', titlesize=fntsz)     # fontsize of the axes title
+plt.rc('axes', labelsize=fntsz)     # fontsize of the x and y labels
+plt.rc('xtick', labelsize=fntsz)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=fntsz)    # fontsize of the tick labels
+plt.rc('legend', fontsize=fntsz)    # legend fontsize
 
-plt.rcParams['xtick.labelsize'] = 18
-plt.rcParams['ytick.labelsize'] = 18
-plt.rcParams['font.size']= 16
+bins_n = 25
 
-bins_n = 30
-
-def plot_result(config,overplot=False,verbose=False):
+def plot_result(config,overplot=False,verbose=False,rdb_lbl=True):
     config = get_config(config)
     savefig_path=pth.Path(config.analysis_directory)
     if overplot:
@@ -33,14 +42,14 @@ def plot_result(config,overplot=False,verbose=False):
         mkdir(savefig_path)        
         for mlt_i, mltype_i in enumerate(config.mltype): #ml type
             for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):
-                mllist_name,mlfp = ml_config 
+                """mllist_name,mlfp = ml_config 
                 if mltype_i=="polyml":
                     mlfp_str="_mlfp_"+str(mlfp)
                 elif mltype_i=="splml":
                     if config.forcen:
                         mlfp_str="_nmlspl_"+str(mlfp)
                     else:
-                        mlfp_str="_knstml_"+str(mlfp)
+                        mlfp_str="_knstml_"+str(mlfp)"""
                         
                 saveml_path = saveknt_path/config.get_savemlpath(mltype_i,ml_config)# saveknt_path/str("ml"+mltype_i[:-2]+mllist_name+mlfp_str) 
 
@@ -51,15 +60,15 @@ def plot_result(config,overplot=False,verbose=False):
                 name  = str(config.combkw[a][mlt_i][mlc_i]).replace("spl1_","")
                 distr = np.transpose(timedelays)
                 distr_mag = np.transpose(magshifts)
-                plot_result_single(distr,name,saveml_path)
+                plot_result_single(distr,name,saveml_path,labels=config.delay_labels,readable_labels=rdb_lbl,verbose=verbose)
                 if verbose:
                     print("Done Resulting Distr "+name.replace("_"," "))
-                plot_result_single(distr_mag,name,saveml_path,mag=True)                    
+                plot_result_single(distr_mag,name,saveml_path,mag=True,labels=config.delay_labels,readable_labels=rdb_lbl)
                 if verbose:
                     print("Done Resulting Distr Mag "+name.replace("_"," "))
                 if overplot:
-                    ax,lgi   = overplot_result_single(distr,name,saveml_path,ax=ax,alpha=.5,color=colors[color_id])
-                    ax_mag,_ = overplot_result_single(distr,name,saveml_path,ax=ax_mag,alpha=.5,color=colors[color_id])                    
+                    ax,lgi   = overplot_result_single(distr,name,saveml_path,ax=ax,alpha=.5,color=colors[color_id],labels=config.delay_labels)
+                    ax_mag,_ = overplot_result_single(distr,name,saveml_path,ax=ax_mag,alpha=.5,color=colors[color_id],labels=config.delay_labels)
                     color_id+=1
                     if color_id==len(colors):
                         color_id=0
@@ -82,9 +91,11 @@ def plot_result(config,overplot=False,verbose=False):
         print(f"Saving {overplot_name_dt}") 
         fg_mag.savefig(overplot_name_mag)
         print(f"Saving {overplot_name_mag}") 
+        fg.close()
+        fg_mag.close()
         
 
-def overplot_result_single(distr,name,save_path,ax,alpha=.5,mag=False,color=None):
+def overplot_result_single(distr,name,save_path,ax,labels=["AB","AC","BC"],alpha=.5,mag=False,color=None):
     # OverPlot the resulting time delay distribution
     if not mag:
         Dunit = "\Delta t"
@@ -93,17 +104,15 @@ def overplot_result_single(distr,name,save_path,ax,alpha=.5,mag=False,color=None
         Dunit = "\Delta\ mag"
         unit  = ""
     for i in range(len(distr)): #ABCD
+        let = labels[i]
         if i==0:           
             ax_i=ax[0][0] 
-            let = "AB" 
         if i==1: 
             ax_i=ax[1][0] 
-            let = "AC" 
         if i==2: 
             ax_i=ax[1][1]             
-            let = "BC"            
         ddt = distr[i]
-        arr,_,_ = ax_i.hist(ddt,bins=bins_n,alpha=alpha,color=color)
+        ax_i.hist(ddt,bins=bins_n,alpha=alpha,color=color)
         ax_i.set_xlabel("$"+Dunit+"$ "+let+" ["+unit+"]")
         ax_i.set_yticklabels([])
         ax_i.set_yticks([])
@@ -115,7 +124,7 @@ def overplot_result_single(distr,name,save_path,ax,alpha=.5,mag=False,color=None
 
 
 
-def plot_result_single(distr,name,save_path,wD=False,mag=False):
+def plot_result_single(distr,name,save_path,labels=["AB","AC","BC"],mag=False,readable_labels=True,rgd_set=None,verbose=False):
     # Plot the resulting time delay distribution
     fg,ax= plt.subplots(2,2,figsize=(12,12))
     if not mag:
@@ -124,19 +133,23 @@ def plot_result_single(distr,name,save_path,wD=False,mag=False):
     else:
         Dunit = "\Delta\ mag"
         unit  = ""
-    plt.suptitle("Resulting $"+Dunit+"$ Distribution for "+name.replace("_"," "))
+    lbl = name.replace("_"," ")
+    if verbose:
+        print("Plotting "+lbl)
+    if readable_labels:
+        if rgd_set:
+            lbl = rename_label(rgd_set)
+        else:
+            lbl = rename_label(name)
+    plt.suptitle("Resulting $"+Dunit+"$ Distribution for "+lbl)
     for i in range(len(distr)): #ABCD
+        let = labels[i]
         if i==0:           
-            ax_i=ax[0][0] 
-            let = "AB" 
+            ax_i=ax[0][0]
         if i==1: 
-            ax_i=ax[1][0] 
-            let = "AC" 
+            ax_i=ax[1][0]
         if i==2: 
-            ax_i=ax[1][1]             
-            let = "BC"       
-            if wD:
-                let="AD"     
+            ax_i=ax[1][1]
         ddt = distr[i]
         vl,vc,vr = quantile(ddt,q=[0.16,0.5,0.84])
         err_min = vc-vl
@@ -152,7 +165,11 @@ def plot_result_single(distr,name,save_path,wD=False,mag=False):
         
         ax_i.legend()
     axdel=ax[0][1]
-    axdel.plot(1,1,label=name.replace("_"," "),color="w")
+    if readable_labels:
+        for lbli in lbl.split(","):
+            axdel.plot(1,1,label=lbli,color="w")
+    else:
+        axdel.plot(1,1,label=lbl,color="w")
     axdel.plot(1,1,label=r"Median",color="r",ls="--",linewidth=2.5)
     axdel.fill_between([1,1],1,1,color='grey', alpha=0.2, label="1-$\sigma$ region")
     axdel.legend()
@@ -162,20 +179,19 @@ def plot_result_single(distr,name,save_path,wD=False,mag=False):
     plt.savefig(str(save_path)+"/ResDist_"+name+".png")
     plt.close()
 
-
-def plot_err(config,verbose=False):    
-    output_dir = config.lens_directory 
+def plot_err(config,verbose=False,rdb_lbl=True):
+    #output_dir = config.lens_directory 
     opt = config.optset[0]
-    base_lcs = config.get_lcs() 
+    #base_lcs = config.get_lcs() 
     plot_path = config.figure_directory
     savefig_path=pth.Path(config.simu_directory)
     for knt_i, knt in enumerate(config.knotstep_marg): #knotstep of the intr.spline
         saveknt_path = savefig_path/str("simulation_kn"+str(knt))
         for mlt_i, mltype_i in enumerate(config.mltype): #ml type
             for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):  
+                """
                 lcs = copy.deepcopy(base_lcs)
                 mllist_name,mlfp = ml_config 
-                """
                 kwargs_ml = {"mltype":mltype_i,"mllist_name":mllist_name}
                 if mltype_i=="polyml":
                     mlfp_str="_mlfp_"+str(mlfp)
@@ -197,32 +213,34 @@ def plot_err(config,verbose=False):
 
                 sim_path  = str(combdir)+"/sims_"+config.simset_mock+"_opt_"+opt
         
-                error = Error(sim_path)
-                error_mag = Error_mag(sim_path)
+                error = Error(sim_path,wD=not config.BC)
+                error_mag = Error_mag(sim_path,wD=not config.BC)
                 
                 err_distr = error.get_distr() #not corrected for systematic
                 err_mag_distr = error_mag.get_distr() #not corrected for systematic
                 name = str(config.combkw[knt_i][mlt_i][mlc_i]).replace("spl1_","")
-                plot_err_distr_single(err_distr,name,plot_path)
+                plot_err_distr_single(err_distr,name,plot_path,labels=config.delay_labels,readable_labels=rdb_lbl)
                 if verbose:
                     print("Done Err Distr "+name.replace("_"," "))
-                plot_err_distr_single(err_mag_distr,name,plot_path,mag=True)
+                plot_err_distr_single(err_mag_distr,name,plot_path,mag=True,labels=config.delay_labels,readable_labels=rdb_lbl)
                 if verbose:
                     print("Done Err Distr Mag "+name.replace("_"," "))
 
-def plot_err_distr_single(distr,name,plot_path,mag=False):
+def plot_err_distr_single(distr,name,plot_path,labels=["AB","AC","BC"],mag=False,readable_labels=True):
     fg,ax= plt.subplots(2,2,figsize=(12,12))
-    plt.suptitle("Error Distribution of "+name.replace("_"," "))
+    lbl = name.replace("_"," ")
+    if readable_labels:
+        lbl = rename_label(name)
+    
+    plt.suptitle("Error Distribution of "+lbl) 
     for i in range(len(distr)): 
+        let = labels[i]
         if i==0:           
             ax_i=ax[0][0] 
-            let = "AB" 
         if i==1: 
             ax_i=ax[1][0] 
-            let = "AC" 
         if i==2: 
-            ax_i=ax[1][1]             
-            let = "BC"            
+            ax_i=ax[1][1]
         ddt = distr[i]
         vl,vc,vr = quantile(ddt,q=[0.16,0.5,0.84])
         err_min = vc-vl
@@ -237,10 +255,10 @@ def plot_err_distr_single(distr,name,plot_path,mag=False):
         ax_i.set_ylim(0,max_plot)
         if not mag:
             unit  = "d"
-            ax_i.set_xlabel("$\Delta t_{sim}-\Delta t_{meas}$ "+let+" ["+unit+"]")
+            ax_i.set_xlabel("$\Delta t_{\mathrm{sim}}-\Delta t_{\mathrm{meas}}$ "+let+" ["+unit+"]")
         else:
             unit  = ""
-            ax_i.set_xlabel("$\Delta mag_{sim}-\Delta mag_{meas}$ "+let+" ["+unit+"]")
+            ax_i.set_xlabel("$\Delta \mathrm{mag}_{\mathrm{sim}}-\Delta \mathrm{mag}_{\mathrm{meas}}$ "+let)
         ax_i.fill_between(np.linspace(vl,vr) , 0, max_plot, color='grey', alpha=0.2)
         ax_i.axvline(0,c="k",ls="-.",linewidth=2.5)
         to_annotate = "      Error\n"
@@ -257,19 +275,123 @@ def plot_err_distr_single(distr,name,plot_path,mag=False):
         #to_annotate += "\nTot.: "+str(np.round(np.sqrt(sys_err**2+ rnd_err**2),2))+" "+unit
         ax_i.annotate(to_annotate,xy=(.65,.73),xycoords="axes fraction",bbox=dict(boxstyle='round', fc='w'))
     axdel=ax[0][1]
-    axdel.plot(1,1,label=name.replace("_"," "),color="w")
+    if readable_labels:
+        for lbli in lbl.split(","):
+            axdel.plot(1,1,label=lbli,color="w")
+    else:
+        axdel.plot(1,1,label=lbli,color="w")
     axdel.plot(1,1,label=r"Median",color="g",ls="--",linewidth=2.5)
     axdel.plot(1,1,label=r"Zero",color="k",ls="-.",linewidth=2.5)
     axdel.fill_between([1,1],1,1,color='grey', alpha=0.2, label="1-$\sigma$ region")
     axdel.legend()
     axdel.axis("off")
     if not mag:
-        plt.savefig(str(plot_path)+"/ErrDist_"+name+".png")
+        svnm = str(plot_path)+"/ErrDist_"+name+".png"
     else:
-        plt.savefig(str(plot_path)+"/ErrDistMag_"+name+".png")
-    
+        svnm = str(plot_path)+"/ErrDistMag_"+name+".png"
+    plt.savefig(svnm)
+    print("Saved "+svnm)
     plt.close()
 
+def plot_single_fitted_lc(lcs,spline,path):
+    # to correct for the plotting
+    # for the rest it doesn't matter
+    for lc in lcs:
+        lc.jds = lc.jds-2400000.5 
+        # for the naming
+        lc.timeshift =0
+        lc.magshift =0
+        lc.fluxshift =0
+        lc.ml = None
+    
+    nm=path+"/fit_lcs.pdf"
+    print("Saving ",nm ) 
+    pycs3.gen.lc_func.display(lcs,nicefont=True,title="SDSSJ1433",showdates=True,filename=nm)
+    nm=path+"/fit_lcs_w_spline.pdf"
+    print("Saving ",nm ) 
+    if type(spline) is not list:
+        spline = [spline]
+    pycs3.gen.lc_func.display(lcs,spline,nicefont=True,title="SDSSJ1433",showdates=True,filename=nm)
+    
+def plot_fitted_lcs(config):
+    config = get_config(config)
+    savefig_path=pth.Path(config.analysis_directory)
+    for a, knt in enumerate(config.knotstep_marg): #knotstep of the intr.spline
+        saveknt_path = savefig_path/str("analysis_kn"+str(knt))
+        for mlt_i, mltype_i in enumerate(config.mltype): #ml type
+            for mlc_i,ml_config in enumerate(config.ml_config[mlt_i]):
+                """mllist_name,mlfp = ml_config 
+                if mltype_i=="polyml":
+                    mlfp_str="_mlfp_"+str(mlfp)
+                elif mltype_i=="splml":
+                    if config.forcen:
+                        mlfp_str="_nmlspl_"+str(mlfp)
+                    else:
+                        mlfp_str="_knstml_"+str(mlfp)
+                """
+                saveml_path = saveknt_path/config.get_savemlpath(mltype_i,ml_config)
+                
+                with open(str(saveml_path)+"/splines.data", 'rb') as f:
+                    splines=pickle.load(f)
+                lcfound =True
+                if type(splines[0])==list:
+                    if str(type(splines[0][0]))=="<class 'pycs3.gen.lc.LightCurve'>":
+                        lcs = splines[0]
+                    else:
+                        lcfound=False
+                else:
+                    lcfound=False
+                if not lcfound:
+                    print("No lcs found, use instead recreate_splineplot.py")
+                    break
+                plot_single_fitted_lc(lcs,splines,path=saveml_path+"/splines/")
+
+
+
+def plot_regdiff_fit(lcs,rslcs,rslcs_residuals=None,name=None):
+    #prepare the figure pannel : 
+    fig1 = plt.figure(figsize=(15, 10))
+    gs1 = gridspec.GridSpec(11, 2)
+    gs1.update(left=0.08, right=0.96, top=0.98, bottom=0.05, wspace=0.05, hspace=0.09)
+    ax1 = plt.subplot(gs1[:8, :])
+    ax2 = plt.subplot(gs1[8:9, :],sharex=ax1)
+    ax3 = plt.subplot(gs1[9:10, :],sharex=ax1)
+    ax4 = plt.subplot(gs1[10:11, :],sharex=ax1)
+
+    #colorize the residuals curves : 
+    for j,lc in enumerate(rslcs_residuals):
+        lc.plotcolour = lcs[j+1].plotcolour
+
+    #prepare the legend for the difference curves
+    disptext = []
+    for j,lc in enumerate(rslcs_residuals) :
+        ycoord = 0.5
+        xcoord = 0.03
+        kwargs = {"fontsize": 14, "color": lcs[j+1].plotcolour}
+        txt = "A - %s"%lcs[j+1].object
+        disptext.append((xcoord, ycoord, txt, kwargs))
+
+    #plot the curves, regression, and difference curves : 
+    pycs3.gen.lc_func.display(lcs, rslcs, showdelays=False, showlegend=False,
+                        title=r"$\mathrm{Regression\ Difference }$", filename = "screen", ax=ax1,  style="cosmograil_dr1")
+    pycs3.gen.lc_func.display([],[rslcs_residuals[0]], showdelays=False, showlegend=False, filename = "screen", ax=ax2, style="cosmograil_dr1", text = [disptext[0]])
+    pycs3.gen.lc_func.display([],[rslcs_residuals[1]], showdelays=False, showlegend=False, filename = "screen", ax=ax3, style="cosmograil_dr1", text = [disptext[1]])
+    pycs3.gen.lc_func.display([],[rslcs_residuals[2]], showdelays=False, showlegend=False, filename = "screen", ax=ax4, style="cosmograil_dr1", text = [disptext[2]])
+
+    #adjust the axis
+    ax1.get_xaxis().set_visible(False)
+    ax2.get_xaxis().set_visible(False)
+    ax2.set_ylabel('$m_{%s} - m_{%s}$ \n $\mathrm{(mag)}$'%(lcs[0].object[0], lcs[1].object[-1]), fontsize = 12)
+    ax3.get_xaxis().set_visible(False)
+    ax3.set_ylabel('$m_{%s} - m_{%s}$ \n $\mathrm{(mag)}$'%(lcs[0].object[0], lcs[2].object[-1]), fontsize = 12)
+    ax4.set_ylabel("Regression Difference \n Residuals (mag)", fontsize = 9)
+    ax4.set_ylabel('$m_{%s} - m_{%s}$ \n $\mathrm{(mag)}$'%(lcs[0].object[0], lcs[3].object[-1]), fontsize = 12)
+    if name:
+        print("Saving plot ",name)
+        fig1.savefig(name)
+    else:
+        return fig1
+    
 if __name__ == '__main__':
     parser = ap.ArgumentParser(prog="python {}".format(os.path.basename(__file__)),
                                description="Plot distribution of time delay and Dmag analysis's result and/or error",
@@ -285,6 +407,9 @@ if __name__ == '__main__':
     parser.add_argument('-v','--verbose',help="Verbosity",
                         dest="verbose", 
                         default=False,action="store_true")
+    parser.add_argument('-rdbl','--readable_labels',help="Write labels as readable for the article",
+                        dest="rdbl", 
+                        default=False,action="store_true")
     parser.add_argument('-res','--result_distrib',help="Plot the time delay result distribution",
                         dest="res", 
                         default=False,action="store_true")
@@ -297,6 +422,7 @@ if __name__ == '__main__':
     verbose  = args.verbose
     res      = args.res
     err      = args.err
+    rdbl     = args.rdbl
     
     name_prog = sys.argv[0]
     present_program(name_prog)
@@ -304,13 +430,9 @@ if __name__ == '__main__':
         # if no input, it must be only the result distribution by default
         res = True
     
-    sys.path.append("myconfig/")
-    config_file = "myconfig_" + lensname + "_" + dataname
-    config = importlib.import_module(config_file)    
-
+    config = get_config(lensname,dataname)
     if res:
-        plot_result(config,verbose=verbose)
+        plot_result(config,verbose=verbose,rdb_lbl=rdbl)
     if err:
-        plot_err(config,verbose=verbose)        
+        plot_err(config,verbose=verbose,rdb_lbl=rdbl)
     success(name_prog)
-

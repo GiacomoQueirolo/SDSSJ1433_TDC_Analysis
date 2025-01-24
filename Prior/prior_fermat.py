@@ -8,6 +8,7 @@ from Prior.Prior import Prior
 from Compare_Res.super_corner import plot_sup_corner_Df
 from Posterior_analysis.fermat_pot_analysis import labels_Df_AD,labels_Df_BC
 
+raise NotImplementedError("Discontinued, use sup_prior.py instead")
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Produces the prior of the difference of Fermat potential differences given the setting file")
     #parser.add_argument("-PP", "--plot_prior", action="store_true", dest="plot_prior", default=False,

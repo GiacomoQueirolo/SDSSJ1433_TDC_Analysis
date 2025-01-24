@@ -251,3 +251,79 @@ def qphi_from_e1e2(e1, e2,ret_deg=False):
     else:
         warnings.warn("NOTE: phi is returned in radians!")
         return q,phi    
+#########################
+# MOD_VISPOS
+########################
+def get_pixscale(transform_pix2angle):
+    pix_scale = ((transform_pix2angle[0][0]**2 + transform_pix2angle[0][1]**2)**.5) # "/pix
+    return pix_scale
+
+def conv_std(vec_pix,Apixcoord,transform_pix2angle):
+    # vec_pix: vector of pixel coordinates, (N,2) in DS9 coordinates
+    # Apixcoord: vector of pixel coordinates of image A for this image, (2) in DS9 coordinates
+    # standard pos conversion 
+    #Correction for array starting at 1 in DS9 maporcavacca
+    vec_pix   = np.array(vec_pix)-1
+    Apixcoord = np.array(Apixcoord)-1
+    pix_wrt_A = vec_pix - Apixcoord
+    
+    vec  = pix_wrt_A.dot(np.array(transform_pix2angle).T) 
+    # to obtain radec_at_xy0 imput 0,0
+    return vec
+
+def conv_VISPOS(vec_pix,Apixcoord,transform_pix2angle,R_VISPOS,t_VISPOS):
+    # vec_pix: vector of pixel coordinates, (N,2) in DS9 coordinates
+    # Apixcoord: vector of pixel coordinates of image A for this image, (2) in DS9 coordinates
+    # transform_pix2angle: the transformation matrix for this image
+    # R_VISPOS,t_VISPOS: the rotation and the translation vector to match this image to the VIS reference frame 
+    
+    #Correction for array starting at 1 in DS9 maporcavacca
+    vec_pix = np.array(vec_pix)-1
+    Apixcoord = np.array(Apixcoord)-1
+    pix_wrt_A = vec_pix - Apixcoord
+    
+    # combined transformation matrix (already transposed)
+    vec_transl = np.array(t_VISPOS).dot(np.array(R_VISPOS).T)
+    MT   = np.array(transform_pix2angle).T.dot(np.array(R_VISPOS).T)
+    vec  = pix_wrt_A.dot(MT) + vec_transl
+
+    # to obtain radec_at_xy0 input 1,1
+    return vec
+
+# remember, the pix coord all start from 1,1 everytime
+
+def conv_sett(sett,vec_pix):
+    vec_radec_at_0 = sett.ra_at_xy_0,sett.dec_at_xy_0
+    transform_pix2angle = sett.transform_pix2angle
+    Apixcoord  = invconv_std([0,0],vec_radec_at_0,transform_pix2angle)
+    return conv_std(vec_pix,Apixcoord,transform_pix2angle)
+
+def invconv_std(vec_radec,radec_at_xy0,transform_pix2angle):
+    # vec_radec: vector in radec coordinates, (N,2), wrt A
+    # radec_at_xy0: vector in radec coordinates of image pix 0,0 for this image, (2) in DS9 coordinates
+    # inverted  pos conversion 
+    inv_trans_mtx = np.linalg.inv(transform_pix2angle)
+    Apixcoord = -inv_trans_mtx.dot(radec_at_xy0).T 
+    pix_wrt_A = inv_trans_mtx.dot(vec_radec).T
+    vec_pix   = pix_wrt_A + Apixcoord 
+    #Correction for array starting at 1 in DS9 maporcavacca
+    vec_pix   = np.array(vec_pix)+1
+    return vec_pix
+
+
+def invconv_sett(sett,vec_radec):
+    radec_at_xy0 = sett.ra_at_xy_0,sett.dec_at_xy_0
+    transform_pix2angle = sett.transform_pix2angle
+    
+    return invconv_std(vec_radec,radec_at_xy0,transform_pix2angle)
+
+
+def get_transf_matrix(image_path,in_arcsec=True):
+    with fits.open(image_path) as hdulist:
+        hdr = hdulist[0].header
+    CD1_1,CD1_2,CD2_1,CD2_2 = hdr["CD1_1"],hdr["CD1_2"],hdr["CD2_1"],hdr["CD2_2"]
+    transform_pix2angle = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
+    if in_arcsec:
+        transform_pix2angle*=3600.
+    return transform_pix2angle
+    

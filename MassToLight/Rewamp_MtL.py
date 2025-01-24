@@ -14,11 +14,11 @@ from Utils.tools import *
 from Utils.get_res import *
 from Data.conversion import *
 
-from Data.input_data import init_lens_model
+from Data.input_data import init_lens_model,get_rotangle
 from Data.image_manipulation import load_fits,get_header
 
 @check_setting
-def getluminosity(setting,intens,r,cosmo=None,K=None):
+def getluminosity(setting,intens,r,eps,cosmo=None,K=None):
     if cosmo is None:
             cosmo = FlatLambdaCDM(H0=70, Om0=0.3) # cosmo from https://academic.oup.com/mnras/article/474/3/3391/4644836, Agnello 2017
     if K is None:
@@ -27,7 +27,8 @@ def getluminosity(setting,intens,r,cosmo=None,K=None):
     filter   = get_filter(setting)
     ZP       = get_ZP(filt=filter)
     M_sun    = get_M_sun(filt=filter)
-    return _getluminosity(intens,M_sun=M_sun,r=r,distance=cosmo_ld,ZP=ZP,pix_scale=setting.pix_scale,K=K)
+    return _getluminosity(intens,M_sun=M_sun,r=r,eps=eps,distance=cosmo_ld,\
+                          ZP=ZP,pix_scale=setting.pix_scale,z_lens=sett.z_lens,K=K)
 
 def get_K_corr(setting):
     filter = get_filter(setting)
@@ -46,21 +47,19 @@ def get_K_corr(setting):
  
 def _getluminosity(intens,M_sun,r,eps,distance,ZP,pix_scale,z_lens,K):
 
-    flux=[]
-    area_annulus = get_annulus(r=r,eps=eps,from_0=True)
-    flux_i = area_annulus*intens[i]
+    area_annulus = get_annulus(r=r,eps=eps,from_0=True) #area in arcsec**2
+    flux_i = area_annulus*intens 
     flux =[flux_i[0]]
-    for i in range(len(intens)):
-        if i==0:
-            flux.append(flux_i[0])
-        else:
-            flux.append(flux_i[i]+flux[-1])
+    for i in range(1,len(intens)):
+        flux.append(flux_i[i]+flux[-1])
+    """
     # x is in arcsec
     for i in range(len(intens)):
         if i==0:
             flux.append(np.pi*(r[i]**2)*intens[i])
         else:
             flux.append(flux[i-1] + np.pi*(r[i]**2-r[i-1]**2)*intens[i])
+    """
 
     mag =[] # AB mag
     Mag =[] # AB mag
@@ -99,6 +98,7 @@ def velocity_disp_FJr(L_V):
 
 
 def velocity_disp_theta(theta,z_lens,z_source,cosmo=None):
+    # assuming SIS distr.
     if cosmo is None:
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
     cosmo_ds  = cosmo.angular_diameter_distance(z_source)
@@ -146,15 +146,16 @@ def get_kappa_along_r(r,kwres,lens_model):
     kappa = lens_model.kappa(x=x0,y=y_r,kwargs=kwres['kwargs_lens'])
     return kappa
 
-from Data.image_manipulation import get_rotangle
-def get_kappa(r,eps,pa,kwres,lens_model,transform_pix2angle,phi_thresh=5,q_thresh=.1):
+def get_kappa(r,pa,kwres,lens_model,transform_pix2angle):#,phi_thresh=5,q_thresh=.1):
     # have to be centered on the lens center
-    x_0   = kwres["kwargs_lens"][0]["center_x"]
-    y_0   = kwres["kwargs_lens"][0]["center_y"]    
-    # 2 options: A) ~ where we ignore the difference of pointing btw lens and light
-    # B) we consider the difference and integrate over the annulus
-    # for now A)
-    
+    x_0   = kwres["kwargs_lens"][0]["center_x"] # those are good for both
+    y_0   = kwres["kwargs_lens"][0]["center_y"] # lens and mass models
+    # The light is measured based on the annulus, which is in turn defined on the ellipticity of the isoph-light model
+    # we have to measure the mass in the same way -> but indeed this is then multiplied to an elliptical annulus
+    # which might differ from the PA and axis ratio of the model 
+    # A) assume that k at r,eps -> x,y is almost identical to the mean of k around the annulus
+    # B) compute the mean -> don't
+
     # r is assumed to be in arcsecs
     # pa is assumed to be in deg 
     rotang = get_rotangle(transform_pix2angle)
@@ -164,15 +165,16 @@ def get_kappa(r,eps,pa,kwres,lens_model,transform_pix2angle,phi_thresh=5,q_thres
     phi_rad = np.pi*phi/(180*3600)
     x = x_0 + np.array(r)*np.cos(phi_rad) #x_0*np.ones_like(r)
     y = y_0 + np.array(r)*np.sin(phi_rad) #x_0*np.ones_like(r)
-    
-    # B) for now only test/warning
+    """
     q  = 1 - np.array(eps)
     e1,e2 = kwres["kwargs_lens"][0]["e1"],kwres["kwargs_lens"][0]["e2"]
-    q_lm,phi_lm = qphi_from_e1e2(e1,e2)
+    q_lm,phi_lm = qphi_from_e1e2(e1,e2,ret_deg=True)
+    print(phi,phi_lm,np.abs(phi-phi_lm),phi_thresh,np.abs(phi-phi_lm)>phi_thresh)
     if np.abs(phi-phi_lm)>phi_thresh:
         print(f"WARNING: Difference of angle higher then {phi_thresh}: {np.tot(np.abs(phi-phi_lm))},")
     if np.abs(q-q_lm)>q_thresh:
         print(f"WARNING: Difference of ellipticity higher then {q_thresh}: {np.tot(np.abs(q-q_lm))},")
+    """
     kappa = lens_model.kappa(x=x,y=y,kwargs=kwres['kwargs_lens'])
     return kappa
 
@@ -185,14 +187,16 @@ def get_annulus(r,eps,from_0=True):
         area_ann = [np.pi*r[0]**2*(1-eps[0]), *list_ann ]
     return area_ann
 
-def _get_cumulative_mass(kappa,r,crit_density):
+def _get_cumulative_mass(kappa,r,eps,crit_density):
     cumulative_mass=[]
     if getattr(crit_density,"value",False):
         crit_density = crit_density.to("Msun/(arcsec arcsec)").value
         print("Crit density ",crit_density/1e9,"1e9 Msun/arcsec^2")
-    cumulative_mass = [np.pi*(r[0])**2*kappa[0]*crit_density]
-    for i in range(1,len(r)):
-        cumulative_mass.append(np.pi*(r[i]**2-r[i-1]**2)*kappa[i]*crit_density+cumulative_mass[i-1])
+    area_annulus = get_annulus(r=r,eps=eps,from_0=True) #area in arcsec**2
+    mass_i = area_annulus*kappa*crit_density
+    cumulative_mass = [mass_i[0]]
+    for i in range(1,len(kappa)):
+        cumulative_mass.append(mass_i[i]+cumulative_mass[-1])
     return cumulative_mass
 
 @check_setting
@@ -207,12 +211,13 @@ def get_cosmo_prm(setting,cosmo=None,SigCr_arcs2=False):
     cosmo_ds  = cosmo.angular_diameter_distance(z_source).to("kpc") #kpc
     cosmo_dds = cosmo.angular_diameter_distance_z1z2(z1=z_lens,z2=z_source).to("kpc") #kpc
     
-    # Sigma_crit = D_s*c^2/(4piG * D_d*D_ds)
-    Sigma_crit   = (cosmo_ds*const.c**2)/(4*np.pi*const.G*cosmo_dds*cosmo_dd)
-    Sigma_crit   = Sigma_crit.to("Msun /(kpc kpc)")    
+    # Sigma_Crit = D_s*c^2/(4piG * D_d*D_ds)
+    Sigma_Crit   = (cosmo_ds*const.c**2)/(4*np.pi*const.G*cosmo_dds*cosmo_dd)
+    Sigma_Crit   = Sigma_Crit.to("Msun /(kpc kpc)")    
+    cosmo_Ld     = cosmo.luminosity_distance(z_lens) 
     if SigCr_arcs2:
-        Sigma_crit/=(cosmo.arcsec_per_kpc_proper(z_lens))**2
-    return Sigma_crit,cosmo_dd
+        Sigma_Crit/=(cosmo.arcsec_per_kpc_proper(z_lens))**2
+    return {"cosmo":cosmo,"Sigma_Crit":Sigma_Crit,"cosmo_dd":cosmo_dd,"cosmo_Ld":cosmo_Ld,"arcsec_per_kpc_proper":cosmo.arcsec_per_kpc_proper(z_lens)}
 
 def get_cumulative_mass(sett,r,eps,pa,kwres=None,lens_model=None,cosmo=None):
     if lens_model is None:
@@ -222,22 +227,40 @@ def get_cumulative_mass(sett,r,eps,pa,kwres=None,lens_model=None,cosmo=None):
     if cosmo is None:
         cosmo = FlatLambdaCDM(H0=70, Om0=0.3) # cosmo from https://academic.oup.com/mnras/article/474/3/3391/4644836, Agnello 2017
     #kappa           = get_kappa_along_r(r,kwres=kwres,lens_model=lens_model)
-    kappa          = get_kappa(r,eps,pa,kwres=kwres,lens_model=lens_model,transform_pix2angle=sett.transform_pix2angle)
-    Sigma_crit, _,_ = get_cosmo_prm(sett,cosmo=cosmo,SigCr_arcs2=True)
-    cumulative_mass = _get_cumulative_mass(kappa=kappa,r=r,crit_density=Sigma_crit)
+    kappa           = get_kappa(r,pa,kwres=kwres,lens_model=lens_model,transform_pix2angle=sett.transform_pix2angle)
+    Sigma_Crit      = get_cosmo_prm(sett,cosmo=cosmo,SigCr_arcs2=True)["Sigma_Crit"]
+    cumulative_mass = _get_cumulative_mass(kappa=kappa,r=r,eps=eps,crit_density=Sigma_Crit)
     return cumulative_mass
 
 def get_radii_images(setting,kw_res=None):
     # Consider the mass enclosed in a radius of approximately at the image positions, 
     # centered on the center of the main lens
     if kw_res is None:
-        kw_res = get_kwres(setting)
+        kw_res = getattr(sett,"kwres",get_kwres(setting)["kwargs_results"])
     lens_res            = kw_res["kwargs_lens"][0]
     x,y                 = lens_res["center_x"],lens_res["center_y"]
     ps_res              = kw_res["kwargs_ps"][0]
     ra_image, dec_image = ps_res["ra_image"],ps_res["dec_image"] # A is ~0,0
     radii  = [np.sqrt((ra_i-x)**2 + (dec_i-y)**2) for ra_i,dec_i in zip(ra_image,dec_image)]
     return radii 
+
+# from https://ned.ipac.caltech.edu/level5/Sept14/Courteau/Courteau7.html
+# eqnt 71 -> Einstein mass:
+def M_E(setting,kw_res=None):
+    # output the Einstein Mass (avrg. mass at the Einstein radius)
+    if kw_res is None:
+        kw_res = getattr(sett,"kwres",get_kwres(setting)["kwargs_results"])
+    lens_res = kw_res["kwargs_lens"][0]
+    theta_E  = lens_res["theta_E"] #to be converted to rad
+    theta_E_rad   = theta_E*np.pi/(180.*3600.) 
+    kw_cosmo      = get_cosmo_prm(setting,SigCr_arcs2=False)
+    Sigma_Crit    = kw_cosmo["Sigma_Crit"]
+    cosmo_dd      = kw_cosmo["cosmo_dd"]
+    Mass_Einstein = np.pi*(theta_E_rad**2)*(cosmo_dd**2)*Sigma_Crit
+    return Mass_Einstein
+
+def test_z(A,B,sigma):
+    return np.abs(A-B)/sigma
 
 if __name__=="__main__":
     ############################
@@ -262,10 +285,14 @@ if __name__=="__main__":
         intens    = param_val.field("flux_sb")[1:]
         sett.eps_light = param_val.field("eps")[1:]
         sett.pa_light  = param_val.field("pa")[1:]
+        pll = sett.lens_prior().pll
+        xll,yll = (pll["x"],pll["y"])
+        lns_res = get_kwres(sett)["kwargs_results"]["kwargs_lens"][0]
+        xlm,ylm = lns_res["center_x"],lns_res["center_y"]
+        if test_z(xlm,*xll)>1 or  test_z(ylm,*yll)>1:
+            print("coordinate are in tension") #not the case
 
-
-
-        sett.L,sett.Mag,sett.mag  = getluminosity(sett,intens,r=sett.rad,cosmo=cosmo,K=0)
+        sett.Lum,sett.Mag,sett.mag  = getluminosity(sett,intens,r=sett.rad,eps=sett.eps_light,cosmo=cosmo,K=0)
         ########################################################################
         # SB is also calculated, but the ZP is wrong
         # correct for that and check that it's compatible with what we obtain
@@ -338,8 +365,13 @@ if __name__=="__main__":
 
     Mag_interp_f814 = spline_lum(x_fit=new_rad,x_value=sett_f814.rad,y_value=sett_f814.Mag)
     Mag_interp_f475 = spline_lum(x_fit=new_rad,x_value=sett_f475.rad,y_value=sett_f475.Mag)
+    
     abs_color_f475_f814_interp = np.array(Mag_interp_f475)-np.array(Mag_interp_f814)
-    plt.plot(new_rad,abs_color_f475_f814_interp,'.')
+    tmp_new_rad = copy(new_rad)
+    if abs_color_f475_f814_interp[0]>5:
+        tmp_new_rad=new_rad[1:]
+        abs_color_f475_f814_interp = abs_color_f475_f814_interp[1:]
+    plt.plot(tmp_new_rad,abs_color_f475_f814_interp,'.')
     plt.xlabel('r [arcsec]')
     plt.ylabel('Absolute F475-F814 interpolated')
     plt.title("Absolute color")
@@ -417,5 +449,9 @@ if __name__=="__main__":
         plt.tight_layout()
         plt.savefig(mtl_name)
         print(f"Saved {mtl_name}") 
-        plt.close()        
+        plt.close()
+
+        print("M_Einstein:",M_E(sett,kw_res=sett.kwres))
+        print("\n")
+        plt.close()
     success(sys.argv[0])

@@ -23,8 +23,6 @@ from MassToLight.grid_class import Circ_Grid,Length
 from Data.image_manipulation import fits_with_copied_hdr
 
 
-# In[ ]:
-
 
 def _get_EE(setting):
     setting   = get_setting_module(setting,1)

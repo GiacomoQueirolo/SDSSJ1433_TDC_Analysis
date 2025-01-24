@@ -37,7 +37,7 @@ def get_prior_src_pos(sett,npoints=1000,saveprior=False):
     
 
 if __name__=="__main__":
-    parser = argparse.ArgumentParser(description="Simply plot the posterior of the source wrt the other params")
+    parser = argparse.ArgumentParser(description="Plot the posterior of the source wrt the other params")
     parser.add_argument("-PP", "--plot_prior", action="store_true", dest="plot_prior", default=False,
                         help="Plot the prior distribution for the source parameters")
     parser.add_argument("-np", "--npoints", type=int,dest="npoints", default=1000,

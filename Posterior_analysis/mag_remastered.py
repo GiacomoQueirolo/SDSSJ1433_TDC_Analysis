@@ -16,10 +16,10 @@ from Utils.order_images import get_new_image_order
 from Posterior_analysis.tools_Post import get_array_BC
 from Data.input_data import init_lens_model,init_kwrg_data,init_kwrg_numerics
 
-labels_mr_BC = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_C$/$\mu_B$"]
-labels_mr_AD = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_D$/$\mu_A$"]
-labels_fr_BC = ["$FR_B/FR_A$","$FR_C/FR_A$","$FR_C/FR_B$"]
-labels_fr_AD = ["$FR_B/FR_A$","$FR_C/FR_A$","$FR_D/FR_A$"]  
+labels_Rmag_BC = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_C$/$\mu_B$"]
+labels_Rmag_AD = ["$\mu_B$/$\mu_A$","$\mu_C$/$\mu_A$","$\mu_D$/$\mu_A$"]
+labels_Rf_BC = ["$FR_B/FR_A$","$FR_C/FR_A$","$FR_C/FR_B$"]
+labels_Rf_AD = ["$FR_B/FR_A$","$FR_C/FR_A$","$FR_D/FR_A$"]  
 Warning_BC   = "Warning: we are considering the image couple BC instead of AD, this is not the standard analysis, be careful."
 
 @check_setting
@@ -161,9 +161,9 @@ def flux_ratio(setting,kwargs_result,BC=False,outnames=False):
 
     if outnames:
         if BC:
-            return FR,labels_fr_BC
+            return FR,labels_Rf_BC
         else:
-            return FR,labels_fr_AD
+            return FR,labels_Rf_AD
     else:
         return FR
 
@@ -187,12 +187,12 @@ if __name__=="__main__":
     FR          = args.FR
     BC          = args.BC 
 
-    labels_mr = labels_mr_AD
-    labels_fr = labels_fr_AD
+    labels_Rmag = labels_Rmag_AD
+    labels_Rf = labels_Rf_AD
     if BC:
         print(Warning_BC)
-        labels_mr = labels_mr_BC
-        labels_fr = labels_fr_BC
+        labels_Rmag = labels_Rmag_BC
+        labels_Rf = labels_Rf_BC
 
     for setting in settings:
         sets = get_setting_name(setting)
@@ -200,7 +200,7 @@ if __name__=="__main__":
             print("Analysing: ",sets)
         mcmc_mag,savefig_path = gen_mag_ratio(setting,svpth=True,BC=BC)
         if corner_plot:
-            plot = corner.corner(np.array(mcmc_mag), labels=labels_mr, show_titles=True)
+            plot = corner.corner(np.array(mcmc_mag), labels=labels_Rmag, show_titles=True)
             plot.savefig(str(savefig_path)+"/Mag_Rt.png")
         if FR:
             kwargs_data     = init_kwrg_data(setting,saveplots=False)
@@ -209,7 +209,7 @@ if __name__=="__main__":
 
             fr_i  = flux_ratio(setting,kwargs_result,BC=BC)
             
-            kw_fr  = { nm:fr for nm,fr  in zip(labels_fr,fr_i)}
+            kw_fr  = { nm:fr for nm,fr  in zip(labels_Rf,fr_i)}
             with open(str(savefig_path)+"/FR.json","w") as f:
                 json.dump(kw_fr,f)
     success(sys.argv[0])

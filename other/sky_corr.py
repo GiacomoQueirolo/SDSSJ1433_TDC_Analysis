@@ -1,6 +1,7 @@
-from astropy.io import fits
-import numpy as np
 import argparse
+import numpy as np
+from astropy.io import fits
+
 
 def load_fits(image_path,HDU=0):
     #load the image and read it as numpy array

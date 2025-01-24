@@ -1,23 +1,17 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
-
 #### Def.source position from image position
+import pickle
 import argparse
 import numpy as np
 import pathos.multiprocessing as multiprocessing
 from functools import partial
 from corner import corner,quantile
-from lenstronomy.LensModel.lens_model import LensModel
 
 from Utils.tools import *
 from Utils.get_res import *
 from Data.input_data import init_lens_model
-
-
-
 
 def pll_get_source_pos(kwargs_result_i,lensModel):
     ra_image   = kwargs_result_i["kwargs_ps"][0]["ra_image"]
@@ -30,12 +24,12 @@ def pll_get_source_pos(kwargs_result_i,lensModel):
         mc_i.append(source_y[j])
     return mc_i
 
-def test_get_source_pos_MCMC(setting,parallelised=True):
+def test_get_source_pos_MCMC(setting,parallelised=True,backup_path="backup_results"):
     #We implement the source position posterior
     #####################################
     setting      = get_setting_module(setting).setting()
-    samples_mcmc = get_mcmc_smpl(setting)
-    param_mcmc   = get_mcmc_prm(setting)
+    samples_mcmc = get_mcmc_smpl(setting,backup_path=backup_path)
+    param_mcmc   = get_mcmc_prm(setting,backup_path=backup_path)
     labels_source = ["source position_x"]*4+["source position_y"]*4
     
     list_kwargs_results = []
@@ -89,19 +83,22 @@ def test_get_source_pos_MCMC(setting,parallelised=True):
     return 0    
         
 
-def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True):
+def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True,samples_mcmc=None,param_mcmc=None,lensModel=None,backup_path="./backup_results/"):
     #We implement the source position posterior
     #####################################
-    setting      = get_setting_module(setting).setting()
-    samples_mcmc = get_mcmc_smpl(setting)
-    param_mcmc   = get_mcmc_prm(setting)
+    setting      = get_setting_module(setting,1)
+    if not samples_mcmc:
+        samples_mcmc = get_mcmc_smpl(setting,backup_path=backup_path)
+    if not param_mcmc:
+        param_mcmc   = get_mcmc_prm(setting,backup_path=backup_path)
     labels_source = ["source position_x"]*4+["source position_y"]*4
     
     if parallelised:
         list_kwargs_results = []
         for i in range(len(samples_mcmc)):
             list_kwargs_results.append(setting.produce_kwargs_result(samples_mcmc,param_mcmc,i))
-        lensModel = init_lens_model(setting)
+        if not lensModel:
+            lensModel = init_lens_model(setting)
         with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
             mcmc_source = p.map(partial(pll_get_source_pos, lensModel=lensModel), list_kwargs_results)
     else:
@@ -119,7 +116,7 @@ def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True):
             mcmc_source.append(mc_i)
     if svfg:
         plot = corner(np.array(mcmc_source), labels=labels_source, show_titles=True)
-        plot.savefig(get_savefigpath(setting)+"/MCMC_source.png")
+        plot.savefig(get_savefigpath(setting,backup_path=backup_path)+"/MCMC_source.png")
     
     #then I want to consider the combined result:
     mcmc_source_T   = np.array(mcmc_source).transpose()
@@ -134,7 +131,7 @@ def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True):
     labels_source_comb = ["Combined source ra","Combined source dec"]
     if svfg:
         plot = corner(np.transpose(mcmc_combined_source), labels=labels_source_comb, show_titles=True)
-        plot.savefig(get_savefigpath(setting)+"/MCMC_source_comb.png")
+        plot.savefig(get_savefigpath(setting,backup_path=backup_path)+"/MCMC_source_comb.png")
 
     #############################################
     # add the corner plot with all other params #
@@ -147,7 +144,7 @@ def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True):
         mcmc_tot   = np.hstack([samples_mcmc,resampled_combined])
         labels_tot = [*param_mcmc,*labels_source_comb]
         plot = corner(mcmc_tot, labels=labels_tot, show_titles=True)
-        plot.savefig(get_savefigpath(setting)+"/MCMC_post_ws.png")
+        plot.savefig(get_savefigpath(setting,backup_path=backup_path)+"/MCMC_post_ws.png")
     
         
     str_src = "\n#################################\n"
@@ -178,9 +175,9 @@ def get_source_pos_MCMC(setting,svfg=False,output_mcmc=False,parallelised=True):
     else:
         return kwargs_source_out,str_src
 
-def get_source_pos_PSO(setting):
+def get_source_pos_PSO(setting,backup_path="./backup_results/"):
     setting = get_setting_module(setting,True)
-    kwres = get_kwres(setting)["kwargs_results"]
+    kwres = get_kwres(setting,backup_path=backup_path)["kwargs_results"]
     if not check_if_WS(setting):
         kw_source = kwres["kwargs_source"][0]
         center_x,center_y = kw_source["center_x"],kw_source["center_y"]
@@ -202,10 +199,6 @@ def get_source_gen(ra_image,dec_image,kw_lens,setting=None,lensModel=None):
         source_y.append(y_source)
     return source_x,source_y
 
-
-
-
-
 if __name__=="__main__":
     ############################
     present_program(sys.argv[0])
@@ -224,15 +217,19 @@ if __name__=="__main__":
     corner_plot = args.corner_plot
     verbose = args.verbose
     pso = args.pso
+    backup_path = "./backup_results/"
     for sets in settings:
         if verbose:
             print(strip_setting_name(sets))
-        kw_res, _ = get_source_pos_MCMC(sets,svfg=corner_plot)
+        kw_res, _ = get_source_pos_MCMC(sets,svfg=corner_plot,backup_path=backup_path)
         if corner_plot:
-            print("Plot saved in "+get_savefigpath(sets))
+            print("Plot saved in "+get_savefigpath(sets,backup_path=backup_path))
         if verbose:
             print("MCMC result:\n",kw_res)
             if pso:
                 print("PSO result:\n",get_source_pos_PSO(sets))
+        with open(get_savefigpath(sets,backup_path=backup_path)+"/read_source.data","wb") as f:
+            pickle.dump(kw_res, f)
+
     success(sys.argv[0])
 

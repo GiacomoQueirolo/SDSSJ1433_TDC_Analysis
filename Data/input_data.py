@@ -67,9 +67,8 @@ def init_kwrg_psf(setting,saveplots=False,saveinterp=True,backup_path="backup_re
                 data_object="PSF image (neg. values interpolated)",\
                 data_history="Used image_manipulation.interpolate_2D to interpolate negative values",\
                 fits_res_namepath=psf_file_interp,overwrite=True,verbose=True)
-    
     if saveplots:
-        savefig_path  = get_savefigpath(setting,backup_path) 
+        savefig_path  = get_savefigpath(setting,backup_path)
         if setting.pssf>1:
             plot_image(psf_image,setting,savefig_path+"/psf_supersampled.png")
         else:
@@ -137,6 +136,11 @@ def init_lens_model_list(setting):
     if setting.CP:
         #lens_model_list = ['PEMD']
         lens_model_list = ['EPL_NUMBA'] #test
+    #WIP
+    #elif getattr(setting,"composite",False):
+    #    lens_model_list = ["NFW","CHAMELEON"]#note:no ellipticity in the NFW 
+    #    #Cham. param ['alpha_1', 'w_c', 'w_t', 'e1', 'e2', 'center_x', 'center_y']
+        
     lens_model_list = [*lens_model_list,'SIS','SHEAR_GAMMA_PSI']
     return lens_model_list
 

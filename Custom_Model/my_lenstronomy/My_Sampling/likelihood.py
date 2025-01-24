@@ -5,7 +5,7 @@ from lenstronomy.Sampling.Likelihoods.image_likelihood import ImageLikelihood
 from lenstronomy.Sampling.Likelihoods.position_likelihood import PositionLikelihood
 from lenstronomy.Sampling.Likelihoods.flux_ratio_likelihood import FluxRatioLikelihood
 #from lenstronomy.Sampling.Likelihoods.prior_likelihood import PriorLikelihood
-from Prior.prior_likelihood_KDE import PriorLikelihood_KDE
+from prior_likelihood_KDE import PriorLikelihood_KDE
 import lenstronomy.Util.class_creator as class_creator
 import numpy as np
 
@@ -69,6 +69,7 @@ class LikelihoodModule(object):
         :param kwargs_flux_compute: keyword arguments of how to compute the image position fluxes (see FluxRatioLikeliood)
         :param custom_logL_addition: a definition taking as arguments (kwargs_lens, kwargs_source, kwargs_lens_light,
          kwargs_ps, kwargs_special, kwargs_extinction) and returns a logL (punishing) value.
+        :param precomputed_prior_kde: Allows to input a precomputed KDE to fit the prior at given position, hence allowing for unusual prior shapes
         :param kwargs_pixelbased: keyword arguments with various settings related to the pixel-based solver (see SLITronomy documentation)
         """
         multi_band_list, multi_band_type, time_delays_measured, time_delays_uncertainties, flux_ratios, flux_ratio_errors, ra_image_list, dec_image_list = self._unpack_data(**kwargs_data_joint)
@@ -85,10 +86,14 @@ class LikelihoodModule(object):
                                                  prior_lens_light_lognormal, prior_ps_lognormal,
                                                  prior_special_lognormal, prior_extinction_lognormal,
                                                  precomputed_prior_kde,
+
                                                  )
         self._time_delay_likelihood = time_delay_likelihood
         self._image_likelihood = image_likelihood
         self._flux_ratio_likelihood = flux_ratio_likelihood
+        if kwargs_flux_compute is None:
+            kwargs_flux_compute = {}
+        linear_solver = self.param.linear_solver
         self._kwargs_flux_compute = kwargs_flux_compute
         self._check_bounds = check_bounds
         self._custom_logL_addition = custom_logL_addition
@@ -98,7 +103,7 @@ class LikelihoodModule(object):
                                 'bands_compute': bands_compute,
                                 'image_likelihood_mask_list': image_likelihood_mask_list, 'source_marg': source_marg,
                                 'linear_prior': linear_prior, 'check_positive_flux': check_positive_flux,
-                                'kwargs_pixelbased': kwargs_pixelbased}
+                                'kwargs_pixelbased': kwargs_pixelbased,'linear_solver':linear_solver}
         self._kwargs_position = {'astrometric_likelihood': astrometric_likelihood,
                                  'image_position_likelihood': image_position_likelihood,
                                  'source_position_likelihood': source_position_likelihood,
@@ -126,7 +131,10 @@ class LikelihoodModule(object):
         :return: updated model instances of this class
         """
 
-        lens_model_class, source_model_class, lens_light_model_class, point_source_class, extinction_class = class_creator.create_class_instances(**kwargs_model)
+        # TODO: in case lens model or point source models are only applied on partial images, then this current class
+        # has ambiguities when it comes to time-delay likelihood and flux ratio likelihood
+        lens_model_class, _, _, point_source_class, _ = class_creator.create_class_instances(all_models=True,
+                                                                                             **kwargs_model)
         self.PointSource = point_source_class
 
         if self._time_delay_likelihood is True:
@@ -146,6 +154,12 @@ class LikelihoodModule(object):
     def logL(self, args, verbose=False):
         """
         routine to compute X2 given variable parameters for a MCMC/PSO chain
+
+        :param args: ordered parameter values that are being sampled
+        :type args: tuple or list of floats
+        :param verbose: if True, makes print statements about individual likelihood components
+        :type verbose: boolean
+        :returns: log likelihood of the data given the model (natural logarithm)
         """
         # extract parameters
         kwargs_return = self.param.args2kwargs(args)
@@ -156,6 +170,17 @@ class LikelihoodModule(object):
         return self.log_likelihood(kwargs_return, verbose=verbose)
 
     def log_likelihood(self, kwargs_return, verbose=False):
+        """
+        :param kwargs_return: need to contain 'kwargs_lens', 'kwargs_source', 'kwargs_lens_light', 'kwargs_ps',
+         'kwargs_special'. These entries themselves are lists of keyword argument of the parameters entering the model
+         to be evaluated
+        :type kwargs_return: keyword arguments
+        :param verbose: if True, makes print statements about individual likelihood components
+        :type verbose: boolean
+
+        :returns:
+         - logL (float) log likelihood of the data given the model (natural logarithm)
+        """
         kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps, kwargs_special = kwargs_return['kwargs_lens'], \
                                                                                    kwargs_return['kwargs_source'], \
                                                                                    kwargs_return['kwargs_lens_light'], \
@@ -164,7 +189,7 @@ class LikelihoodModule(object):
         # update model instance in case of changes affecting it (i.e. redshift sampling in multi-plane)
         self._update_model(kwargs_special)
         # generate image and computes likelihood
-        self._reset_point_source_cache(bool=True)
+        self._reset_point_source_cache(bool_input=True)
         logL = 0
 
         if self._image_likelihood is True:
@@ -195,7 +220,7 @@ class LikelihoodModule(object):
             logL += logL_cond
             if verbose is True:
                 print('custom added logL = %s' % logL_cond)
-        self._reset_point_source_cache(bool=False)
+        self._reset_point_source_cache(bool_input=False)
         return logL#, None
 
     @staticmethod
@@ -258,9 +283,9 @@ class LikelihoodModule(object):
         return -self.logL(a)
 
     @staticmethod
-    def _unpack_data(multi_band_list=[], multi_band_type='multi-linear', time_delays_measured=None,
-                     time_delays_uncertainties=None, flux_ratios=None, flux_ratio_errors=None, ra_image_list=[],
-                     dec_image_list=[]):
+    def _unpack_data(multi_band_list=None, multi_band_type='multi-linear', time_delays_measured=None,
+                     time_delays_uncertainties=None, flux_ratios=None, flux_ratio_errors=None, ra_image_list=None,
+                     dec_image_list=None):
         """
 
         :param multi_band_list: list of [[kwargs_data, kwargs_psf, kwargs_numerics], [], ...]
@@ -271,13 +296,19 @@ class LikelihoodModule(object):
         :param flux_ratio_errors: error in flux ratio measurement
         :return:
         """
+        if multi_band_list is None:
+            multi_band_list = []
+        if ra_image_list is None:
+            ra_image_list = []
+        if dec_image_list is None:
+            dec_image_list = []
         return multi_band_list, multi_band_type, time_delays_measured, time_delays_uncertainties, flux_ratios, flux_ratio_errors, ra_image_list, dec_image_list
 
-    def _reset_point_source_cache(self, bool=True):
+    def _reset_point_source_cache(self, bool_input=True):
         self.PointSource.delete_lens_model_cache()
-        self.PointSource.set_save_cache(bool)
+        self.PointSource.set_save_cache(bool_input)
         if self._image_likelihood is True:
-            self.image_likelihood.reset_point_source_cache(bool)
+            self.image_likelihood.reset_point_source_cache(bool_input)
 
     def _update_model(self, kwargs_special):
         """

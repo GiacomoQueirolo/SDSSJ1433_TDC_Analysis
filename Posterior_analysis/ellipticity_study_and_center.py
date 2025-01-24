@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# In[ ]:
+
+
 # Test: i want to check the posterior of q,phi of the ellipticity compared to the one obtained from the luminosity of the lens
 # instead of e1 e2
+
+
+# In[3]:
 
 
 import argparse
@@ -11,9 +17,12 @@ from corner import corner
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-from Utils.tools import *
-from Utils.get_res import *
-from Data.conversion import qphi_from_e1e2
+from tools import *
+from get_res import *
+from conversion import qphi_from_e1e2
+
+
+# In[4]:
 
 
 def get_qphi_post(smpl,prm):
@@ -43,76 +52,83 @@ def get_ell_prior(sets,npoints=10000):
     
     return e1_prior,e2_prior
 
+
+def semigauss(x0,sig,x):
+    """
+    Compute the semi-Gaussian function.
+
+    Parameters:
+        x (array-like): Input values.
+        x0 (float): Threshold value.
+        sigma (float): Standard deviation of the Gaussian.
+
+    Returns:
+        array-like: Semi-Gaussian values corresponding to the input x values.
+    """
+    gauss_values = np.exp(-0.5 * ((x - x0) / sigma) ** 2)
+    semi_gauss_values = np.where(x <= x0, gauss_values, 1)
+    return semi_gauss_values
+
+
 if __name__=="__main__":
     ############################
     present_program(sys.argv[0])
     ############################
-    parser = argparse.ArgumentParser(description="Produce posterior of q,phi instead of e1,e2 for the main lens")
+    parser = argparse.ArgumentParser(description="Produce posterior of q,phi for the main lens compared to its posterior for the center mass and light")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
     args = parser.parse_args()
     
     settings = args.SETTING_FILES
     for sets in settings:
         print("Setting ",get_setting_name(sets))
+        setm = get_setting_module(sets,1)
         svfg_i = get_savefigpath(sets)+"/ellipticity/"
         mkdir(svfg_i)
         smpl = get_mcmc_smpl(sets)
         prm  = get_mcmc_prm(sets)
         q,phi  = get_qphi_post(smpl,prm)
-        fg = corner(np.transpose([q,phi]),labels=["q",r"$\phi$"],show_titles=True)
-        fg.suptitle("Post. of q,$\phi$")
-        plt.tight_layout()
-        fg.savefig(svfg_i+"/qphi_post.png")
-        print("Created "+svfg_i+"/qphi_post.png")
         if not check_if_SUB(sets):
             q_ll,phi_ll  = get_qphi_post_ll(smpl,prm)
-            fg = corner(np.transpose([q_ll,phi_ll]),labels=["q",r"$\phi$"],show_titles=True)
-            fg.suptitle("Lens Light")
-            plt.tight_layout()
-            fg.savefig(svfg_i+"/qphi_post_ll.png")
-            print("Created "+svfg_i+"/qphi_post_ll.png")
-            plt.close()
-            diff_phi = phi - phi_ll
-            fg,ax  = plt.subplots()
-            ax.hist(diff_phi,histtype="step")
-            ax.set_title(r"$\phi_{lns}-\phi_{ll}$")
-            plt.tight_layout()
-            plt.savefig(svfg_i+"/dphi.png")
-            plt.close()
-            print("Created "+svfg_i+"/dphi.png")
-        plt.close()
         e1_prior,e2_prior = get_ell_prior(sets)
-        fg    = corner(np.transpose([e1_prior,e2_prior]),labels=["$e_1^{prior}$",r"$e_2^{prior}$"],show_titles=True)
-        fg.savefig(svfg_i+"/e12_prior.png")
-        print("Created "+svfg_i+"/e12_prior.png")
-        q_prior,phi_prior =  qphi_from_e1e2(e1_prior,e2_prior,ret_deg=True)
-        fg = corner(np.transpose([q_prior,phi_prior]),labels=["$q^{prior}$",r"$\phi^{prior}$"],show_titles=True)
-        fg.savefig(svfg_i+"/qphi_prior.png")
-        plt.close()
-        
-        
-        # compare prior and post for q,phi
-        legend_elements  = []
-        fg,ax = plt.subplots(2,2,figsize=(6,6))
-        setm = get_setting_module(sets,1)
-        truths_qphi = [setm.lens_prior().pll["q"][0],setm.lens_prior().pll["phi"][0]]
-        corner(np.transpose([q_prior,phi_prior]),truths=truths_qphi,labels=["$q^{prior}$",r"$\phi^{prior}$"],show_titles=True,color="b",hist_kwargs= {"density":True},fig=fg)
+        q_prior,phi_prior = qphi_from_e1e2(e1_prior,e2_prior,ret_deg=True)
 
-        legend_elements.append(Patch(facecolor="b",label="Prior"))
-        corner(np.transpose([q,phi]),truths=truths_qphi, fig=fg,color="g",hist_kwargs= {"density":True})
-        legend_elements.append(Patch(facecolor="g",label="Post. from Lens model"))
+        # center_main_lens
+        xll,yll = setm.pll["x"][0],setm.pll["y"][0]
+        sigma_xy = 0.4
+        prior_x,prior_y = np.random.normal([xll,yll],[sigma_xy,sigma_xy], (10000,2))
+        x_ml = smpl.T[prm.index("center_x_lens0")]
+        y_ml = smpl.T[prm.index("center_y_lens0")]
         if not check_if_SUB(sets):
-            corner(np.transpose([q_ll,phi_ll]),truths=truths_qphi,fig=fg,color="r",hist_kwargs= {"density":True})
+            x_mll = smpl.T[prm.index("center_x_lens_light0")] 
+            y_mll = smpl.T[prm.index("center_y_lens_light0")] 
+        
+        # compare prior and post for q,phi with center x,y of main lens
+        legend_elements  = []
+        fg,ax = plt.subplots(4,4,figsize=(8,8))
+
+        truths_qphixy = [setm.pll["q"][0],setm.pll["phi"][0],xll,yll]
+        corner(np.transpose([q_prior,phi_prior,prior_x,prior_y]),truths=truths_qphixy,\
+                labels=["$q^{prior}$",r"$\phi^{prior}$","$x^{prior}$","$y^{prior}$"],show_titles=True,color="b",hist_kwargs= {"density":True},fig=fg)
+        legend_elements.append(Patch(facecolor="b",label="Prior"))
+        corner(np.transpose([q,phi,x_ml,y_ml]),truths=truths_qphixy, fig=fg,color="g",hist_kwargs= {"density":True})
+        legend_elements.append(Patch(facecolor="g",label="Post. from Lens model"))
+        
+        if not check_if_SUB(sets):
+            corner(np.transpose([q_ll,phi_ll,x_mll,y_mll]),truths=truths_qphixy,fig=fg,color="r",hist_kwargs= {"density":True})
             legend_elements.append(Patch(facecolor="r",label="Post. from Lens Light model"))
-        fg.suptitle(r"Prior of q,$\phi$ vs Post. comp. to prior pll")
+        fg.suptitle(r"Prior of q,$\phi$,x,y vs Post. comp. to prior pll")
         ax_i = ax[0][1]
         ax_i.legend(handles=legend_elements)
         ax_i.axis("off")
-        plt.tight_layout()
-        fg.savefig(svfg_i+"/qphi_prior_vs_post.png")
-        print("Created "+svfg_i+"/qphi_prior_vs_post.png")
-        plt.close()
+        # test:
+        x = np.linspace(*ax[0][0].get_xlim(),100) 
+        ax[0][0].plot(x,semigauss(setm.pll["q"][0]-0.1,0.1,x),label="Added Likelihood")
         
+        plt.tight_layout()
+        fg.savefig(svfg_i+"/qphi_cnt_prior_vs_post.png")
+        print("Created "+svfg_i+"/qphi_cnt_prior_vs_post.png")
+        plt.close()
+        """
         #TEST -> result from PSO vs mcmc posterior of q,phi
         kw_lens         = get_kwres(sets)["kwargs_results"]["kwargs_lens"]
         e1,e2           = kw_lens[0]["e1"],kw_lens[0]["e2"]
@@ -148,5 +164,8 @@ if __name__=="__main__":
         plt.tight_layout()
         fg.savefig(svfg_i+"/e12_post_vs_res.png")
         print("Created "+svfg_i+"/e12_post_vs_res.png")
+        """
 
+                
     success(sys.argv[0])
+

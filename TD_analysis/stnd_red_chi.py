@@ -49,9 +49,9 @@ def red_chi(data,sigma,model,n_int_knt,mlparams,n_lc):
     return chi_red 
 
 def get_chi_red(spline_i,mlparams,nl_lc):
-    spl_mask = spline_i.datapoints.mask
-    m, merr = spline_i.datapoints.mags[spl_mask], spline_i.datapoints.magerrs[spl_mask]
-    f = spline_i.eval(spline_i.datapoints.jds[spl_mask])
+    spl_mask    = spline_i.datapoints.mask
+    m, merr     = spline_i.datapoints.mags[spl_mask], spline_i.datapoints.magerrs[spl_mask]
+    f           = spline_i.eval(spline_i.datapoints.jds[spl_mask])
     n_int_knt   = spline_i.getnint()-1 # n* intervals (of intrinsic spline)
     spl_chi_red = red_chi(m,merr,f,n_int_knt,mlparams, nl_lc)
     return spl_chi_red

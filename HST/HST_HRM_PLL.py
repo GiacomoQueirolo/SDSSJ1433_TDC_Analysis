@@ -19,6 +19,7 @@ from Utils import last_commands
 from Data.image_manipulation import *
 from Utils import rewrite_read_results
 from Test.mask_source import get_masksource
+from Data.PSF.iterate_psf import iterate_psf # MOD_PSFITER
 from Utils.check_success import check_success
 from Posterior_analysis import mag_remastered
 from Posterior_analysis.source_pos import get_source_pos_MCMC
@@ -150,6 +151,9 @@ if __name__=="__main__":
     # ### PSF 
     kwargs_psf = init_kwrg_psf(setting,saveplots=True,backup_path=backup_path)
 
+    #MOD_PSFITER
+    if getattr(setting,"iter_psf",False):
+        kwargs_psf = iterate_psf(setting=setting,kwargs_psf=kwargs_psf,saveplots=True)
 
     # ## Modelling
 
@@ -165,7 +169,7 @@ if __name__=="__main__":
 
     # ### Parameters for the PSO/MCMC runs
      
-    kwargs_likelihood = init_kwrg_custom_likelihood(setting,mask,custom="qphi")
+    kwargs_likelihood = init_kwrg_custom_likelihood(setting,mask,custom=setting.prior_lens.custom_type)
      
 
     ######

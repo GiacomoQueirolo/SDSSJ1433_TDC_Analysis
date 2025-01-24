@@ -18,3 +18,8 @@ def get_array_BC(array,relation="ratio"):
     else:
         raise ValueError(f"Argument relation should be either 'ratio' or 'subtraction', not {relation} ")
     return array
+
+#To define a single cosmology for all application
+from astropy.cosmology import FlatLambdaCDM
+
+default_cosmo= FlatLambdaCDM(H0=70, Om0=0.3)# cosmo from https://academic.oup.com/mnras/article/474/3/3391/4644836, Agnello 2017

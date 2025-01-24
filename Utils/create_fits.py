@@ -79,11 +79,30 @@ def get_chired(setting,model=None,error_map=None):
     if model is None:
         model = complete_model(setting,unconvolved=False,bandmodel=bandmodel)
     if error_map is None:
-        kwdata  = init_kwrg_data(setting)
-        error_map = kwdata["noise_map"]
+        error_map = 0
     chi2red = bandmodel.reduced_chi2(model, error_map=error_map)
     return chi2red
-
+    
+@check_setting
+def get_chired_corr_red(setting,model=None,error_map=None):
+    # output chi^2 reduced -> I correct the denominator
+    # as it is divided by the number of pixel, but doesn't take into account the fitted
+    # parameters
+    bandmodel = get_bandmodel(setting=setting)
+    _chi2red  = get_chired(setting,model,error_map)
+    pix = bandmodel.num_data_evaluate # number of pixel considered
+    #non-linear params
+    n_nlp = len( get_kwres(setting,1) )
+    #linar params
+    res = get_kwres(setting,0)["kwargs_results"]
+    del res["kwargs_extinction"]
+    del res["kwargs_special"]
+    n_lp = bandmodel.num_param_linear(**res)
+    # tot n params:
+    num_params = n_nlp + n_lp
+    chi2red = _chi2red*pix/(pix-num_params)
+    return chi2red
+    
 if __name__=="__main__":
     present_program(sys.argv[0])
     parser = ArgumentParser(description="Create fits file with all light components")

@@ -161,7 +161,6 @@ def save_Df(setting,no_plot=False,BC=True):
     #MCMC sample
     samples_mcmc = get_mcmc_smpl(setting,backup_path)
     mcmc_fermat  = gen_mcmc_fermat(samples_mcmc,setting)
-    mcmc_Df      = gen_mcmc_Df(samples_mcmc,setting,mcmc_fermat=mcmc_fermat,BC=BC)
 
     #Save the mcmc in a file, NOTE: they are ordered A,B,C,D
     mcmc_file_name = savemcmc_path + setting_name.replace(".py","").replace("settings","mcmc_ordered_fermat")+".json"
@@ -169,6 +168,8 @@ def save_Df(setting,no_plot=False,BC=True):
     with open(mcmc_file_name, 'w+') as mcmc_file:
         json.dump(mcmc_fermat, mcmc_file)
     if not no_plot:
+        mcmc_Df     = gen_mcmc_Df(samples_mcmc,setting,mcmc_fermat=mcmc_fermat,BC=BC)
+        
         mcmc_fermat = np.array(mcmc_fermat[cut_mcmc:])
         mcmc_Df     = np.array(mcmc_Df[cut_mcmc:])
 
@@ -211,7 +212,7 @@ if __name__=="__main__":
     parser.add_argument("-NP", "--no_plot",dest="no_plot", default=False,action="store_true",
                         help="Ignore the corner plots")
     parser.add_argument("-AD", dest="AD", default=False,action="store_true",
-                        help="Consider AD couple instead of BC")
+                        help="Consider AD couple instead of BC (only for plotting)")
     parser.add_argument('SETTING_FILES',nargs="+",default=[],help="setting file(s) to consider")
     
     args = parser.parse_args()
